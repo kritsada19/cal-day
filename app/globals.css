@@ -24,4 +24,7 @@
 
   --color-emerald-accent: #00DF89;
   --color-emerald-glow: rgba(0, 223, 137, 0.15);
+
+  --shadow-glow-gold: 0 0 15px rgba(212, 175, 55, 0.25);
+  --shadow-glow-emerald: 0 0 15px rgba(0, 223, 137, 0.25);
 }

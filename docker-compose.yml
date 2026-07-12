@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: calday-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: calday
+      POSTGRES_PASSWORD: calday123
+      POSTGRES_DB: calday
+    ports:
+      - "7777:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

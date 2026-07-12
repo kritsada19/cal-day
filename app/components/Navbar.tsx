@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 interface NavItem {
   label: string;
@@ -12,6 +13,7 @@ interface NavItem {
 export default function Navbar() {
   const [activeTab, setActiveTab] = useState("DASHBOARD");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session } = useSession();
 
   // Daily calorie tracking state for interactive WOW effect
   const [consumed, setConsumed] = useState(1420);
@@ -136,12 +138,12 @@ export default function Navbar() {
                 {/* Diagonal cut capsule */}
                 <div className="bg-linear-to-r from-obsidian-900 to-obsidian-800 border border-white/10 hover:border-gold-accent/50 px-4 py-1.5 flex items-center gap-3 transition-colors duration-300">
                   <div className="flex flex-col text-right">
-                    <span className="text-xs font-bold tracking-wider text-white">KRIT S.</span>
+                    <span className="text-xs font-bold tracking-wider text-white">{session?.user?.name}</span>
                     <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">PRO ELITE</span>
                   </div>
                   {/* Avatar Frame (Sharp Box) */}
                   <div className="w-8 h-8 bg-obsidian-700 border border-gold-accent flex items-center justify-center text-xs font-bold text-gold-accent group-hover:bg-gold-accent group-hover:text-black transition-all duration-300">
-                    KS
+                    {session?.user?.name?.substring(0, 2)}
                   </div>
                 </div>
               </div>

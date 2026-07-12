@@ -1,0 +1,181 @@
+"use client";
+
+import React, { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function SignInPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        setError("AUTHENTICATION FAILED: INVALID EMAIL OR PASSCODE");
+      } else {
+        router.push("/");
+        router.refresh();
+      }
+    } catch (err: any) {
+      setError("SYSTEM EXCEPTION: UNABLE TO ESTABLISH CONNECTION");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[85vh] flex-1 flex items-center justify-center px-4 relative overflow-hidden bg-obsidian-950">
+      {/* Premium Ambient Grid Backgrounds */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.06),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+
+      {/* Main Container Card */}
+      <div className="max-w-md w-full bg-obsidian-900 border border-white/10 p-8 md:p-10 shadow-glow-gold relative overflow-hidden">
+        {/* Top Golden Laser Line Accent */}
+        <div className="absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent via-gold-accent to-transparent"></div>
+
+        {/* Sharp Corner Brackets for Card */}
+        <span className="absolute -top-px -left-px w-2.5 h-2.5 border-t border-l border-gold-accent"></span>
+        <span className="absolute -top-px -right-px w-2.5 h-2.5 border-t border-r border-gold-accent"></span>
+        <span className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b border-l border-gold-accent"></span>
+        <span className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b border-r border-gold-accent"></span>
+
+        {/* Logo and Headers Section */}
+        <div className="flex flex-col items-center mb-8 select-none">
+          {/* Geometric Logo Container */}
+          <div className="relative w-12 h-12 flex items-center justify-center bg-obsidian-950 border border-gold-accent/40 group hover:border-gold-accent transition-colors duration-300">
+            <span className="absolute -top-px -left-px w-[5px] h-[5px] border-t border-l border-gold-accent"></span>
+            <span className="absolute -bottom-px -right-px w-[5px] h-[5px] border-b border-r border-gold-accent"></span>
+
+            <svg
+              viewBox="0 0 24 24"
+              className="w-6 h-6 text-gold-accent group-hover:scale-110 group-hover:text-white transition-all duration-300"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5" />
+              <polygon points="12 7 17 10 17 14 12 17 7 14 7 10" fill="currentColor" fillOpacity="0.2" />
+            </svg>
+          </div>
+
+          <div className="flex flex-col items-center mt-4 text-center">
+            <span className="text-xl font-bold tracking-[0.3em] text-white font-sans">
+              CALDAY
+            </span>
+            <span className="text-[9px] tracking-[0.45em] text-white/40 font-mono mt-1 uppercase">
+              CHRONO METRIC SECURE LOG
+            </span>
+          </div>
+        </div>
+
+        {/* Error Notification Banner */}
+        {error && (
+          <div className="mb-6 bg-red-950/20 border border-red-500/30 p-4 relative overflow-hidden">
+            {/* Red accent corners */}
+            <span className="absolute -top-px -left-px w-1.5 h-1.5 border-t border-l border-red-500/50"></span>
+            <span className="absolute -bottom-px -right-px w-1.5 h-1.5 border-b border-r border-red-500/50"></span>
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span className="text-[10px] tracking-wider font-mono text-red-400 leading-tight">
+                {error}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Sign In Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email input field */}
+          <div className="space-y-2">
+            <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+              USER IDENTIFICATION / EMAIL
+            </label>
+            <div className="relative group">
+              {/* Highlight corners on focus */}
+              <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
+              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
+
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                placeholder="ENTER EMAIL ADDRESS"
+              />
+            </div>
+          </div>
+
+          {/* Password input field */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+                SECURE PASSCODE / PASSWORD
+              </label>
+            </div>
+            <div className="relative group">
+              {/* Highlight corners on focus */}
+              <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
+              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
+
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                placeholder="ENTER PASSCODE"
+              />
+            </div>
+          </div>
+
+
+          {/* Submit Action Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full relative px-6 py-3.5 bg-obsidian-950 border border-gold-accent/40 text-gold-accent hover:text-white hover:bg-gold-accent/10 hover:border-gold-accent text-xs font-bold tracking-[0.25em] font-sans transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group rounded-none"
+            >
+              {/* Corner decorative brackets on hover */}
+              <span className="absolute bottom-1.5 left-2.5 w-1.5 h-1.5 border-b border-l border-gold-accent/0 group-hover:border-gold-accent/60 transition-all duration-300"></span>
+              <span className="absolute top-1.5 right-2.5 w-1.5 h-1.5 border-t border-r border-gold-accent/0 group-hover:border-gold-accent/60 transition-all duration-300"></span>
+
+              {loading ? "PROCESSING..." : "SIGN IN"}
+            </button>
+          </div>
+        </form>
+
+        {/* Footer links */}
+        <div className="mt-8 pt-6 border-t border-white/5 text-center relative">
+          <span className="text-[9px] tracking-widest text-white/30 font-mono">
+            NEW USER?{" "}
+            <Link
+              href="/signup"
+              className="text-gold-accent hover:text-white transition-colors duration-300 font-bold underline underline-offset-4 decoration-gold-accent/20 hover:decoration-white/40"
+            >
+              INITIATE REGISTRATION
+            </Link>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
