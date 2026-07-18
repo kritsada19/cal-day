@@ -23,10 +23,10 @@ export default function Navbar() {
   const remaining = Math.max(target - consumed, 0);
 
   const navItems: NavItem[] = [
-    { label: "DASHBOARD", href: "#", active: activeTab === "DASHBOARD" },
-    { label: "DIARY", href: "#", active: activeTab === "DIARY" },
-    { label: "ANALYTICS", href: "#", active: activeTab === "ANALYTICS" },
-    { label: "ELITE CLUB", href: "#", active: activeTab === "ELITE CLUB" },
+    { label: "Dashboard", href: "#", active: activeTab === "Dashboard" },
+    { label: "Diary", href: "#", active: activeTab === "Diary" },
+    { label: "Analytics", href: "#", active: activeTab === "Analytics" },
+    { label: "Members", href: "#", active: activeTab === "Members" },
   ];
 
   return (
@@ -65,7 +65,7 @@ export default function Navbar() {
                   CALDAY
                 </span>
                 <span className="text-[8px] tracking-[0.45em] text-white/40 font-mono">
-                  CHRONO METRIC
+                  DAILY TRACKER
                 </span>
               </div>
             </Link>
@@ -108,7 +108,7 @@ export default function Navbar() {
 
                 <div className="flex flex-col">
                   <div className="flex justify-between items-baseline gap-8 text-[10px] tracking-wider text-white/50 font-mono">
-                    <span>ENERGY BALANCE</span>
+                    <span>DAILY BALANCE</span>
                     <span className="text-white font-semibold">
                       <span className="text-emerald-accent text-glow-emerald font-bold">{consumed}</span> / {target} kcal
                     </span>
@@ -126,8 +126,8 @@ export default function Navbar() {
                   </div>
 
                   <div className="flex justify-between text-[9px] tracking-widest text-white/30 font-mono mt-1">
-                    <span>METABOLIC</span>
-                    <span className="text-gold-accent text-glow-gold font-semibold">{remaining} KCAL REMAINING</span>
+                    <span>PROGRESS</span>
+                    <span className="text-gold-accent text-glow-gold font-semibold">{remaining} KCAL LEFT</span>
                   </div>
                 </div>
               </div>
@@ -140,7 +140,7 @@ export default function Navbar() {
                   <div className="bg-linear-to-r from-obsidian-900 to-obsidian-800 border border-white/10 hover:border-gold-accent/50 px-4 py-1.5 flex items-center gap-3 transition-colors duration-300">
                     <div className="flex flex-col text-right">
                       <span className="text-xs font-bold tracking-wider text-white">{session?.user?.name}</span>
-                      <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">PRO ELITE</span>
+                      <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">PREMIUM</span>
                     </div>
                     {/* Avatar Frame (Sharp Box) */}
                     <div className="w-8 h-8 bg-obsidian-700 border border-gold-accent flex items-center justify-center text-xs font-bold text-gold-accent group-hover:bg-gold-accent group-hover:text-black transition-all duration-300">
@@ -154,10 +154,10 @@ export default function Navbar() {
           ) : (
             <div className="hidden lg:flex items-center gap-4">
               <Link href="/signin" className="px-4 py-2 text-xs font-semibold tracking-[0.2em] text-white/80 hover:text-gold-accent transition-colors duration-200">
-                SIGN IN
+                LOG IN
               </Link>
               <Link href="/signup" className="px-4 py-2 text-xs font-semibold tracking-[0.2em] text-white/80 hover:text-gold-accent transition-colors duration-200">
-                SIGN UP
+                CREATE ACCOUNT
               </Link>
             </div>
           )}
@@ -208,7 +208,7 @@ export default function Navbar() {
             {/* Mobile Calorie Stats Widget */}
             <div className="bg-obsidian-900 border border-white/10 p-4 space-y-3">
               <div className="flex justify-between items-baseline text-[10px] tracking-wider text-white/50 font-mono">
-                <span>ENERGY BALANCE</span>
+                <span>DAILY BALANCE</span>
                 <span className="text-white font-semibold">
                   <span className="text-emerald-accent font-bold">{consumed}</span> / {target} kcal
                 </span>
@@ -230,7 +230,7 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-bold tracking-wider text-white">KRIT S.</span>
-                <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">PRO ELITE MEMBER</span>
+                <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">PREMIUM MEMBER</span>
               </div>
             </div>
           </div>

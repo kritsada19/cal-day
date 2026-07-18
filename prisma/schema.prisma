@@ -25,6 +25,7 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   accounts Account[]
+  profile Profile?
 }
 
 enum Role {
@@ -49,4 +50,36 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  gender Gender
+  age       Int
+  weight    Float
+  height    Float
+  exerciseLevel ExerciseLevel
+  goal     Goal
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ExerciseLevel {
+  SEDENTARY
+  LIGHT
+  MODERATE
+  ACTIVE
+  VERY_ACTIVE
+}
+
+enum Goal {
+  LOSE_WEIGHT
+  MAINTAIN_WEIGHT
+  GAIN_WEIGHT
 }

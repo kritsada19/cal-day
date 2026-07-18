@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CalDay // Daily Calorie Tracker",
-  description: "Luxurious and precise daily calorie and metabolic chronometer.",
+  title: "CalDay — Simple daily calorie tracking",
+  description: "A simple and clear way to track calories, habits, and daily progress.",
 };
 
 export default async function RootLayout({

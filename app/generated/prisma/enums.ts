@@ -15,3 +15,31 @@ export const Role = {
 } as const
 
 export type Role = (typeof Role)[keyof typeof Role]
+
+
+export const Gender = {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE'
+} as const
+
+export type Gender = (typeof Gender)[keyof typeof Gender]
+
+
+export const ExerciseLevel = {
+  SEDENTARY: 'SEDENTARY',
+  LIGHT: 'LIGHT',
+  MODERATE: 'MODERATE',
+  ACTIVE: 'ACTIVE',
+  VERY_ACTIVE: 'VERY_ACTIVE'
+} as const
+
+export type ExerciseLevel = (typeof ExerciseLevel)[keyof typeof ExerciseLevel]
+
+
+export const Goal = {
+  LOSE_WEIGHT: 'LOSE_WEIGHT',
+  MAINTAIN_WEIGHT: 'MAINTAIN_WEIGHT',
+  GAIN_WEIGHT: 'GAIN_WEIGHT'
+} as const
+
+export type Goal = (typeof Goal)[keyof typeof Goal]

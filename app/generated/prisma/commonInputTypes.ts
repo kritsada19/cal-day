@@ -206,6 +206,84 @@ export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedIntNullableFilter<$PrismaModel>
 }
 
+export type EnumGenderFilter<$PrismaModel = never> = {
+  equals?: $Enums.Gender | Prisma.EnumGenderFieldRefInput<$PrismaModel>
+  in?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGenderFilter<$PrismaModel> | $Enums.Gender
+}
+
+export type FloatFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  notIn?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  lt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedFloatFilter<$PrismaModel> | number
+}
+
+export type EnumExerciseLevelFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExerciseLevel | Prisma.EnumExerciseLevelFieldRefInput<$PrismaModel>
+  in?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumExerciseLevelFilter<$PrismaModel> | $Enums.ExerciseLevel
+}
+
+export type EnumGoalFilter<$PrismaModel = never> = {
+  equals?: $Enums.Goal | Prisma.EnumGoalFieldRefInput<$PrismaModel>
+  in?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalFilter<$PrismaModel> | $Enums.Goal
+}
+
+export type EnumGenderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Gender | Prisma.EnumGenderFieldRefInput<$PrismaModel>
+  in?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGenderWithAggregatesFilter<$PrismaModel> | $Enums.Gender
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGenderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGenderFilter<$PrismaModel>
+}
+
+export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  notIn?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  lt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedFloatWithAggregatesFilter<$PrismaModel> | number
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _avg?: Prisma.NestedFloatFilter<$PrismaModel>
+  _sum?: Prisma.NestedFloatFilter<$PrismaModel>
+  _min?: Prisma.NestedFloatFilter<$PrismaModel>
+  _max?: Prisma.NestedFloatFilter<$PrismaModel>
+}
+
+export type EnumExerciseLevelWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExerciseLevel | Prisma.EnumExerciseLevelFieldRefInput<$PrismaModel>
+  in?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumExerciseLevelWithAggregatesFilter<$PrismaModel> | $Enums.ExerciseLevel
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumExerciseLevelFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumExerciseLevelFilter<$PrismaModel>
+}
+
+export type EnumGoalWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Goal | Prisma.EnumGoalFieldRefInput<$PrismaModel>
+  in?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalWithAggregatesFilter<$PrismaModel> | $Enums.Goal
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGoalFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGoalFilter<$PrismaModel>
+}
+
 export type NestedIntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -409,6 +487,73 @@ export type NestedFloatNullableFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   not?: Prisma.NestedFloatNullableFilter<$PrismaModel> | number | null
+}
+
+export type NestedEnumGenderFilter<$PrismaModel = never> = {
+  equals?: $Enums.Gender | Prisma.EnumGenderFieldRefInput<$PrismaModel>
+  in?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGenderFilter<$PrismaModel> | $Enums.Gender
+}
+
+export type NestedEnumExerciseLevelFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExerciseLevel | Prisma.EnumExerciseLevelFieldRefInput<$PrismaModel>
+  in?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumExerciseLevelFilter<$PrismaModel> | $Enums.ExerciseLevel
+}
+
+export type NestedEnumGoalFilter<$PrismaModel = never> = {
+  equals?: $Enums.Goal | Prisma.EnumGoalFieldRefInput<$PrismaModel>
+  in?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalFilter<$PrismaModel> | $Enums.Goal
+}
+
+export type NestedEnumGenderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Gender | Prisma.EnumGenderFieldRefInput<$PrismaModel>
+  in?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Gender[] | Prisma.ListEnumGenderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGenderWithAggregatesFilter<$PrismaModel> | $Enums.Gender
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGenderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGenderFilter<$PrismaModel>
+}
+
+export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  notIn?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  lt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedFloatWithAggregatesFilter<$PrismaModel> | number
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _avg?: Prisma.NestedFloatFilter<$PrismaModel>
+  _sum?: Prisma.NestedFloatFilter<$PrismaModel>
+  _min?: Prisma.NestedFloatFilter<$PrismaModel>
+  _max?: Prisma.NestedFloatFilter<$PrismaModel>
+}
+
+export type NestedEnumExerciseLevelWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ExerciseLevel | Prisma.EnumExerciseLevelFieldRefInput<$PrismaModel>
+  in?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ExerciseLevel[] | Prisma.ListEnumExerciseLevelFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumExerciseLevelWithAggregatesFilter<$PrismaModel> | $Enums.ExerciseLevel
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumExerciseLevelFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumExerciseLevelFilter<$PrismaModel>
+}
+
+export type NestedEnumGoalWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Goal | Prisma.EnumGoalFieldRefInput<$PrismaModel>
+  in?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Goal[] | Prisma.ListEnumGoalFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalWithAggregatesFilter<$PrismaModel> | $Enums.Goal
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGoalFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGoalFilter<$PrismaModel>
 }
 
 

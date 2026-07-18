@@ -27,7 +27,7 @@ declare module "next-auth/jwt" {
 }
 
 export const authOptions: NextAuthOptions = {
-    adapter: PrismaAdapter(prisma),
+    adapter: PrismaAdapter(prisma) as any,
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -45,20 +45,29 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials) {
                 if (!credentials) return null;
 
-                const { email, password } = credentials;
+                const email = typeof credentials.email === "string"
+                    ? credentials.email.trim().toLowerCase()
+                    : "";
+                const password = typeof credentials.password === "string"
+                    ? credentials.password
+                    : "";
+
+                if (!email || !password) {
+                    return null;
+                }
 
                 const user = await prisma.user.findUnique({
                     where: { email },
                 });
 
                 if (!user || !user.password) {
-                    throw new Error("Invalid email or password");
+                    return null;
                 }
 
                 const isValid = await bcrypt.compare(password, user.password);
 
                 if (!isValid) {
-                    throw new Error("Invalid email or password");
+                    return null;
                 }
 
                 return {

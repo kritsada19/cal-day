@@ -1,18 +1,76 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 
+type ProfileData = {
+  gender?: string | null;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  exerciseLevel?: string | null;
+  goal?: string | null;
+};
+
+function getBmiStatus(bmi: number) {
+  if (bmi < 18.5) {
+    return { label: "Underweight", tone: "border-amber-400/30 bg-amber-500/10 text-amber-300" };
+  }
+
+  if (bmi < 25) {
+    return { label: "Healthy", tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300" };
+  }
+
+  return { label: "Overweight", tone: "border-rose-400/30 bg-rose-500/10 text-rose-300" };
+}
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
 
-  const displayName = session?.user?.name || session?.user?.email || "UNNAMED OPERATOR";
+  const displayName = session?.user?.name || session?.user?.email || "Guest user";
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    let isMounted = true;
+
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted) {
+          setProfile(data.profile ?? null);
+          setHasLoadedProfile(true);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setProfile(null);
+          setHasLoadedProfile(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [status]);
+
+  const bmi =
+    profile?.weight && profile?.height
+      ? Number((profile.weight / ((profile.height / 100) ** 2)).toFixed(1))
+      : null;
+
+  const bmiStatus = bmi !== null ? getBmiStatus(bmi) : null;
 
   return (
     <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 relative overflow-hidden bg-obsidian-950">
@@ -23,17 +81,17 @@ export default function ProfilePage() {
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[10px] tracking-[0.35em] text-gold-accent font-mono uppercase">
-              PROFILE ACCESS
+              Your profile
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-[0.2em] text-white">
-              OPERATOR PROFILE
+              Your account
             </h1>
           </div>
           <Link
             href="/"
             className="inline-flex items-center justify-center border border-white/10 bg-obsidian-900 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-white/70 transition-all duration-300 hover:border-gold-accent/50 hover:text-gold-accent"
           >
-            RETURN TO DASHBOARD
+            Back to home
           </Link>
         </div>
 
@@ -52,33 +110,87 @@ export default function ProfilePage() {
 
               <div className="flex-1">
                 <p className="text-[10px] tracking-[0.35em] text-white/45 font-mono uppercase">
-                  PROFILE STATUS
+                  Account status
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-[0.18em] text-white">
                   {status === "loading" ? "LOADING PROFILE" : displayName}
                 </h2>
                 <p className="mt-2 text-sm text-white/60">
-                  {session?.user?.email || "Authenticate to unlock your secure profile dashboard."}
+                  {session?.user?.email || "Log in to view your profile and manage your account."}
                 </p>
-                <div className="mt-4 inline-flex border border-emerald-accent/30 bg-emerald-glow px-3 py-1 text-[10px] font-semibold tracking-[0.25em] text-emerald-accent uppercase">
-                  ACTIVE ELITE ACCESS
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="inline-flex border border-emerald-accent/30 bg-emerald-glow px-3 py-1 text-[10px] font-semibold tracking-[0.25em] text-emerald-accent uppercase">
+                    Premium access
+                  </div>
+                  <Link
+                    href="/profile/form"
+                    className="inline-flex items-center justify-center border border-gold-accent/40 bg-obsidian-950 px-3 py-1 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/10 hover:text-white"
+                  >
+                    Fill personal info
+                  </Link>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <div className="border border-white/10 bg-obsidian-950 p-4">
-                <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Member class</p>
-                <p className="mt-2 text-sm font-semibold text-gold-accent">PRO ELITE</p>
+            <div className="mt-8 rounded border border-white/10 bg-obsidian-950/70 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Profile summary</p>
+                <Link
+                  href="/profile/form"
+                  className="text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition hover:text-white"
+                >
+                  Edit profile
+                </Link>
               </div>
-              <div className="border border-white/10 bg-obsidian-950 p-4">
-                <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Access level</p>
-                <p className="mt-2 text-sm font-semibold text-white">Full dashboard</p>
-              </div>
-              <div className="border border-white/10 bg-obsidian-950 p-4">
-                <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Security</p>
-                <p className="mt-2 text-sm font-semibold text-white">Encrypted session</p>
-              </div>
+
+              {status !== "authenticated" ? (
+                <p className="mt-4 text-sm text-white/60">Please sign in to view your profile details.</p>
+              ) : !hasLoadedProfile ? (
+                <p className="mt-4 text-sm text-white/60">Loading profile data…</p>
+              ) : profile ? (
+                <div className="mt-4 grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
+                  <div className={`rounded border p-4 ${bmiStatus?.tone || "border-white/10 bg-obsidian-900"}`}>
+                    <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">BMI</p>
+                    <p className="mt-2 text-3xl font-semibold text-white">{bmi ?? "—"}</p>
+                    <p className="mt-2 text-sm font-semibold">
+                      {bmiStatus ? `${bmiStatus.label}` : "No data"}
+                    </p>
+                  </div>
+
+                  <div className="rounded border border-white/10 bg-obsidian-900 p-4 text-sm text-white/70">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Gender</p>
+                        <p className="mt-1 font-semibold text-white">{profile.gender || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Age</p>
+                        <p className="mt-1 font-semibold text-white">{profile.age ? `${profile.age} years` : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Weight</p>
+                        <p className="mt-1 font-semibold text-white">{profile.weight ? `${profile.weight} kg` : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Height</p>
+                        <p className="mt-1 font-semibold text-white">{profile.height ? `${profile.height} cm` : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Exercise level</p>
+                        <p className="mt-1 font-semibold text-white">{profile.exerciseLevel || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Goal</p>
+                        <p className="mt-1 font-semibold text-white">{profile.goal || "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-white/60">
+                  No profile data yet. Please fill in your personal information first.
+                </p>
+              )}
             </div>
           </section>
 
@@ -87,7 +199,7 @@ export default function ProfilePage() {
               <span className="absolute -top-px -left-px h-2.5 w-2.5 border-l border-t border-gold-accent" />
               <span className="absolute -bottom-px -right-px h-2.5 w-2.5 border-b border-r border-gold-accent" />
 
-              <p className="text-[10px] tracking-[0.3em] text-white/40 font-mono uppercase">Account snapshot</p>
+              <p className="text-[10px] tracking-[0.3em] text-white/40 font-mono uppercase">Account details</p>
               <div className="mt-4 space-y-3 text-sm text-white/70">
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
                   <span className="text-white/45">USER ID</span>
@@ -116,27 +228,27 @@ export default function ProfilePage() {
                       onClick={() => signOut({ callbackUrl: "/" })}
                       className="w-full border border-gold-accent/40 bg-obsidian-950 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/10 hover:text-white"
                     >
-                      SIGN OUT
+                      Log out
                     </button>
                     <Link
                       href="/"
                       className="flex w-full items-center justify-center border border-white/10 bg-obsidian-950 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-white/70 transition-all duration-300 hover:border-white/25 hover:text-white"
                     >
-                      VIEW DASHBOARD
+                      Go to home
                     </Link>
                   </div>
                 </>
               ) : (
                 <>
-                  <p className="text-[10px] tracking-[0.3em] text-white/40 font-mono uppercase">Session required</p>
+                  <p className="text-[10px] tracking-[0.3em] text-white/40 font-mono uppercase">Log in required</p>
                   <p className="mt-3 text-sm text-white/60">
-                    Please sign in to view your secure profile and manage your account.
+                    Please log in to view your profile and manage your account.
                   </p>
                   <Link
                     href="/signin"
                     className="mt-4 inline-flex w-full items-center justify-center border border-gold-accent/40 bg-obsidian-950 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/10 hover:text-white"
                   >
-                    SIGN IN
+                    Log in
                   </Link>
                 </>
               )}
