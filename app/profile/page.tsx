@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
+import type { NutritionTargets } from "@/lib/nutrition";
 
 type ProfileData = {
   gender?: string | null;
@@ -13,21 +15,20 @@ type ProfileData = {
   goal?: string | null;
 };
 
-function getBmiStatus(bmi: number) {
-  if (bmi < 18.5) {
-    return { label: "Underweight", tone: "border-amber-400/30 bg-amber-500/10 text-amber-300" };
-  }
-
-  if (bmi < 25) {
-    return { label: "Healthy", tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300" };
-  }
-
-  return { label: "Overweight", tone: "border-rose-400/30 bg-rose-500/10 text-rose-300" };
-}
+type ProfileApiResponse = {
+  profile: ProfileData | null;
+  bmi: number | null;
+  bmiStatus: { label: string; tone: string } | null;
+  nutritionTargets: NutritionTargets | null;
+  dailyProgress: {
+    calories: { consumed: number; target: number; percent: number };
+    protein: { consumed: number; target: number; percent: number };
+  };
+};
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profileData, setProfileData] = useState<ProfileApiResponse | null>(null);
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
 
   const displayName = session?.user?.name || session?.user?.email || "Guest user";
@@ -45,17 +46,17 @@ export default function ProfilePage() {
 
     let isMounted = true;
 
-    fetch("/api/profile")
-      .then((res) => res.json())
-      .then((data) => {
+    axios
+      .get<ProfileApiResponse>("/api/profile")
+      .then((res) => {
         if (isMounted) {
-          setProfile(data.profile ?? null);
+          setProfileData(res.data);
           setHasLoadedProfile(true);
         }
       })
       .catch(() => {
         if (isMounted) {
-          setProfile(null);
+          setProfileData(null);
           setHasLoadedProfile(true);
         }
       });
@@ -65,12 +66,14 @@ export default function ProfilePage() {
     };
   }, [status]);
 
-  const bmi =
-    profile?.weight && profile?.height
-      ? Number((profile.weight / ((profile.height / 100) ** 2)).toFixed(1))
-      : null;
-
-  const bmiStatus = bmi !== null ? getBmiStatus(bmi) : null;
+  const profile = profileData?.profile ?? null;
+  const bmi = profileData?.bmi ?? null;
+  const bmiStatus = profileData?.bmiStatus ?? null;
+  const nutritionTargets = profileData?.nutritionTargets ?? null;
+  const todayCalories = profileData?.dailyProgress?.calories?.consumed ?? 0;
+  const todayProtein = profileData?.dailyProgress?.protein?.consumed ?? 0;
+  const calorieProgress = profileData?.dailyProgress?.calories?.percent ?? 0;
+  const proteinProgress = profileData?.dailyProgress?.protein?.percent ?? 0;
 
   return (
     <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 relative overflow-hidden bg-obsidian-950">
@@ -148,7 +151,7 @@ export default function ProfilePage() {
               ) : !hasLoadedProfile ? (
                 <p className="mt-4 text-sm text-white/60">Loading profile data…</p>
               ) : profile ? (
-                <div className="mt-4 grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
+                <div className="mt-4 grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
                   <div className={`rounded border p-4 ${bmiStatus?.tone || "border-white/10 bg-obsidian-900"}`}>
                     <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">BMI</p>
                     <p className="mt-2 text-3xl font-semibold text-white">{bmi ?? "—"}</p>
@@ -158,6 +161,30 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="rounded border border-white/10 bg-obsidian-900 p-4 text-sm text-white/70">
+                    <div className="mb-4 rounded border border-gold-accent/20 bg-obsidian-950/70 p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Daily target</p>
+                        <p className="text-[10px] font-semibold tracking-[0.25em] text-gold-accent">{nutritionTargets ? nutritionTargets.goalLabel : "—"}</p>
+                      </div>
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-white/60">
+                          <span>Calories</span>
+                          <span>{todayCalories} / {nutritionTargets?.calories ?? "—"} kcal</span>
+                        </div>
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                          <div className="h-full rounded-full bg-gold-accent transition-all" style={{ width: `${calorieProgress}%` }} />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-white/60">
+                          <span>Protein</span>
+                          <span>{todayProtein} / {nutritionTargets?.protein ?? "—"} g</span>
+                        </div>
+                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                          <div className="h-full rounded-full bg-emerald-accent transition-all" style={{ width: `${proteinProgress}%` }} />
+                        </div>
+                      </div>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
                         <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Gender</p>

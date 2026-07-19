@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db/prisma";
+import { buildProfileNutritionSummary } from "@/lib/nutrition";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -14,7 +15,9 @@ export async function GET() {
     where: { userId: Number(session.user.id) },
   });
 
-  return NextResponse.json({ profile });
+  const summary = buildProfileNutritionSummary(profile, 0, 0);
+
+  return NextResponse.json({ profile, ...summary });
 }
 
 export async function POST(request: Request) {
@@ -63,5 +66,7 @@ export async function POST(request: Request) {
         },
       });
 
-  return NextResponse.json({ profile, message: "Profile saved successfully" });
+  const summary = buildProfileNutritionSummary(profile, 0, 0);
+
+  return NextResponse.json({ profile, ...summary, message: "Profile saved successfully" });
 }
