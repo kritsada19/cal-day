@@ -13,19 +13,33 @@ datasource db {
   provider = "postgresql"
 }
 
+// โครงสร้างหลักของผู้ใช้ในแอป
+// ใช้เก็บข้อมูลพื้นฐานและความสัมพันธ์กับข้อมูลด้านโภชนาการ
 model User {
+  // รหัสตัวผู้ใช้แบบอัตโนมัติ
   id            Int       @id @default(autoincrement())
+  // ชื่อที่แสดงในแอป
   name          String?
+  // อีเมลสำหรับล็อกอินและติดต่อ
   email         String    @unique
+  // เวลาที่ยืนยันอีเมลแล้ว
   emailVerified DateTime?
+  // รูปโปรไฟล์
   image         String?
+  // รหัสผ่านสำหรับการเข้าสู่ระบบแบบปกติ
   password      String?
+  // บทบาทของผู้ใช้ เช่น USER หรือ ADMIN
   role          Role      @default(USER)
+  // วันเวลาที่สร้างบัญชี
   createdAt     DateTime  @default(now())
+  // วันเวลาที่อัปเดตล่าสุด
   updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  profile Profile?
+  // ข้อมูลที่เกี่ยวข้องกับผู้ใช้
+  accounts       Account[]
+  profile        Profile?
+  meals          Meal[]
+  dailySummaries DailySummary[]
 }
 
 enum Role {
@@ -33,11 +47,16 @@ enum Role {
   ADMIN
 }
 
+// เก็บข้อมูลบัญชีสำหรับการเข้าสู่ระบบผ่านตัวกลางอย่าง Google หรือ Email
 model Account {
   id                Int     @id @default(autoincrement())
+  // รหัสผู้ใช้ที่เชื่อมกับบัญชีนี้
   userId            Int
+  // ประเภทบัญชี เช่น oauth, credentials
   type              String
+  // แหล่งเข้าสู่ระบบ เช่น google, github
   provider          String
+  // รหัสบัญชีจากผู้ให้บริการ
   providerAccountId String
   refresh_token     String? @db.Text
   access_token      String? @db.Text
@@ -47,22 +66,42 @@ model Account {
   id_token          String? @db.Text
   session_state     String?
 
+  // เชื่อมกับผู้ใช้
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // ป้องกันการสร้างบัญชีซ้ำจาก provider เดียวกัน
   @@unique([provider, providerAccountId])
 }
 
+// เก็บข้อมูลส่วนตัวและค่าที่ใช้คำนวณแคลอรีให้กับผู้ใช้
 model Profile {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  gender Gender
-  age       Int
-  weight    Float
-  height    Float
+  id            Int           @id @default(autoincrement())
+  // รหัสผู้ใช้ที่มีโปรไฟล์นี้
+  userId        Int           @unique
+  // เพศของผู้ใช้
+  gender        Gender
+  // อายุ
+  age           Int
+  // น้ำหนักหน่วยกิโลกรัม
+  weight        Float
+  // ส่วนสูงหน่วยเซนติเมตร
+  height        Float
+  // ระดับการออกกำลังกาย
   exerciseLevel ExerciseLevel
-  goal     Goal
+  // เป้าหมายของการกินอาหาร
+  goal          Goal
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // ค่าใช้คำนวณพื้นฐานสำหรับการคำนวณแคลอรี
+  bmr            Float
+  tdee           Float
+  targetCalories Float
+  tragetProtein  Float
+
+  // เวลาที่แก้ไขข้อมูลล่าสุด
+  updatedAt DateTime @updatedAt
+
+  // เชื่อมกับผู้ใช้
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Gender {
@@ -82,4 +121,72 @@ enum Goal {
   LOSE_WEIGHT
   MAINTAIN_WEIGHT
   GAIN_WEIGHT
+}
+
+// เก็บมื้ออาหารของผู้ใช้แต่ละมื้อ
+model Meal {
+  id     Int @id @default(autoincrement())
+  // รหัสผู้ใช้ที่เป็นเจ้าของมื้ออาหารนี้
+  userId Int
+
+  // ประเภทมื้ออาหาร เช่น เช้า กลางวัน เย็น ของว่าง
+  mealType MealType
+
+  // วันเวลาที่สร้างมื้ออาหาร
+  createdAt DateTime @default(now())
+
+  // เชื่อมกับผู้ใช้
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // รายการอาหารในมื้อนี้
+  foodEntries FoodEntry[]
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+// เก็บข้อมูลอาหารแต่ละรายการที่อยู่ในมื้ออาหาร
+model FoodEntry {
+  id       Int    @id @default(autoincrement())
+  // รหัสมื้ออาหารที่รายการนี้อยู่ภายใต้
+  mealId   Int
+  // ชื่ออาหาร
+  foodName String
+
+  // ปริมาณอาหารที่กิน
+  amount Float
+  // หน่วยของปริมาณ เช่น กรัม ชิ้น
+  unit   String
+
+  // แคลอรีและโปรตีนของรายการนี้
+  calories Float
+  protein  Float
+
+  // เชื่อมกับมื้ออาหาร
+  meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+}
+
+// สรุปข้อมูลการกินอาหารของผู้ใช้รายวัน
+model DailySummary {
+  id     Int @id @default(autoincrement())
+  // รหัสผู้ใช้ที่เป็นเจ้าของสรุปนี้
+  userId Int
+
+  // วันที่ของสรุป
+  date DateTime @unique
+
+  // ผลรวมแคลอรีและโปรตีนที่กินในวันนั้น
+  totalCalories Float
+  totalProtein  Float
+
+  // เป้าหมายแคลอรีและโปรตีนที่ควรกินในวันนั้น
+  tragetCalories Float
+  tragetProtein  Float
+
+  // เชื่อมกับผู้ใช้
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

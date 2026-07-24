@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 
 interface NavItem {
   label: string;
@@ -10,23 +11,47 @@ interface NavItem {
   active: boolean;
 }
 
+type ProfileApiResponse = {
+  dailyProgress: {
+    calories: { consumed: number; target: number; percent: number };
+    protein: { consumed: number; target: number; percent: number };
+  };
+};
+
 export default function Navbar() {
   const [activeTab, setActiveTab] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session } = useSession();
+  const [userData, setUserData] = useState<ProfileApiResponse | null>(null);
 
-  // Daily calorie tracking state for interactive WOW effect
-  const [consumed] = useState(1420);
-  const target = 2200;
+  const consumed = userData?.dailyProgress.calories.consumed ?? 0;
+  const target = userData?.dailyProgress.calories.target ?? 0;
 
   const percentage = Math.min((consumed / target) * 100, 100);
   const remaining = Math.max(target - consumed, 0);
 
+  useEffect(() => {
+    if (!session?.user) {
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get<ProfileApiResponse>("/api/profile");
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [session]);
+
   const navItems: NavItem[] = [
-    { label: "Dashboard", href: "#", active: activeTab === "Dashboard" },
-    { label: "Diary", href: "#", active: activeTab === "Diary" },
-    { label: "Analytics", href: "#", active: activeTab === "Analytics" },
-    { label: "Members", href: "#", active: activeTab === "Members" },
+    { label: "Dashboard", href: "/dashboard", active: activeTab === "Dashboard" },
+    { label: "Diary", href: "/diary", active: activeTab === "Diary" },
+    { label: "Analytics", href: "/analytics", active: activeTab === "Analytics" },
+    { label: "Members", href: "/members", active: activeTab === "Members" },
   ];
 
   return (
@@ -74,8 +99,9 @@ export default function Navbar() {
           {/* Middle Section: Navigation Menu Items */}
           <div className="hidden lg:flex space-x-1">
             {navItems.map((item) => (
-              <button
+              <Link
                 key={item.label}
+                href={item.href}
                 onClick={() => setActiveTab(item.label)}
                 className={`relative px-6 py-2.5 text-xs font-semibold tracking-[0.2em] transition-all duration-300 font-sans border-t border-transparent hover:text-gold-500 rounded-none group ${item.active
                   ? "text-gold-accent bg-white/5 border-t-gold-accent"
@@ -92,7 +118,7 @@ export default function Navbar() {
                 {item.active && (
                   <span className="absolute bottom-0 left-0 w-full h-px bg-gold-accent text-glow-gold"></span>
                 )}
-              </button>
+              </Link>
             ))}
           </div>
 

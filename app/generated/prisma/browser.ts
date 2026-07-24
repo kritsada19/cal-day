@@ -32,3 +32,18 @@ export type Account = Prisma.AccountModel
  * 
  */
 export type Profile = Prisma.ProfileModel
+/**
+ * Model Meal
+ * 
+ */
+export type Meal = Prisma.MealModel
+/**
+ * Model FoodEntry
+ * 
+ */
+export type FoodEntry = Prisma.FoodEntryModel
+/**
+ * Model DailySummary
+ * 
+ */
+export type DailySummary = Prisma.DailySummaryModel

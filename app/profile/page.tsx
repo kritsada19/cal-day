@@ -70,10 +70,6 @@ export default function ProfilePage() {
   const bmi = profileData?.bmi ?? null;
   const bmiStatus = profileData?.bmiStatus ?? null;
   const nutritionTargets = profileData?.nutritionTargets ?? null;
-  const todayCalories = profileData?.dailyProgress?.calories?.consumed ?? 0;
-  const todayProtein = profileData?.dailyProgress?.protein?.consumed ?? 0;
-  const calorieProgress = profileData?.dailyProgress?.calories?.percent ?? 0;
-  const proteinProgress = profileData?.dailyProgress?.protein?.percent ?? 0;
 
   return (
     <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 relative overflow-hidden bg-obsidian-950">
@@ -163,27 +159,12 @@ export default function ProfilePage() {
                   <div className="rounded border border-white/10 bg-obsidian-900 p-4 text-sm text-white/70">
                     <div className="mb-4 rounded border border-gold-accent/20 bg-obsidian-950/70 p-3">
                       <div className="flex items-center justify-between">
-                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Daily target</p>
+                        <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Goal</p>
                         <p className="text-[10px] font-semibold tracking-[0.25em] text-gold-accent">{nutritionTargets ? nutritionTargets.goalLabel : "—"}</p>
                       </div>
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-xs text-white/60">
-                          <span>Calories</span>
-                          <span>{todayCalories} / {nutritionTargets?.calories ?? "—"} kcal</span>
-                        </div>
-                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
-                          <div className="h-full rounded-full bg-gold-accent transition-all" style={{ width: `${calorieProgress}%` }} />
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-xs text-white/60">
-                          <span>Protein</span>
-                          <span>{todayProtein} / {nutritionTargets?.protein ?? "—"} g</span>
-                        </div>
-                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
-                          <div className="h-full rounded-full bg-emerald-accent transition-all" style={{ width: `${proteinProgress}%` }} />
-                        </div>
-                      </div>
+                      <p className="mt-2 text-sm text-white/60">
+                        Your nutrition plan is tailored around your profile and daily activity level.
+                      </p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>

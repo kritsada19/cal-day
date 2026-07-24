@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db/prisma";
-import { buildProfileNutritionSummary } from "@/lib/nutrition";
+import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/lib/nutrition";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -11,13 +11,18 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: Number(session.user.id) },
-  });
+  try {
+    const profile = await prisma.profile.findUnique({
+      where: { userId: Number(session.user.id) },
+    });
 
-  const summary = buildProfileNutritionSummary(profile, 0, 0);
+    const summary = buildProfileNutritionSummary(profile, 0, 0);
 
-  return NextResponse.json({ profile, ...summary });
+    return NextResponse.json({ profile, ...summary });
+  } catch (error) {
+    console.error("Profile GET error:", error);
+    return NextResponse.json({ message: "Database unavailable" }, { status: 503 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -37,36 +42,55 @@ export async function POST(request: Request) {
     );
   }
 
-  const userId = Number(session.user.id);
-  const existingProfile = await prisma.profile.findUnique({
-    where: { userId },
-  });
+  const profileData = {
+    gender,
+    age: Number(age),
+    weight: Number(weight),
+    height: Number(height),
+    exerciseLevel,
+    goal,
+  };
 
-  const profile = existingProfile
-    ? await prisma.profile.update({
-        where: { userId },
-        data: {
-          gender,
-          age: Number(age),
-          weight: Number(weight),
-          height: Number(height),
-          exerciseLevel,
-          goal,
-        },
-      })
-    : await prisma.profile.create({
-        data: {
-          userId,
-          gender,
-          age: Number(age),
-          weight: Number(weight),
-          height: Number(height),
-          exerciseLevel,
-          goal,
-        },
-      });
+  const nutritionTargets = calculateDailyNutritionTargets(profileData);
 
-  const summary = buildProfileNutritionSummary(profile, 0, 0);
+  if (!nutritionTargets) {
+    return NextResponse.json(
+      { message: "Unable to calculate nutrition targets from the provided profile" },
+      { status: 400 }
+    );
+  }
 
-  return NextResponse.json({ profile, ...summary, message: "Profile saved successfully" });
+  const profilePayload = {
+    ...profileData,
+    bmr: nutritionTargets.bmr,
+    tdee: nutritionTargets.tdee,
+    targetCalories: nutritionTargets.calories,
+    tragetProtein: nutritionTargets.protein,
+  };
+
+  try {
+    const userId = Number(session.user.id);
+    const existingProfile = await prisma.profile.findUnique({
+      where: { userId },
+    });
+
+    const profile = existingProfile
+      ? await prisma.profile.update({
+          where: { userId },
+          data: profilePayload,
+        })
+      : await prisma.profile.create({
+          data: {
+            userId,
+            ...profilePayload,
+          },
+        });
+
+    const summary = buildProfileNutritionSummary(profile, 0, 0);
+
+    return NextResponse.json({ profile, ...summary, message: "Profile saved successfully" });
+  } catch (error) {
+    console.error("Profile POST error:", error);
+    return NextResponse.json({ message: "Database unavailable" }, { status: 503 });
+  }
 }

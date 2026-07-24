@@ -98,7 +98,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-obsidian-900 via-obsidian-900 to-obsidian-950 p-6 md:p-8">
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-obsidian-900 via-obsidian-900 to-obsidian-950 p-6 md:p-8">
               <div className="absolute -right-8 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full bg-gold-accent/10 blur-3xl" />
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center border border-gold-accent/40 bg-gold-accent/10 text-lg font-bold text-gold-accent">

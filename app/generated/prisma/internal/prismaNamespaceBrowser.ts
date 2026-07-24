@@ -53,7 +53,10 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Account: 'Account',
-  Profile: 'Profile'
+  Profile: 'Profile',
+  Meal: 'Meal',
+  FoodEntry: 'FoodEntry',
+  DailySummary: 'DailySummary'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -113,10 +116,51 @@ export const ProfileScalarFieldEnum = {
   weight: 'weight',
   height: 'height',
   exerciseLevel: 'exerciseLevel',
-  goal: 'goal'
+  goal: 'goal',
+  bmr: 'bmr',
+  tdee: 'tdee',
+  targetCalories: 'targetCalories',
+  tragetProtein: 'tragetProtein',
+  updatedAt: 'updatedAt'
 } as const
 
 export type ProfileScalarFieldEnum = (typeof ProfileScalarFieldEnum)[keyof typeof ProfileScalarFieldEnum]
+
+
+export const MealScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  mealType: 'mealType',
+  createdAt: 'createdAt'
+} as const
+
+export type MealScalarFieldEnum = (typeof MealScalarFieldEnum)[keyof typeof MealScalarFieldEnum]
+
+
+export const FoodEntryScalarFieldEnum = {
+  id: 'id',
+  mealId: 'mealId',
+  foodName: 'foodName',
+  amount: 'amount',
+  unit: 'unit',
+  calories: 'calories',
+  protein: 'protein'
+} as const
+
+export type FoodEntryScalarFieldEnum = (typeof FoodEntryScalarFieldEnum)[keyof typeof FoodEntryScalarFieldEnum]
+
+
+export const DailySummaryScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  date: 'date',
+  totalCalories: 'totalCalories',
+  totalProtein: 'totalProtein',
+  tragetCalories: 'tragetCalories',
+  tragetProtein: 'tragetProtein'
+} as const
+
+export type DailySummaryScalarFieldEnum = (typeof DailySummaryScalarFieldEnum)[keyof typeof DailySummaryScalarFieldEnum]
 
 
 export const SortOrder = {

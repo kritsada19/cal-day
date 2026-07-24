@@ -11,4 +11,7 @@
 export type * from './models/User'
 export type * from './models/Account'
 export type * from './models/Profile'
+export type * from './models/Meal'
+export type * from './models/FoodEntry'
+export type * from './models/DailySummary'
 export type * from './commonInputTypes'

@@ -43,3 +43,13 @@ export const Goal = {
 } as const
 
 export type Goal = (typeof Goal)[keyof typeof Goal]
+
+
+export const MealType = {
+  BREAKFAST: 'BREAKFAST',
+  LUNCH: 'LUNCH',
+  DINNER: 'DINNER',
+  SNACK: 'SNACK'
+} as const
+
+export type MealType = (typeof MealType)[keyof typeof MealType]
