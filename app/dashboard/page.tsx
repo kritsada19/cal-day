@@ -87,12 +87,20 @@ export default function DashboardPage() {
               Your nutrition overview
             </h1>
           </div>
-          <Link
-            href="/profile"
-            className="inline-flex items-center justify-center border border-white/10 bg-obsidian-900 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-white/70 transition-all duration-300 hover:border-gold-accent/50 hover:text-gold-accent"
-          >
-            View profile
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/meals/new"
+              className="inline-flex items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-white"
+            >
+              Add meal
+            </Link>
+            <Link
+              href="/profile"
+              className="inline-flex items-center justify-center border border-white/10 bg-obsidian-900 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-white/70 transition-all duration-300 hover:border-gold-accent/50 hover:text-gold-accent"
+            >
+              View profile
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -116,7 +124,7 @@ export default function DashboardPage() {
                   {status === "loading" ? "LOADING DATA" : displayName}
                 </h2>
                 <p className="mt-2 text-sm text-white/60">
-                  Keep your nutrition targets clear and balanced with a calm daily overview.
+                  Add meals in natural language and let the app estimate calories and protein for your day.
                 </p>
               </div>
             </div>

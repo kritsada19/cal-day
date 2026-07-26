@@ -177,7 +177,7 @@ model DailySummary {
   userId Int
 
   // วันที่ของสรุป
-  date DateTime @unique
+  date DateTime
 
   // ผลรวมแคลอรีและโปรตีนที่กินในวันนั้น
   totalCalories Float

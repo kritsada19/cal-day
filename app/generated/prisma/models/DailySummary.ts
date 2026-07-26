@@ -268,17 +268,17 @@ export type DailySummaryOrderByWithRelationInput = {
 
 export type DailySummaryWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  date?: Date | string
   AND?: Prisma.DailySummaryWhereInput | Prisma.DailySummaryWhereInput[]
   OR?: Prisma.DailySummaryWhereInput[]
   NOT?: Prisma.DailySummaryWhereInput | Prisma.DailySummaryWhereInput[]
   userId?: Prisma.IntFilter<"DailySummary"> | number
+  date?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   totalCalories?: Prisma.FloatFilter<"DailySummary"> | number
   totalProtein?: Prisma.FloatFilter<"DailySummary"> | number
   tragetCalories?: Prisma.FloatFilter<"DailySummary"> | number
   tragetProtein?: Prisma.FloatFilter<"DailySummary"> | number
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-}, "id" | "date">
+}, "id">
 
 export type DailySummaryOrderByWithAggregationInput = {
   id?: Prisma.SortOrder

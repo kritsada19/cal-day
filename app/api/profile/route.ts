@@ -16,7 +16,27 @@ export async function GET() {
       where: { userId: Number(session.user.id) },
     });
 
-    const summary = buildProfileNutritionSummary(profile, 0, 0);
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const dailySummary = await prisma.dailySummary.findFirst({
+      where: {
+        userId: Number(session.user.id),
+        date: {
+          gte: startOfDay,
+          lt: endOfDay,
+        },
+      },
+    });
+
+    const summary = buildProfileNutritionSummary(
+      profile, 
+      dailySummary?.totalCalories ?? 0, 
+      dailySummary?.totalProtein ?? 0
+    );
 
     return NextResponse.json({ profile, ...summary });
   } catch (error) {
