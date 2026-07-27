@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import type { NutritionTargets } from "@/lib/nutrition";
+import MealCalendar from "../components/MealCalender";
 
 type ProfileApiResponse = {
   profile: {
@@ -252,6 +253,7 @@ export default function DashboardPage() {
             </div>
           </aside>
         </div>
+        <MealCalendar />
       </div>
     </div>
   );
