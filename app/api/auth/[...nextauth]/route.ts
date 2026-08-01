@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/db/prisma";
 import GoogleProvider from "next-auth/providers/google";
+import { redis } from "@/lib/db/redis";
 
 declare module "next-auth" {
     interface Session {
@@ -62,14 +63,31 @@ export const authOptions: NextAuthOptions = {
                 });
 
                 if (!user || !user.password) {
+                    // แก้ช่องโหว่ User Enumeration ผ่าน Timing Attacks
+                    // ใช้ Dummy Hash ที่มีโครงสร้างถูกต้องเพื่อให้ bcrypt เสียเวลาประมวลผลใกล้เคียงกัน
+                    await bcrypt.compare(password, "$2b$10$m0j0YtUe4v0j9ZcQx4zYp.H9v5c4s2z1t0b4k7d6f5e4c3b2a1");
                     return null;
+                }
+
+                const failedLoginKey = `failed_login:${email}`
+
+                const failedLoginCount = await redis.get(failedLoginKey);
+                if (Number(failedLoginCount) >= 5) {
+                    throw new Error("Too many failed login attempts. Please try again later.")
                 }
 
                 const isValid = await bcrypt.compare(password, user.password);
 
                 if (!isValid) {
+                    const count = await redis.incr(failedLoginKey);
+                    if (Number(count) === 1) {
+                        redis.expire(failedLoginKey, 60 * 15); // 15 minutes
+                    }
                     return null;
                 }
+
+                // Reset counter after successful login
+                await redis.del(failedLoginKey);
 
                 return {
                     id: user.id,
