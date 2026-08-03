@@ -67,7 +67,7 @@ export const authOptions: NextAuthOptions = {
                 if (!user || !user.password) {
                     // แก้ช่องโหว่ User Enumeration ผ่าน Timing Attacks
                     // ใช้ Dummy Hash ที่มีโครงสร้างถูกต้องเพื่อให้ bcrypt เสียเวลาประมวลผลใกล้เคียงกัน
-                    await bcrypt.compare(password, "$2b$10$m0j0YtUe4v0j9ZcQx4zYp.H9v5c4s2z1t0b4k7d6f5e4c3b2a1");
+                    await bcrypt.compare(password, "$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW");
                     return null;
                 }
 

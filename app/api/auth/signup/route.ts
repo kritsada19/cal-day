@@ -1,73 +1,52 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
+import { signupSchema } from "@/lib/validation/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// นี่คือ Dummy Hash ระดับ 12 Rounds (สังเกตตรง $2a$12$) เพื่อให้หน่วงเวลาเท่ากับตอนสร้าง User 
+const DUMMY_HASH_12 = "";
 
 export async function POST(req: NextRequest) {
   try {
-    let body: { name?: unknown; email?: unknown; password?: unknown; confirmPassword?: unknown } = {};
+    const isAllowed = await checkRateLimit(req, "signup", 5, 60);
 
+    if (!isAllowed) {
+      return NextResponse.json(
+        { message: "Too many signup attempts. Please try again in a minute." },
+        { status: 429, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    let body = {};
     try {
       body = await req.json();
     } catch {
-      body = {};
+      // ปล่อยให้ Zod เป็นคนเตือนเรื่องข้อมูลขาดหายเอง
     }
 
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    const password = typeof body.password === "string" ? body.password : "";
-    const confirmPassword = typeof body.confirmPassword === "string" ? body.confirmPassword : "";
+    // โยน body ให้ Zod จัดการ Validate ทั้งหมด (รวมเช็ค Password ตรงกัน)
+    const validationResult = signupSchema.safeParse(body);
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!validationResult.success) {
+      // ดึง Error Message ตัวแรกมาแสดง
       return NextResponse.json(
-        { message: "Please provide name, email, password and confirm password" },
-        {
-          status: 400,
-          headers: { "Cache-Control": "no-store" },
-        },
+        { message: validationResult.error.issues[0].message },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
       );
     }
 
-    if (name.length > 100 || email.length > 254 || !EMAIL_REGEX.test(email)) {
-      return NextResponse.json(
-        { message: "Please enter a valid name and email address" },
-        {
-          status: 400,
-          headers: { "Cache-Control": "no-store" },
-        },
-      );
-    }
+    const { name, email, password } = validationResult.data; // ได้ Data ที่ผ่านการ Clean & Type Check แล้ว
 
-    if (password !== confirmPassword) {
-      return NextResponse.json(
-        { message: "Passwords do not match" },
-        {
-          status: 400,
-          headers: { "Cache-Control": "no-store" },
-        },
-      );
-    }
-
-    if (password.length < 8 || password.length > 72) {
-      return NextResponse.json(
-        { message: "Password must be at least 8 characters" },
-        {
-          status: 400,
-          headers: { "Cache-Control": "no-store" },
-        },
-      );
-    }
-
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
 
     if (existingUser) {
+      // ถ่วงเวลาด้วย Dummy Hash ระดับ 12 ให้เท่ากับตอนสร้างปกติ (Timing Attack Mitigation)
+      await bcrypt.compare(password, DUMMY_HASH_12);
+
       return NextResponse.json(
         { message: "If this account already exists, you can log in instead" },
-        {
-          status: 200,
-          headers: { "Cache-Control": "no-store" },
-        },
+        { status: 200, headers: { "Cache-Control": "no-store" } }
       );
     }
 
@@ -75,27 +54,21 @@ export async function POST(req: NextRequest) {
 
     await prisma.user.create({
       data: {
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
         password: hashedPassword,
       },
     });
 
     return NextResponse.json(
       { message: "Account created successfully" },
-      {
-        status: 201,
-        headers: { "Cache-Control": "no-store" },
-      },
+      { status: 201, headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {
     console.error("Error creating user:", error);
     return NextResponse.json(
       { message: "We could not create your account right now" },
-      {
-        status: 500,
-        headers: { "Cache-Control": "no-store" },
-      },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
