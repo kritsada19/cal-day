@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 
@@ -19,7 +20,7 @@ type ProfileApiResponse = {
 };
 
 export default function Navbar() {
-  const [activeTab, setActiveTab] = useState("");
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session } = useSession();
   const [userData, setUserData] = useState<ProfileApiResponse | null>(null);
@@ -48,10 +49,10 @@ export default function Navbar() {
   }, [session]);
 
   const navItems: NavItem[] = [
-    { label: "Dashboard", href: "/dashboard", active: activeTab === "Dashboard" },
-    { label: "Diary", href: "/diary", active: activeTab === "Diary" },
-    { label: "Analytics", href: "/analytics", active: activeTab === "Analytics" },
-    { label: "Members", href: "/members", active: activeTab === "Members" },
+    { label: "Dashboard", href: "/dashboard", active: pathname === "/dashboard" },
+    { label: "New Entry", href: "/meals/new", active: pathname === "/meals/new" },
+    { label: "Analytics", href: "/analytics", active: pathname === "/analytics" },
+    { label: "Members", href: "/members", active: pathname === "/members" },
   ];
 
   return (
@@ -102,7 +103,6 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
-                onClick={() => setActiveTab(item.label)}
                 className={`relative px-6 py-2.5 text-xs font-semibold tracking-[0.2em] transition-all duration-300 font-sans border-t border-transparent hover:text-gold-500 rounded-none group ${item.active
                   ? "text-gold-accent bg-white/5 border-t-gold-accent"
                   : "text-white/60 hover:bg-white/2"
@@ -215,19 +215,19 @@ export default function Navbar() {
           <div className="lg:hidden border-t border-white/10 bg-obsidian-950 px-4 py-4 space-y-4">
             <div className="flex flex-col space-y-1">
               {navItems.map((item) => (
-                <button
+                <Link
                   key={item.label}
+                  href={item.href}
                   onClick={() => {
-                    setActiveTab(item.label);
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-3 text-xs font-semibold tracking-[0.2em] transition-all duration-200 border-l-2 ${item.active
+                  className={`w-full block text-left px-4 py-3 text-xs font-semibold tracking-[0.2em] transition-all duration-200 border-l-2 ${item.active
                     ? "text-gold-accent bg-white/5 border-l-gold-accent"
                     : "text-white/60 border-l-transparent hover:bg-white/2"
                     }`}
                 >
                   {item.label}
-                </button>
+                </Link>
               ))}
             </div>
 

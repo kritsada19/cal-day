@@ -53,3 +53,20 @@ export const MealType = {
 } as const
 
 export type MealType = (typeof MealType)[keyof typeof MealType]
+
+
+export const Plan = {
+  FREE: 'FREE',
+  PRO: 'PRO'
+} as const
+
+export type Plan = (typeof Plan)[keyof typeof Plan]
+
+
+export const SubscriptionStatus = {
+  ACTIVE: 'ACTIVE',
+  EXPIRED: 'EXPIRED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus]

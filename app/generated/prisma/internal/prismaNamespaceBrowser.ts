@@ -56,7 +56,8 @@ export const ModelName = {
   Profile: 'Profile',
   Meal: 'Meal',
   FoodEntry: 'FoodEntry',
-  DailySummary: 'DailySummary'
+  DailySummary: 'DailySummary',
+  Subscription: 'Subscription'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -161,6 +162,20 @@ export const DailySummaryScalarFieldEnum = {
 } as const
 
 export type DailySummaryScalarFieldEnum = (typeof DailySummaryScalarFieldEnum)[keyof typeof DailySummaryScalarFieldEnum]
+
+
+export const SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  plan: 'plan',
+  status: 'status',
+  startAt: 'startAt',
+  endAt: 'endAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[keyof typeof SubscriptionScalarFieldEnum]
 
 
 export const SortOrder = {

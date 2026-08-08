@@ -16,3 +16,9 @@ export const signupSchema = z.object({
     message: "Passwords do not match",
     path: ["confirmPassword"], // บอกว่า Error นี้เกิดที่ช่อง confirmPassword
 });
+
+export const sessionSchema = z.object({
+    id: z.string(),
+    role: z.string(),
+    plan: z.string(),
+});

@@ -69,3 +69,8 @@ export type FoodEntry = Prisma.FoodEntryModel
  * 
  */
 export type DailySummary = Prisma.DailySummaryModel
+/**
+ * Model Subscription
+ * 
+ */
+export type Subscription = Prisma.SubscriptionModel
