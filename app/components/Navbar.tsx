@@ -132,30 +132,36 @@ export default function Navbar() {
                 <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-white/20"></span>
                 <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-white/20"></span>
 
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-baseline gap-8 text-[10px] tracking-wider text-white/50 font-mono">
-                    <span>DAILY BALANCE</span>
-                    <span className="text-white font-semibold">
-                      <span className="text-emerald-accent text-glow-emerald font-bold">{consumed}</span> / {target} kcal
-                    </span>
-                  </div>
+                {target > 0 ? (
+                  <div className="flex flex-col">
+                    <div className="flex justify-between items-baseline gap-8 text-[10px] tracking-wider text-white/50 font-mono">
+                      <span>DAILY BALANCE</span>
+                      <span className="text-white font-semibold">
+                        <span className="text-emerald-accent text-glow-emerald font-bold">{consumed}</span> / {target} kcal
+                      </span>
+                    </div>
 
-                  {/* Target Progress Bar */}
-                  <div className="w-48 h-1.5 bg-white/5 border border-white/10 mt-1.5 relative">
-                    <div
-                      className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
-                      style={{ width: `${percentage}%` }}
-                    />
-                    {/* Subtle target ticks */}
-                    <span className="absolute top-0 left-1/2 w-px h-full bg-white/20"></span>
-                    <span className="absolute top-0 left-3/4 w-px h-full bg-white/20"></span>
-                  </div>
+                    {/* Target Progress Bar */}
+                    <div className="w-48 h-1.5 bg-white/5 border border-white/10 mt-1.5 relative">
+                      <div
+                        className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
+                        style={{ width: `${percentage}%` }}
+                      />
+                      {/* Subtle target ticks */}
+                      <span className="absolute top-0 left-1/2 w-px h-full bg-white/20"></span>
+                      <span className="absolute top-0 left-3/4 w-px h-full bg-white/20"></span>
+                    </div>
 
-                  <div className="flex justify-between text-[9px] tracking-widest text-white/30 font-mono mt-1">
-                    <span>PROGRESS</span>
-                    <span className="text-gold-accent text-glow-gold font-semibold">{remaining} KCAL LEFT</span>
+                    <div className="flex justify-between text-[9px] tracking-widest text-white/30 font-mono mt-1">
+                      <span>PROGRESS</span>
+                      <span className="text-gold-accent text-glow-gold font-semibold">{remaining} KCAL LEFT</span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-center w-48 py-2">
+                    <span className="text-[10px] tracking-widest text-white/50 font-mono">ยังไม่ได้กรอกโปรไฟล์</span>
+                  </div>
+                )}
               </div>
 
               {/* Profile Avatar & Rank Widget */}
@@ -233,20 +239,28 @@ export default function Navbar() {
 
             {/* Mobile Calorie Stats Widget */}
             <div className="bg-obsidian-900 border border-white/10 p-4 space-y-3">
-              <div className="flex justify-between items-baseline text-[10px] tracking-wider text-white/50 font-mono">
-                <span>DAILY BALANCE</span>
-                <span className="text-white font-semibold">
-                  <span className="text-emerald-accent font-bold">{consumed}</span> / {target} kcal
-                </span>
-              </div>
+              {target > 0 ? (
+                <>
+                  <div className="flex justify-between items-baseline text-[10px] tracking-wider text-white/50 font-mono">
+                    <span>DAILY BALANCE</span>
+                    <span className="text-white font-semibold">
+                      <span className="text-emerald-accent font-bold">{consumed}</span> / {target} kcal
+                    </span>
+                  </div>
 
-              {/* Target Progress Bar */}
-              <div className="w-full h-1.5 bg-white/5 border border-white/10 relative">
-                <div
-                  className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
+                  {/* Target Progress Bar */}
+                  <div className="w-full h-1.5 bg-white/5 border border-white/10 relative">
+                    <div
+                      className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-2">
+                  <span className="text-[10px] tracking-widest text-white/50 font-mono">ยังไม่ได้กรอกโปรไฟล์</span>
+                </div>
+              )}
             </div>
 
             {/* Mobile Profile Display */}

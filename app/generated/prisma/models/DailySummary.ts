@@ -226,7 +226,7 @@ export type DailySummaryGroupByOutputType = {
   _max: DailySummaryMaxAggregateOutputType | null
 }
 
-type GetDailySummaryGroupByPayload<T extends DailySummaryGroupByArgs> = Prisma.PrismaPromise<
+export type GetDailySummaryGroupByPayload<T extends DailySummaryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<DailySummaryGroupByOutputType, T['by']> &
       {
@@ -1261,6 +1261,11 @@ export type DailySummaryFindManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Skip the first `n` DailySummaries.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of DailySummaries.
+   */
   distinct?: Prisma.DailySummaryScalarFieldEnum | Prisma.DailySummaryScalarFieldEnum[]
 }
 

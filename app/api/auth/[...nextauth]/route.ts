@@ -131,6 +131,18 @@ export const authOptions: NextAuthOptions = {
             return session;
         },
     },
+
+    events: {
+        async createUser({ user }) {
+            await prisma.subscription.create({
+                data: {
+                    userId: Number(user.id),
+                    plan: "FREE",
+                    status: "ACTIVE",
+                },
+            });
+        },
+    },
 };
 
 const handler = NextAuth(authOptions);

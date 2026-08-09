@@ -193,8 +193,9 @@ model DailySummary {
 }
 
 model Subscription {
-  id     Int @id @default(autoincrement())
-  userId Int @unique
+  id               Int     @id @default(autoincrement())
+  userId           Int     @unique
+  stripeCustomerId String? @unique
 
   plan   Plan               @default(FREE)
   status SubscriptionStatus @default(ACTIVE)

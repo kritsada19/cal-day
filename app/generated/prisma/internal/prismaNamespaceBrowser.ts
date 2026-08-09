@@ -167,6 +167,7 @@ export type DailySummaryScalarFieldEnum = (typeof DailySummaryScalarFieldEnum)[k
 export const SubscriptionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  stripeCustomerId: 'stripeCustomerId',
   plan: 'plan',
   status: 'status',
   startAt: 'startAt',

@@ -57,6 +57,13 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password: hashedPassword,
+
+        subscription: {
+          create: {
+            plan: "FREE",
+            status: "ACTIVE",
+          },
+        },
       },
     });
 

@@ -222,7 +222,7 @@ export type FoodEntryGroupByOutputType = {
   _max: FoodEntryMaxAggregateOutputType | null
 }
 
-type GetFoodEntryGroupByPayload<T extends FoodEntryGroupByArgs> = Prisma.PrismaPromise<
+export type GetFoodEntryGroupByPayload<T extends FoodEntryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<FoodEntryGroupByOutputType, T['by']> &
       {
@@ -1255,6 +1255,11 @@ export type FoodEntryFindManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Skip the first `n` FoodEntries.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of FoodEntries.
+   */
   distinct?: Prisma.FoodEntryScalarFieldEnum | Prisma.FoodEntryScalarFieldEnum[]
 }
 
