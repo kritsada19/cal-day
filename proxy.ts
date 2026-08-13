@@ -37,6 +37,7 @@ export async function proxy(request: NextRequest) {
     const isProtectedPath =
         pathname.startsWith('/dashboard') ||
         pathname.startsWith('/profile') ||
+        pathname.startsWith('/subscription') ||
         pathname.startsWith('/admin');
 
     // ถ้าเป็น protected route

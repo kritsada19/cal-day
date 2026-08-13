@@ -52,7 +52,7 @@ export default function Navbar() {
     { label: "Dashboard", href: "/dashboard", active: pathname === "/dashboard" },
     { label: "New Entry", href: "/meals/new", active: pathname === "/meals/new" },
     { label: "Analytics", href: "/analytics", active: pathname === "/analytics" },
-    { label: "Members", href: "/members", active: pathname === "/members" },
+    { label: "Subscription", href: "/subscription", active: pathname === "/subscription" },
   ];
 
   return (
