@@ -24,6 +24,9 @@ type ProfileApiResponse = {
     calories: { consumed: number; target: number; percent: number };
     protein: { consumed: number; target: number; percent: number };
   };
+  aiUsage?: number;
+  aiLimit?: number;
+  aiRemaining?: number;
 };
 
 export default function ProfilePage() {
@@ -217,9 +220,13 @@ export default function ProfilePage() {
                   <span className="text-white/45">ROLE</span>
                   <span className="font-semibold text-white">{session?.user?.role || "USER"}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-white/45">AUTH</span>
-                  <span className="font-semibold text-white">NEXT AUTH</span>
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span className="text-white/45">AI REMAINING</span>
+                  <span className="font-semibold text-white">
+                    {profileData?.aiRemaining !== undefined
+                      ? `${profileData.aiRemaining} / ${profileData.aiLimit}`
+                      : "—"}
+                  </span>
                 </div>
               </div>
             </div>

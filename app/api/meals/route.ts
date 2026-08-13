@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/sesstion";
 import prisma from "@/lib/db/prisma";
+import { redis } from "@/lib/db/redis";
+import { AI_LIMIT_FREE } from "@/lib/services/ai-quota";
+import { AI_LIMIT_PRO } from "@/lib/services/ai-quota";
 
 type MealTypeValue = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
 
@@ -62,6 +65,44 @@ export async function POST(request: Request) {
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(now);
   endOfDay.setHours(23, 59, 59, 999);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      subscription: true
+    }
+  });
+
+  if (!user) {
+    return NextResponse.json(
+      { message: "User not found" },
+      { status: 404 },
+    );
+  }
+
+  const AI_RATE_LIMIT_KEY = `ai_limit:${userId}`;
+  const currentCount = await redis.incr(AI_RATE_LIMIT_KEY);
+
+  if (currentCount === 1) {
+    await redis.expire(AI_RATE_LIMIT_KEY, 60 * 60 * 24);
+  }
+
+  const isFreePlan = !user.subscription || user.subscription.plan === "FREE";
+  const isProPlan = user.subscription?.plan === "PRO";
+
+  if (isFreePlan && currentCount > AI_LIMIT_FREE) {
+    return NextResponse.json(
+      { message: "AI limit reached. Please upgrade to premium to continue." },
+      { status: 429 },
+    );
+  }
+
+  if (isProPlan && currentCount > AI_LIMIT_PRO) {
+    return NextResponse.json(
+      { message: "Pro AI limit reached. Please contact support for assistance." },
+      { status: 429 },
+    );
+  }
 
   try {
     const meal = await prisma.meal.create({
@@ -134,6 +175,10 @@ export async function POST(request: Request) {
       totalProtein: Number(totalProtein.toFixed(1)),
     });
   } catch (error) {
+    if (currentCount <= AI_LIMIT_FREE) {
+      await redis.decr(AI_RATE_LIMIT_KEY);
+    }
+
     console.error("Meal POST error:", error);
     return NextResponse.json(
       { message: "Database unavailable", error: String(error) },
@@ -145,7 +190,7 @@ export async function POST(request: Request) {
 export async function GET(request: NextRequest) {
   const session = await getSession();
   const userId = Number(session?.user?.id);
-  
+
 
   if (!userId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
