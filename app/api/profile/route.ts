@@ -76,6 +76,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit(request, 'profile', 10, 60);
+
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': rateLimit.limit.toString(),
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+        }
+      }
+    );
+  }
+
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {

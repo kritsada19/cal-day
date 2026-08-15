@@ -3,10 +3,26 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: NextRequest) {
+    const rateLimit = await checkRateLimit(request, "checkout", 10, 60);
+
+    if (!rateLimit.success) {
+        return NextResponse.json(
+            { message: "Rate limit exceeded. Please try again later." },
+            {
+                status: 429,
+                headers: {
+                    "X-RateLimit-Limit": rateLimit.limit.toString(),
+                    "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+                },
+            }
+        );
+    }
+
     try {
         const sessionUser = await getServerSession(authOptions);
 

@@ -6,6 +6,8 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/db/prisma";
 import GoogleProvider from "next-auth/providers/google";
 import { redis } from "@/lib/db/redis";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { NextRequest, NextResponse } from "next/server";
 
 declare module "next-auth" {
     interface Session {
@@ -147,4 +149,23 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST };
+async function rateLimitedHandler(request: NextRequest) {
+  const rateLimit = await checkRateLimit(request, "auth", 60, 60);
+
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": rateLimit.limit.toString(),
+          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+        },
+      }
+    );
+  }
+
+  return handler(request);
+}
+
+export { rateLimitedHandler as GET, rateLimitedHandler as POST };

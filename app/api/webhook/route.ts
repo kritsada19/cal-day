@@ -3,10 +3,25 @@ import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getPeriodEnd } from "@/lib/stripe/getPeriodEnd";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
+    const rateLimit = await checkRateLimit(req, "webhook", 100, 60);
+
+    if (!rateLimit.success) {
+        return NextResponse.json(
+            { message: "Rate limit exceeded. Please try again later." },
+            {
+                status: 429,
+                headers: {
+                    "X-RateLimit-Limit": rateLimit.limit.toString(),
+                    "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+                },
+            }
+        );
+    }
 
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
         return NextResponse.json(

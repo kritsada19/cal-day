@@ -9,9 +9,9 @@ const DUMMY_HASH_12 = "";
 
 export async function POST(req: NextRequest) {
   try {
-    const isAllowed = await checkRateLimit(req, "signup", 5, 60);
+    const rateLimit = await checkRateLimit(req, "signup", 5, 60);
 
-    if (!isAllowed) {
+    if (!rateLimit.success) {
       return NextResponse.json(
         { message: "Too many signup attempts. Please try again in a minute." },
         { status: 429, headers: { "Cache-Control": "no-store" } }
