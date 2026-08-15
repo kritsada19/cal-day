@@ -4,6 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { redis } from "@/lib/db/redis";
 import { AI_LIMIT_FREE } from "@/lib/services/ai-quota";
 import { AI_LIMIT_PRO } from "@/lib/services/ai-quota";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 type MealTypeValue = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
 
@@ -38,7 +39,22 @@ function mockAiAnalyzeMeal(mealText: string): MockAiAnalysis {
   };
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const rateLimit = await checkRateLimit(request, 'meals', 10, 60);
+
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': rateLimit.limit.toString(),
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+        }
+      }
+    );
+  }
+
   const session = await getSession();
 
   if (!session?.user?.id) {

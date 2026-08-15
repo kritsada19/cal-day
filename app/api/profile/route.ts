@@ -1,12 +1,27 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db/prisma";
-import { redis } from "@/lib/db/redis";
 import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/lib/nutrition";
 import { getUserAiQuota } from "@/lib/services/ai-quota";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rateLimit = await checkRateLimit(request, 'profile', 10, 60);
+
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { message: "Rate limit exceeded. Please try again later." }, 
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': rateLimit.limit.toString(),
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+        }
+      }
+    );
+  }
+
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -47,9 +62,9 @@ export async function GET() {
       dailySummary?.totalProtein ?? 0
     );
 
-    return NextResponse.json({ 
-      profile, 
-      ...summary, 
+    return NextResponse.json({
+      profile,
+      ...summary,
       aiUsage: aiQuota.usage,
       aiLimit: aiQuota.limit,
       aiRemaining: aiQuota.remaining

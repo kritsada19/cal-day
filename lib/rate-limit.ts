@@ -1,40 +1,25 @@
-import { NextRequest } from "next/server";
-import { redis } from "@/lib/db/redis";
+import { redis } from "./db/redis";
 
-/**
- * Checks if the request should be rate-limited.
- * @param req The incoming NextRequest to extract the IP address.
- * @param action A string to identify the action (e.g., 'signup', 'login') for the Redis key.
- * @param limit The maximum number of requests allowed within the window.
- * @param windowSecs The time window in seconds.
- * @returns true if allowed, false if rate limited.
- */
-export async function checkRateLimit(req: NextRequest, action: string, limit: number, windowSecs: number): Promise<boolean> {
-  try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-      req.headers.get("x-real-ip") ??
-      "unknown";
-    const rateLimitKey = `ratelimit:${action}:${ip}`;
+export async function checkRateLimit(
+    request: Request,
+    apiName: string,
+    limit: number = 10,
+    windowSec: number = 60
+) {
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
 
-    // Increment the request count for this IP
-    const currentReqs = await redis.incr(rateLimitKey);
+    const limitKey = `rate-limit:${apiName}:${ip}`;
 
-    // Set expiry on the first request in the window
-    if (currentReqs === 1) {
-      await redis.expire(rateLimitKey, windowSecs);
+    const current = await redis.incr(limitKey);
+
+    if (current === 1) {
+        await redis.expire(limitKey, windowSec);
     }
-
-    // Check if limit exceeded
-    if (currentReqs > limit) {
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Rate limiting error:", error);
-    // If Redis fails, we might want to allow the request to pass or block it.
-    // Usually it's better to fail open to not block real users if Redis is down.
-    return true;
-  }
+    const remaining = Math.max(0, limit - current);
+    return {
+        success: current <= limit,
+        limit,
+        remaining,
+    };
 }

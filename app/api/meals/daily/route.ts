@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/sesstion";
 import prisma from "@/lib/db/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
+    const rateLimit = await checkRateLimit(request, 'meals', 10, 60);
+
+    if (!rateLimit.success) {
+        return NextResponse.json(
+            { message: "Rate limit exceeded. Please try again later." },
+            {
+                status: 429,
+                headers: {
+                    'X-RateLimit-Limit': rateLimit.limit.toString(),
+                    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+                }
+            }
+        );
+    }
+
     // 1. ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
     const session = await getSession();
     const userId = Number(session?.user?.id);
