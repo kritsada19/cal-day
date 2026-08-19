@@ -9,7 +9,7 @@ const DUMMY_HASH_12 = "";
 
 export async function POST(req: NextRequest) {
   try {
-    const rateLimit = await checkRateLimit(req, "signup", 5, 60);
+    const rateLimit = await checkRateLimit(req, "signup", 20, 60);
 
     if (!rateLimit.success) {
       return NextResponse.json(

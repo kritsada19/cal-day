@@ -121,7 +121,7 @@ export const ProfileScalarFieldEnum = {
   bmr: 'bmr',
   tdee: 'tdee',
   targetCalories: 'targetCalories',
-  tragetProtein: 'tragetProtein',
+  targetProtein: 'targetProtein',
   updatedAt: 'updatedAt'
 } as const
 
@@ -157,8 +157,8 @@ export const DailySummaryScalarFieldEnum = {
   date: 'date',
   totalCalories: 'totalCalories',
   totalProtein: 'totalProtein',
-  tragetCalories: 'tragetCalories',
-  tragetProtein: 'tragetProtein'
+  targetCalories: 'targetCalories',
+  targetProtein: 'targetProtein'
 } as const
 
 export type DailySummaryScalarFieldEnum = (typeof DailySummaryScalarFieldEnum)[keyof typeof DailySummaryScalarFieldEnum]

@@ -149,8 +149,8 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 
-async function rateLimitedHandler(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, "auth", 60, 60);
+async function rateLimitedHandler(request: NextRequest, context: { params: { nextauth: string[] } }) {
+  const rateLimit = await checkRateLimit(request, "auth", 150, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(
@@ -165,7 +165,7 @@ async function rateLimitedHandler(request: NextRequest) {
     );
   }
 
-  return handler(request);
+  return handler(request, context);
 }
 
 export { rateLimitedHandler as GET, rateLimitedHandler as POST };

@@ -40,7 +40,7 @@ function mockAiAnalyzeMeal(mealText: string): MockAiAnalysis {
 }
 
 export async function POST(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'meals', 10, 60);
+  const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
   const mealType = normalizeMealType(
     typeof body?.mealType === "string" ? body.mealType : undefined,
   );
+  const localDateStr = typeof body?.date === "string" ? body.date : null;
 
   if (!rawText.trim()) {
     return NextResponse.json(
@@ -76,11 +77,20 @@ export async function POST(request: NextRequest) {
 
   const aiAnalysis = mockAiAnalyzeMeal(rawText);
   const userId = Number(session.user.id);
-  const now = new Date();
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(now);
-  endOfDay.setHours(23, 59, 59, 999);
+  let startOfDay: Date;
+  let endOfDay: Date;
+
+  if (localDateStr && /^\d{4}-\d{2}-\d{2}$/.test(localDateStr)) {
+    // ถ้ารับมาถูกต้อง เช่น "2026-08-18"
+    // เราจับมันประกอบกับเวลา 00:00:00Z และ 23:59:59Z ได้เลย
+    startOfDay = new Date(`${localDateStr}T00:00:00.000Z`);
+    endOfDay = new Date(`${localDateStr}T23:59:59.999Z`);
+  } else {
+    // Fallback เผื่อไว้กรณี Client เก่า หรือไม่ได้ส่งมา
+    const now = new Date();
+    startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+    endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -121,67 +131,71 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const meal = await prisma.meal.create({
-      data: {
-        userId,
-        mealType,
-      },
-    });
-
-    await prisma.foodEntry.create({
-      data: {
-        mealId: meal.id,
-        foodName: rawText,
-        amount: 1,
-        unit: "text",
-        calories: aiAnalysis.estimatedCalories,
-        protein: aiAnalysis.estimatedProtein,
-      },
-    });
-
-    const totalCalories = aiAnalysis.estimatedCalories;
-    const totalProtein = aiAnalysis.estimatedProtein;
-
-    const profile = await prisma.profile.findUnique({ where: { userId } });
-    const targetCalories = profile?.targetCalories ?? 0;
-    const targetProtein = profile?.tragetProtein ?? 0;
-
-    const existingSummary = await prisma.dailySummary.findFirst({
-      where: {
-        userId,
-        date: {
-          gte: startOfDay,
-          lt: endOfDay,
-        },
-      },
-    });
-
-    if (existingSummary) {
-      await prisma.dailySummary.update({
-        where: { id: existingSummary.id },
-        data: {
-          totalCalories: Number(
-            (existingSummary.totalCalories + totalCalories).toFixed(1),
-          ),
-          totalProtein: Number(
-            (existingSummary.totalProtein + totalProtein).toFixed(1),
-          ),
-          tragetCalories: targetCalories,
-          tragetProtein: targetProtein,
-        },
-      });
-    } else {
-      await prisma.dailySummary.create({
+    const { meal, totalCalories, totalProtein } = await prisma.$transaction(async (tx) => {
+      const meal = await tx.meal.create({
         data: {
           userId,
-          date: startOfDay,
-          totalCalories: Number(totalCalories.toFixed(1)),
-          totalProtein: Number(totalProtein.toFixed(1)),
-          tragetCalories: targetCalories,
-          tragetProtein: targetProtein,
+          mealType,
         },
       });
-    }
+
+      await tx.foodEntry.create({
+        data: {
+          mealId: meal.id,
+          foodName: rawText,
+          amount: 1,
+          unit: "text",
+          calories: aiAnalysis.estimatedCalories,
+          protein: aiAnalysis.estimatedProtein,
+        },
+      });
+
+      const totalCalories = aiAnalysis.estimatedCalories;
+      const totalProtein = aiAnalysis.estimatedProtein;
+
+      const profile = await tx.profile.findUnique({ where: { userId } });
+      const targetCalories = profile?.targetCalories ?? 0;
+      const targetProtein = profile?.targetProtein ?? 0;
+
+      const existingSummary = await tx.dailySummary.findFirst({
+        where: {
+          userId,
+          date: {
+            gte: startOfDay,
+            lt: endOfDay,
+          },
+        },
+      });
+
+      if (existingSummary) {
+        await tx.dailySummary.update({
+          where: { id: existingSummary.id },
+          data: {
+            totalCalories: Number(
+              (existingSummary.totalCalories + totalCalories).toFixed(1),
+            ),
+            totalProtein: Number(
+              (existingSummary.totalProtein + totalProtein).toFixed(1),
+            ),
+            targetCalories: targetCalories,
+            targetProtein: targetProtein,
+          },
+        });
+      } else {
+        await tx.dailySummary.create({
+          data: {
+            userId,
+            date: startOfDay,
+            totalCalories: Number(totalCalories.toFixed(1)),
+            totalProtein: Number(totalProtein.toFixed(1)),
+            targetCalories: targetCalories,
+            targetProtein: targetProtein,
+          },
+        });
+      }
+
+      return { meal, totalCalories, totalProtein };
+    });
 
     return NextResponse.json({
       message: "Meal received and sent to mock AI",
@@ -204,7 +218,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'meals', 10, 60);
+  const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(

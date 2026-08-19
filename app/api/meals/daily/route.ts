@@ -4,7 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
-    const rateLimit = await checkRateLimit(request, 'meals', 10, 60);
+    const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
 
     if (!rateLimit.success) {
         return NextResponse.json(

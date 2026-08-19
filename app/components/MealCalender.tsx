@@ -3,14 +3,40 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+interface DailySummary {
+    totalCalories: number
+    totalProtein: number
+    id: number
+    userId: number
+    date: Date
+    targetCalories: number
+    targetProtein: number
+}
+
+interface MealEntry {
+    id: number;
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    mealId: number;
+}
+
+interface Meal {
+    id: number;
+    mealType: string;
+    foodEntries: MealEntry[];
+}
+
 export default function MealCalendar() {
     // สร้าง state สำหรับเก็บวันที่ปัจจุบัน และ ข้อมูลสรุปรายเดือน
     const [currentDate, setCurrentDate] = useState(new Date());
     // State สำหรับเก็บข้อมูลที่ดึงมาจาก Database (ที่เคยทำ API /api/meals ไว้)
-    const [summaries, setSummaries] = useState<any[]>([]);
+    const [summaries, setSummaries] = useState<DailySummary[]>([]);
 
     const [selectedDate, setSelectedDate] = useState<Date | null>(null); // เก็บว่ากำลังกดดูวันที่เท่าไหร่
-    const [dailyMeals, setDailyMeals] = useState<any[]>([]); // เก็บรายการอาหารของวันนั้น
+    const [dailyMeals, setDailyMeals] = useState<Meal[]>([]); // เก็บรายการอาหารของวันนั้น
     const [isLoadingDaily, setIsLoadingDaily] = useState(false); // เอาไว้โชว์สถานะ Loading ตอนดึงข้อมูล
 
     // --- การคำนวณปฏิทิน ---
@@ -198,6 +224,44 @@ export default function MealCalendar() {
                     <h3 className="text-sm font-semibold tracking-widest text-gold-accent uppercase mb-4">
                         Meals on {selectedDate.toLocaleDateString()}
                     </h3>
+
+                    {(() => {
+                        const selectedDaySummary = summaries.find(s => {
+                            const summaryDate = new Date(s.date);
+                            return summaryDate.getDate() === selectedDate.getDate() &&
+                                summaryDate.getMonth() === selectedDate.getMonth() &&
+                                summaryDate.getFullYear() === selectedDate.getFullYear();
+                        });
+
+                        if (!selectedDaySummary) return null;
+
+                        return (
+                            <div className="mb-6 grid grid-cols-2 gap-4">
+                                <div className="rounded border border-gold-accent/20 bg-obsidian-950/70 p-4">
+                                    <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Total Calories</p>
+                                    <p className="mt-1 text-lg font-semibold text-gold-accent">
+                                        {selectedDaySummary.totalCalories} <span className="text-xs text-white/50">kcal</span>
+                                    </p>
+                                    {selectedDaySummary.targetCalories > 0 && (
+                                        <p className="mt-1 text-[10px] text-white/40">
+                                            Target: {selectedDaySummary.targetCalories} kcal
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="rounded border border-emerald-accent/20 bg-obsidian-950/70 p-4">
+                                    <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Total Protein</p>
+                                    <p className="mt-1 text-lg font-semibold text-emerald-accent">
+                                        {selectedDaySummary.totalProtein} <span className="text-xs text-white/50">g</span>
+                                    </p>
+                                    {selectedDaySummary.targetProtein > 0 && (
+                                        <p className="mt-1 text-[10px] text-white/40">
+                                            Target: {selectedDaySummary.targetProtein} g
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {isLoadingDaily ? (
                         <p className="text-sm text-white/50">Loading meals...</p>

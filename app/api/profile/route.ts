@@ -7,12 +7,12 @@ import { getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'profile', 10, 60);
+  const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." }, 
-      { 
+      { message: "Rate limit exceeded. Please try again later." },
+      {
         status: 429,
         headers: {
           'X-RateLimit-Limit': rateLimit.limit.toString(),
@@ -29,13 +29,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const profile = await prisma.profile.findUnique({
-      where: { userId: Number(session.user.id) },
-    });
-
     const user = await prisma.user.findUnique({
       where: { id: Number(session.user.id) },
-      include: { subscription: true }
+      include: {
+        subscription: true,
+        profile: true,
+      }
     });
 
     const aiQuota = await getUserAiQuota(Number(session.user.id), user?.subscription?.plan);
@@ -57,13 +56,13 @@ export async function GET(request: NextRequest) {
     });
 
     const summary = buildProfileNutritionSummary(
-      profile,
+      user?.profile,
       dailySummary?.totalCalories ?? 0,
       dailySummary?.totalProtein ?? 0
     );
 
     return NextResponse.json({
-      profile,
+      ...user,
       ...summary,
       aiUsage: aiQuota.usage,
       aiLimit: aiQuota.limit,
@@ -76,7 +75,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
-  const rateLimit = await checkRateLimit(request, 'profile', 10, 60);
+  const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(
@@ -130,7 +129,7 @@ export async function POST(request: Request) {
     bmr: nutritionTargets.bmr,
     tdee: nutritionTargets.tdee,
     targetCalories: nutritionTargets.calories,
-    tragetProtein: nutritionTargets.protein,
+    targetProtein: nutritionTargets.protein,
   };
 
   try {

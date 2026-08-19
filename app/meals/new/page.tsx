@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 
 export default function NewMealPage() {
   const router = useRouter();
@@ -26,23 +27,31 @@ export default function NewMealPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/meals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mealType, mealText }),
+      const now = new Date();
+
+      const localDateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      const response = await axios.post("/api/meals", {
+        mealType,
+        mealText,
+
+        // ใช้เวลาจาก client เพื่อให้ Timezone ตรงกับที่ user อยู่
+        date: localDateString
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Unable to save your meal");
-      }
-
-      setMessage({ text: data.message || "Meal saved successfully", type: "success" });
+      // ไม่ต้องเช็ค response.data.ok เพราะ axios จะ throw error อัตโนมัติถ้า status ไม่ใช่ 2xx
+      setMessage({ text: response.data.message || "Meal saved successfully", type: "success" });
       setTimeout(() => router.push("/dashboard"), 900);
     } catch (error) {
+      let errorMessage = "Unable to save your meal";
+      if (axios.isAxiosError(error) && error.response) {
+        errorMessage = error.response.data?.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       setMessage({
-        text: error instanceof Error ? error.message : "Unable to save your meal",
+        text: errorMessage,
         type: "error",
       });
     } finally {

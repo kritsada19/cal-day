@@ -35,7 +35,7 @@ export type ProfileAvgAggregateOutputType = {
   bmr: number | null
   tdee: number | null
   targetCalories: number | null
-  tragetProtein: number | null
+  targetProtein: number | null
 }
 
 export type ProfileSumAggregateOutputType = {
@@ -47,7 +47,7 @@ export type ProfileSumAggregateOutputType = {
   bmr: number | null
   tdee: number | null
   targetCalories: number | null
-  tragetProtein: number | null
+  targetProtein: number | null
 }
 
 export type ProfileMinAggregateOutputType = {
@@ -62,7 +62,7 @@ export type ProfileMinAggregateOutputType = {
   bmr: number | null
   tdee: number | null
   targetCalories: number | null
-  tragetProtein: number | null
+  targetProtein: number | null
   updatedAt: Date | null
 }
 
@@ -78,7 +78,7 @@ export type ProfileMaxAggregateOutputType = {
   bmr: number | null
   tdee: number | null
   targetCalories: number | null
-  tragetProtein: number | null
+  targetProtein: number | null
   updatedAt: Date | null
 }
 
@@ -94,7 +94,7 @@ export type ProfileCountAggregateOutputType = {
   bmr: number
   tdee: number
   targetCalories: number
-  tragetProtein: number
+  targetProtein: number
   updatedAt: number
   _all: number
 }
@@ -109,7 +109,7 @@ export type ProfileAvgAggregateInputType = {
   bmr?: true
   tdee?: true
   targetCalories?: true
-  tragetProtein?: true
+  targetProtein?: true
 }
 
 export type ProfileSumAggregateInputType = {
@@ -121,7 +121,7 @@ export type ProfileSumAggregateInputType = {
   bmr?: true
   tdee?: true
   targetCalories?: true
-  tragetProtein?: true
+  targetProtein?: true
 }
 
 export type ProfileMinAggregateInputType = {
@@ -136,7 +136,7 @@ export type ProfileMinAggregateInputType = {
   bmr?: true
   tdee?: true
   targetCalories?: true
-  tragetProtein?: true
+  targetProtein?: true
   updatedAt?: true
 }
 
@@ -152,7 +152,7 @@ export type ProfileMaxAggregateInputType = {
   bmr?: true
   tdee?: true
   targetCalories?: true
-  tragetProtein?: true
+  targetProtein?: true
   updatedAt?: true
 }
 
@@ -168,7 +168,7 @@ export type ProfileCountAggregateInputType = {
   bmr?: true
   tdee?: true
   targetCalories?: true
-  tragetProtein?: true
+  targetProtein?: true
   updatedAt?: true
   _all?: true
 }
@@ -271,7 +271,7 @@ export type ProfileGroupByOutputType = {
   bmr: number
   tdee: number
   targetCalories: number
-  tragetProtein: number
+  targetProtein: number
   updatedAt: Date
   _count: ProfileCountAggregateOutputType | null
   _avg: ProfileAvgAggregateOutputType | null
@@ -280,7 +280,7 @@ export type ProfileGroupByOutputType = {
   _max: ProfileMaxAggregateOutputType | null
 }
 
-export type GetProfileGroupByPayload<T extends ProfileGroupByArgs> = Prisma.PrismaPromise<
+type GetProfileGroupByPayload<T extends ProfileGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ProfileGroupByOutputType, T['by']> &
       {
@@ -310,7 +310,7 @@ export type ProfileWhereInput = {
   bmr?: Prisma.FloatFilter<"Profile"> | number
   tdee?: Prisma.FloatFilter<"Profile"> | number
   targetCalories?: Prisma.FloatFilter<"Profile"> | number
-  tragetProtein?: Prisma.FloatFilter<"Profile"> | number
+  targetProtein?: Prisma.FloatFilter<"Profile"> | number
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -327,7 +327,7 @@ export type ProfileOrderByWithRelationInput = {
   bmr?: Prisma.SortOrder
   tdee?: Prisma.SortOrder
   targetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -347,7 +347,7 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   bmr?: Prisma.FloatFilter<"Profile"> | number
   tdee?: Prisma.FloatFilter<"Profile"> | number
   targetCalories?: Prisma.FloatFilter<"Profile"> | number
-  tragetProtein?: Prisma.FloatFilter<"Profile"> | number
+  targetProtein?: Prisma.FloatFilter<"Profile"> | number
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "userId">
@@ -364,7 +364,7 @@ export type ProfileOrderByWithAggregationInput = {
   bmr?: Prisma.SortOrder
   tdee?: Prisma.SortOrder
   targetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ProfileCountOrderByAggregateInput
   _avg?: Prisma.ProfileAvgOrderByAggregateInput
@@ -388,7 +388,7 @@ export type ProfileScalarWhereWithAggregatesInput = {
   bmr?: Prisma.FloatWithAggregatesFilter<"Profile"> | number
   tdee?: Prisma.FloatWithAggregatesFilter<"Profile"> | number
   targetCalories?: Prisma.FloatWithAggregatesFilter<"Profile"> | number
-  tragetProtein?: Prisma.FloatWithAggregatesFilter<"Profile"> | number
+  targetProtein?: Prisma.FloatWithAggregatesFilter<"Profile"> | number
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
 }
 
@@ -402,7 +402,7 @@ export type ProfileCreateInput = {
   bmr: number
   tdee: number
   targetCalories: number
-  tragetProtein: number
+  targetProtein: number
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutProfileInput
 }
@@ -419,7 +419,7 @@ export type ProfileUncheckedCreateInput = {
   bmr: number
   tdee: number
   targetCalories: number
-  tragetProtein: number
+  targetProtein: number
   updatedAt?: Date | string
 }
 
@@ -433,7 +433,7 @@ export type ProfileUpdateInput = {
   bmr?: Prisma.FloatFieldUpdateOperationsInput | number
   tdee?: Prisma.FloatFieldUpdateOperationsInput | number
   targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutProfileNestedInput
 }
@@ -450,7 +450,7 @@ export type ProfileUncheckedUpdateInput = {
   bmr?: Prisma.FloatFieldUpdateOperationsInput | number
   tdee?: Prisma.FloatFieldUpdateOperationsInput | number
   targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -466,7 +466,7 @@ export type ProfileCreateManyInput = {
   bmr: number
   tdee: number
   targetCalories: number
-  tragetProtein: number
+  targetProtein: number
   updatedAt?: Date | string
 }
 
@@ -480,7 +480,7 @@ export type ProfileUpdateManyMutationInput = {
   bmr?: Prisma.FloatFieldUpdateOperationsInput | number
   tdee?: Prisma.FloatFieldUpdateOperationsInput | number
   targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -496,7 +496,7 @@ export type ProfileUncheckedUpdateManyInput = {
   bmr?: Prisma.FloatFieldUpdateOperationsInput | number
   tdee?: Prisma.FloatFieldUpdateOperationsInput | number
   targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -517,7 +517,7 @@ export type ProfileCountOrderByAggregateInput = {
   bmr?: Prisma.SortOrder
   tdee?: Prisma.SortOrder
   targetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -530,7 +530,7 @@ export type ProfileAvgOrderByAggregateInput = {
   bmr?: Prisma.SortOrder
   tdee?: Prisma.SortOrder
   targetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
 }
 
 export type ProfileMaxOrderByAggregateInput = {
@@ -545,7 +545,7 @@ export type ProfileMaxOrderByAggregateInput = {
   bmr?: Prisma.SortOrder
   tdee?: Prisma.SortOrder
   targetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -561,7 +561,7 @@ export type ProfileMinOrderByAggregateInput = {
   bmr?: Prisma.SortOrder
   tdee?: Prisma.SortOrder
   targetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -574,7 +574,7 @@ export type ProfileSumOrderByAggregateInput = {
   bmr?: Prisma.SortOrder
   tdee?: Prisma.SortOrder
   targetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
 }
 
 export type ProfileCreateNestedOneWithoutUserInput = {
@@ -639,7 +639,7 @@ export type ProfileCreateWithoutUserInput = {
   bmr: number
   tdee: number
   targetCalories: number
-  tragetProtein: number
+  targetProtein: number
   updatedAt?: Date | string
 }
 
@@ -654,7 +654,7 @@ export type ProfileUncheckedCreateWithoutUserInput = {
   bmr: number
   tdee: number
   targetCalories: number
-  tragetProtein: number
+  targetProtein: number
   updatedAt?: Date | string
 }
 
@@ -684,7 +684,7 @@ export type ProfileUpdateWithoutUserInput = {
   bmr?: Prisma.FloatFieldUpdateOperationsInput | number
   tdee?: Prisma.FloatFieldUpdateOperationsInput | number
   targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -699,7 +699,7 @@ export type ProfileUncheckedUpdateWithoutUserInput = {
   bmr?: Prisma.FloatFieldUpdateOperationsInput | number
   tdee?: Prisma.FloatFieldUpdateOperationsInput | number
   targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -717,7 +717,7 @@ export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   bmr?: boolean
   tdee?: boolean
   targetCalories?: boolean
-  tragetProtein?: boolean
+  targetProtein?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile"]>
@@ -734,7 +734,7 @@ export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   bmr?: boolean
   tdee?: boolean
   targetCalories?: boolean
-  tragetProtein?: boolean
+  targetProtein?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile"]>
@@ -751,7 +751,7 @@ export type ProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   bmr?: boolean
   tdee?: boolean
   targetCalories?: boolean
-  tragetProtein?: boolean
+  targetProtein?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile"]>
@@ -768,11 +768,11 @@ export type ProfileSelectScalar = {
   bmr?: boolean
   tdee?: boolean
   targetCalories?: boolean
-  tragetProtein?: boolean
+  targetProtein?: boolean
   updatedAt?: boolean
 }
 
-export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "gender" | "age" | "weight" | "height" | "exerciseLevel" | "goal" | "bmr" | "tdee" | "targetCalories" | "tragetProtein" | "updatedAt", ExtArgs["result"]["profile"]>
+export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "gender" | "age" | "weight" | "height" | "exerciseLevel" | "goal" | "bmr" | "tdee" | "targetCalories" | "targetProtein" | "updatedAt", ExtArgs["result"]["profile"]>
 export type ProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -800,7 +800,7 @@ export type $ProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     bmr: number
     tdee: number
     targetCalories: number
-    tragetProtein: number
+    targetProtein: number
     updatedAt: Date
   }, ExtArgs["result"]["profile"]>
   composites: {}
@@ -1237,7 +1237,7 @@ export interface ProfileFieldRefs {
   readonly bmr: Prisma.FieldRef<"Profile", 'Float'>
   readonly tdee: Prisma.FieldRef<"Profile", 'Float'>
   readonly targetCalories: Prisma.FieldRef<"Profile", 'Float'>
-  readonly tragetProtein: Prisma.FieldRef<"Profile", 'Float'>
+  readonly targetProtein: Prisma.FieldRef<"Profile", 'Float'>
   readonly updatedAt: Prisma.FieldRef<"Profile", 'DateTime'>
 }
     
@@ -1435,11 +1435,6 @@ export type ProfileFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` Profiles.
    */
   skip?: number
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-   * 
-   * Filter by unique combinations of Profiles.
-   */
   distinct?: Prisma.ProfileScalarFieldEnum | Prisma.ProfileScalarFieldEnum[]
 }
 

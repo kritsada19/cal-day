@@ -96,7 +96,7 @@ model Profile {
   bmr            Float
   tdee           Float
   targetCalories Float
-  tragetProtein  Float
+  targetProtein  Float
 
   // เวลาที่แก้ไขข้อมูลล่าสุด
   updatedAt DateTime @updatedAt
@@ -185,8 +185,8 @@ model DailySummary {
   totalProtein  Float
 
   // เป้าหมายแคลอรีและโปรตีนที่ควรกินในวันนั้น
-  tragetCalories Float
-  tragetProtein  Float
+  targetCalories Float
+  targetProtein  Float
 
   // เชื่อมกับผู้ใช้
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

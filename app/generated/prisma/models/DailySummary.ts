@@ -31,8 +31,8 @@ export type DailySummaryAvgAggregateOutputType = {
   userId: number | null
   totalCalories: number | null
   totalProtein: number | null
-  tragetCalories: number | null
-  tragetProtein: number | null
+  targetCalories: number | null
+  targetProtein: number | null
 }
 
 export type DailySummarySumAggregateOutputType = {
@@ -40,8 +40,8 @@ export type DailySummarySumAggregateOutputType = {
   userId: number | null
   totalCalories: number | null
   totalProtein: number | null
-  tragetCalories: number | null
-  tragetProtein: number | null
+  targetCalories: number | null
+  targetProtein: number | null
 }
 
 export type DailySummaryMinAggregateOutputType = {
@@ -50,8 +50,8 @@ export type DailySummaryMinAggregateOutputType = {
   date: Date | null
   totalCalories: number | null
   totalProtein: number | null
-  tragetCalories: number | null
-  tragetProtein: number | null
+  targetCalories: number | null
+  targetProtein: number | null
 }
 
 export type DailySummaryMaxAggregateOutputType = {
@@ -60,8 +60,8 @@ export type DailySummaryMaxAggregateOutputType = {
   date: Date | null
   totalCalories: number | null
   totalProtein: number | null
-  tragetCalories: number | null
-  tragetProtein: number | null
+  targetCalories: number | null
+  targetProtein: number | null
 }
 
 export type DailySummaryCountAggregateOutputType = {
@@ -70,8 +70,8 @@ export type DailySummaryCountAggregateOutputType = {
   date: number
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
   _all: number
 }
 
@@ -81,8 +81,8 @@ export type DailySummaryAvgAggregateInputType = {
   userId?: true
   totalCalories?: true
   totalProtein?: true
-  tragetCalories?: true
-  tragetProtein?: true
+  targetCalories?: true
+  targetProtein?: true
 }
 
 export type DailySummarySumAggregateInputType = {
@@ -90,8 +90,8 @@ export type DailySummarySumAggregateInputType = {
   userId?: true
   totalCalories?: true
   totalProtein?: true
-  tragetCalories?: true
-  tragetProtein?: true
+  targetCalories?: true
+  targetProtein?: true
 }
 
 export type DailySummaryMinAggregateInputType = {
@@ -100,8 +100,8 @@ export type DailySummaryMinAggregateInputType = {
   date?: true
   totalCalories?: true
   totalProtein?: true
-  tragetCalories?: true
-  tragetProtein?: true
+  targetCalories?: true
+  targetProtein?: true
 }
 
 export type DailySummaryMaxAggregateInputType = {
@@ -110,8 +110,8 @@ export type DailySummaryMaxAggregateInputType = {
   date?: true
   totalCalories?: true
   totalProtein?: true
-  tragetCalories?: true
-  tragetProtein?: true
+  targetCalories?: true
+  targetProtein?: true
 }
 
 export type DailySummaryCountAggregateInputType = {
@@ -120,8 +120,8 @@ export type DailySummaryCountAggregateInputType = {
   date?: true
   totalCalories?: true
   totalProtein?: true
-  tragetCalories?: true
-  tragetProtein?: true
+  targetCalories?: true
+  targetProtein?: true
   _all?: true
 }
 
@@ -217,8 +217,8 @@ export type DailySummaryGroupByOutputType = {
   date: Date
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
   _count: DailySummaryCountAggregateOutputType | null
   _avg: DailySummaryAvgAggregateOutputType | null
   _sum: DailySummarySumAggregateOutputType | null
@@ -226,7 +226,7 @@ export type DailySummaryGroupByOutputType = {
   _max: DailySummaryMaxAggregateOutputType | null
 }
 
-export type GetDailySummaryGroupByPayload<T extends DailySummaryGroupByArgs> = Prisma.PrismaPromise<
+type GetDailySummaryGroupByPayload<T extends DailySummaryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<DailySummaryGroupByOutputType, T['by']> &
       {
@@ -250,8 +250,8 @@ export type DailySummaryWhereInput = {
   date?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   totalCalories?: Prisma.FloatFilter<"DailySummary"> | number
   totalProtein?: Prisma.FloatFilter<"DailySummary"> | number
-  tragetCalories?: Prisma.FloatFilter<"DailySummary"> | number
-  tragetProtein?: Prisma.FloatFilter<"DailySummary"> | number
+  targetCalories?: Prisma.FloatFilter<"DailySummary"> | number
+  targetProtein?: Prisma.FloatFilter<"DailySummary"> | number
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -261,8 +261,8 @@ export type DailySummaryOrderByWithRelationInput = {
   date?: Prisma.SortOrder
   totalCalories?: Prisma.SortOrder
   totalProtein?: Prisma.SortOrder
-  tragetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetCalories?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -275,8 +275,8 @@ export type DailySummaryWhereUniqueInput = Prisma.AtLeast<{
   date?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   totalCalories?: Prisma.FloatFilter<"DailySummary"> | number
   totalProtein?: Prisma.FloatFilter<"DailySummary"> | number
-  tragetCalories?: Prisma.FloatFilter<"DailySummary"> | number
-  tragetProtein?: Prisma.FloatFilter<"DailySummary"> | number
+  targetCalories?: Prisma.FloatFilter<"DailySummary"> | number
+  targetProtein?: Prisma.FloatFilter<"DailySummary"> | number
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id">
 
@@ -286,8 +286,8 @@ export type DailySummaryOrderByWithAggregationInput = {
   date?: Prisma.SortOrder
   totalCalories?: Prisma.SortOrder
   totalProtein?: Prisma.SortOrder
-  tragetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetCalories?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
   _count?: Prisma.DailySummaryCountOrderByAggregateInput
   _avg?: Prisma.DailySummaryAvgOrderByAggregateInput
   _max?: Prisma.DailySummaryMaxOrderByAggregateInput
@@ -304,16 +304,16 @@ export type DailySummaryScalarWhereWithAggregatesInput = {
   date?: Prisma.DateTimeWithAggregatesFilter<"DailySummary"> | Date | string
   totalCalories?: Prisma.FloatWithAggregatesFilter<"DailySummary"> | number
   totalProtein?: Prisma.FloatWithAggregatesFilter<"DailySummary"> | number
-  tragetCalories?: Prisma.FloatWithAggregatesFilter<"DailySummary"> | number
-  tragetProtein?: Prisma.FloatWithAggregatesFilter<"DailySummary"> | number
+  targetCalories?: Prisma.FloatWithAggregatesFilter<"DailySummary"> | number
+  targetProtein?: Prisma.FloatWithAggregatesFilter<"DailySummary"> | number
 }
 
 export type DailySummaryCreateInput = {
   date: Date | string
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
   user: Prisma.UserCreateNestedOneWithoutDailySummariesInput
 }
 
@@ -323,16 +323,16 @@ export type DailySummaryUncheckedCreateInput = {
   date: Date | string
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
 }
 
 export type DailySummaryUpdateInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCalories?: Prisma.FloatFieldUpdateOperationsInput | number
   totalProtein?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
   user?: Prisma.UserUpdateOneRequiredWithoutDailySummariesNestedInput
 }
 
@@ -342,8 +342,8 @@ export type DailySummaryUncheckedUpdateInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCalories?: Prisma.FloatFieldUpdateOperationsInput | number
   totalProtein?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailySummaryCreateManyInput = {
@@ -352,16 +352,16 @@ export type DailySummaryCreateManyInput = {
   date: Date | string
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
 }
 
 export type DailySummaryUpdateManyMutationInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCalories?: Prisma.FloatFieldUpdateOperationsInput | number
   totalProtein?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailySummaryUncheckedUpdateManyInput = {
@@ -370,8 +370,8 @@ export type DailySummaryUncheckedUpdateManyInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCalories?: Prisma.FloatFieldUpdateOperationsInput | number
   totalProtein?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailySummaryListRelationFilter = {
@@ -390,8 +390,8 @@ export type DailySummaryCountOrderByAggregateInput = {
   date?: Prisma.SortOrder
   totalCalories?: Prisma.SortOrder
   totalProtein?: Prisma.SortOrder
-  tragetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetCalories?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
 }
 
 export type DailySummaryAvgOrderByAggregateInput = {
@@ -399,8 +399,8 @@ export type DailySummaryAvgOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   totalCalories?: Prisma.SortOrder
   totalProtein?: Prisma.SortOrder
-  tragetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetCalories?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
 }
 
 export type DailySummaryMaxOrderByAggregateInput = {
@@ -409,8 +409,8 @@ export type DailySummaryMaxOrderByAggregateInput = {
   date?: Prisma.SortOrder
   totalCalories?: Prisma.SortOrder
   totalProtein?: Prisma.SortOrder
-  tragetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetCalories?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
 }
 
 export type DailySummaryMinOrderByAggregateInput = {
@@ -419,8 +419,8 @@ export type DailySummaryMinOrderByAggregateInput = {
   date?: Prisma.SortOrder
   totalCalories?: Prisma.SortOrder
   totalProtein?: Prisma.SortOrder
-  tragetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetCalories?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
 }
 
 export type DailySummarySumOrderByAggregateInput = {
@@ -428,8 +428,8 @@ export type DailySummarySumOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   totalCalories?: Prisma.SortOrder
   totalProtein?: Prisma.SortOrder
-  tragetCalories?: Prisma.SortOrder
-  tragetProtein?: Prisma.SortOrder
+  targetCalories?: Prisma.SortOrder
+  targetProtein?: Prisma.SortOrder
 }
 
 export type DailySummaryCreateNestedManyWithoutUserInput = {
@@ -478,8 +478,8 @@ export type DailySummaryCreateWithoutUserInput = {
   date: Date | string
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
 }
 
 export type DailySummaryUncheckedCreateWithoutUserInput = {
@@ -487,8 +487,8 @@ export type DailySummaryUncheckedCreateWithoutUserInput = {
   date: Date | string
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
 }
 
 export type DailySummaryCreateOrConnectWithoutUserInput = {
@@ -526,8 +526,8 @@ export type DailySummaryScalarWhereInput = {
   date?: Prisma.DateTimeFilter<"DailySummary"> | Date | string
   totalCalories?: Prisma.FloatFilter<"DailySummary"> | number
   totalProtein?: Prisma.FloatFilter<"DailySummary"> | number
-  tragetCalories?: Prisma.FloatFilter<"DailySummary"> | number
-  tragetProtein?: Prisma.FloatFilter<"DailySummary"> | number
+  targetCalories?: Prisma.FloatFilter<"DailySummary"> | number
+  targetProtein?: Prisma.FloatFilter<"DailySummary"> | number
 }
 
 export type DailySummaryCreateManyUserInput = {
@@ -535,16 +535,16 @@ export type DailySummaryCreateManyUserInput = {
   date: Date | string
   totalCalories: number
   totalProtein: number
-  tragetCalories: number
-  tragetProtein: number
+  targetCalories: number
+  targetProtein: number
 }
 
 export type DailySummaryUpdateWithoutUserInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCalories?: Prisma.FloatFieldUpdateOperationsInput | number
   totalProtein?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailySummaryUncheckedUpdateWithoutUserInput = {
@@ -552,8 +552,8 @@ export type DailySummaryUncheckedUpdateWithoutUserInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCalories?: Prisma.FloatFieldUpdateOperationsInput | number
   totalProtein?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailySummaryUncheckedUpdateManyWithoutUserInput = {
@@ -561,8 +561,8 @@ export type DailySummaryUncheckedUpdateManyWithoutUserInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCalories?: Prisma.FloatFieldUpdateOperationsInput | number
   totalProtein?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
-  tragetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetCalories?: Prisma.FloatFieldUpdateOperationsInput | number
+  targetProtein?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 
@@ -573,8 +573,8 @@ export type DailySummarySelect<ExtArgs extends runtime.Types.Extensions.Internal
   date?: boolean
   totalCalories?: boolean
   totalProtein?: boolean
-  tragetCalories?: boolean
-  tragetProtein?: boolean
+  targetCalories?: boolean
+  targetProtein?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dailySummary"]>
 
@@ -584,8 +584,8 @@ export type DailySummarySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   date?: boolean
   totalCalories?: boolean
   totalProtein?: boolean
-  tragetCalories?: boolean
-  tragetProtein?: boolean
+  targetCalories?: boolean
+  targetProtein?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dailySummary"]>
 
@@ -595,8 +595,8 @@ export type DailySummarySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   date?: boolean
   totalCalories?: boolean
   totalProtein?: boolean
-  tragetCalories?: boolean
-  tragetProtein?: boolean
+  targetCalories?: boolean
+  targetProtein?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dailySummary"]>
 
@@ -606,11 +606,11 @@ export type DailySummarySelectScalar = {
   date?: boolean
   totalCalories?: boolean
   totalProtein?: boolean
-  tragetCalories?: boolean
-  tragetProtein?: boolean
+  targetCalories?: boolean
+  targetProtein?: boolean
 }
 
-export type DailySummaryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "totalCalories" | "totalProtein" | "tragetCalories" | "tragetProtein", ExtArgs["result"]["dailySummary"]>
+export type DailySummaryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "totalCalories" | "totalProtein" | "targetCalories" | "targetProtein", ExtArgs["result"]["dailySummary"]>
 export type DailySummaryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -632,8 +632,8 @@ export type $DailySummaryPayload<ExtArgs extends runtime.Types.Extensions.Intern
     date: Date
     totalCalories: number
     totalProtein: number
-    tragetCalories: number
-    tragetProtein: number
+    targetCalories: number
+    targetProtein: number
   }, ExtArgs["result"]["dailySummary"]>
   composites: {}
 }
@@ -1063,8 +1063,8 @@ export interface DailySummaryFieldRefs {
   readonly date: Prisma.FieldRef<"DailySummary", 'DateTime'>
   readonly totalCalories: Prisma.FieldRef<"DailySummary", 'Float'>
   readonly totalProtein: Prisma.FieldRef<"DailySummary", 'Float'>
-  readonly tragetCalories: Prisma.FieldRef<"DailySummary", 'Float'>
-  readonly tragetProtein: Prisma.FieldRef<"DailySummary", 'Float'>
+  readonly targetCalories: Prisma.FieldRef<"DailySummary", 'Float'>
+  readonly targetProtein: Prisma.FieldRef<"DailySummary", 'Float'>
 }
     
 
@@ -1261,11 +1261,6 @@ export type DailySummaryFindManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Skip the first `n` DailySummaries.
    */
   skip?: number
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-   * 
-   * Filter by unique combinations of DailySummaries.
-   */
   distinct?: Prisma.DailySummaryScalarFieldEnum | Prisma.DailySummaryScalarFieldEnum[]
 }
 

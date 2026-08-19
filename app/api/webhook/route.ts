@@ -8,7 +8,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
-    const rateLimit = await checkRateLimit(req, "webhook", 100, 60);
+    const rateLimit = await checkRateLimit(req, "webhook", 300, 60);
 
     if (!rateLimit.success) {
         return NextResponse.json(
