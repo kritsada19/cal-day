@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error("Daily meals GET error:", error);
         return NextResponse.json(
-            { message: "Internal server error", error: String(error) },
+            { message: "Internal server error" },
             { status: 500 }
         );
     }

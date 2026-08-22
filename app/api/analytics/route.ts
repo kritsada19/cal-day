@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   try {
     const userId = Number(session.user.id);
     const now = new Date();
-    
+
     // Calculate start date
     const startDate = new Date(now);
     startDate.setDate(now.getDate() - days + 1);
@@ -58,24 +58,24 @@ export async function GET(request: Request) {
     });
 
     const targetCal = profile?.targetCalories || 2000;
-    const targetPro = profile?.tragetProtein || 100;
+    const targetPro = profile?.targetProtein || 100;
 
     // Build the weekly data array, filling in missing days
     const weeklyData = [];
     let totalCal = 0;
     let daysOnTarget = 0;
     let currentStreak = 0;
-    
+
     // Create an array of active days for streak calculation
     const activeDays = [];
 
     for (let i = 0; i < days; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
-      
+
       // Format day name (e.g., "Mon", "Tue")
       const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
-      
+
       // Find summary for this date
       const summaryForDate = summaries.find(
         s => new Date(s.date).toDateString() === currentDate.toDateString()
@@ -83,8 +83,8 @@ export async function GET(request: Request) {
 
       const calories = summaryForDate?.totalCalories || 0;
       const protein = summaryForDate?.totalProtein || 0;
-      const dayTargetCal = summaryForDate?.tragetCalories || targetCal;
-      const dayTargetPro = summaryForDate?.tragetProtein || targetPro;
+      const dayTargetCal = summaryForDate?.targetCalories || targetCal;
+      const dayTargetPro = summaryForDate?.targetProtein || targetPro;
 
       weeklyData.push({
         day: dayName,
@@ -99,14 +99,14 @@ export async function GET(request: Request) {
 
       // Logic for On Target (within 10% of target or hit exactly)
       // For simplicity, let's say they hit the target if they are within 100 kcal of it, or under if goal is lose weight
-      const isHit = calories > 0 && calories <= dayTargetCal + 100; 
+      const isHit = calories > 0 && calories <= dayTargetCal + 100;
       activeDays.push(isHit);
 
       if (isHit) {
         daysOnTarget++;
         currentStreak++;
       } else if (calories > 0 || currentDate.toDateString() !== now.toDateString()) {
-         // Reset streak if missed a past day or logged over
+        // Reset streak if missed a past day or logged over
         currentStreak = 0;
       }
     }

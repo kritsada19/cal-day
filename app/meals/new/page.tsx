@@ -120,7 +120,6 @@ export default function NewMealPage() {
               className="w-full border border-white/10 bg-obsidian-950 px-3 py-3 text-white outline-none transition focus:border-gold-accent"
               required
             />
-            <span className="block text-xs text-white/45">ข้อความนี้จะถูกรับและส่งผ่าน mock AI ก่อนเพื่อเตรียมสำหรับการเชื่อม AI จริงในอนาคต</span>
           </label>
 
           {message && (

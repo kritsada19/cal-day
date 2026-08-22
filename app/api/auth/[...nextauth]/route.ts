@@ -8,6 +8,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { redis } from "@/lib/db/redis";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
+import { env } from "@/lib/env";
 
 declare module "next-auth" {
     interface Session {
@@ -31,9 +32,8 @@ declare module "next-auth/jwt" {
 }
 
 export const authOptions: NextAuthOptions = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     adapter: PrismaAdapter(prisma) as Adapter,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: env.NEXTAUTH_SECRET,
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -102,8 +102,8 @@ export const authOptions: NextAuthOptions = {
             },
         }),
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
         }),
     ],
 
@@ -149,7 +149,7 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 
-async function rateLimitedHandler(request: NextRequest, context: { params: { nextauth: string[] } }) {
+async function rateLimitedHandler(request: NextRequest, context: { params: Promise<{ nextauth: string[] }> }) {
   const rateLimit = await checkRateLimit(request, "auth", 150, 60);
 
   if (!rateLimit.success) {

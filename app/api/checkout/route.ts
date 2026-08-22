@@ -4,8 +4,9 @@ import prisma from "@/lib/db/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { env } from "@/lib/env";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
 export async function POST(request: NextRequest) {
     const rateLimit = await checkRateLimit(request, "checkout", 50, 60);
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
             line_items: [
                 {
-                    price: process.env.STRIPE_PRO_PRICE_ID!,
+                    price: env.STRIPE_PRO_PRICE_ID,
                     quantity: 1,
                 },
             ],
@@ -72,8 +73,8 @@ export async function POST(request: NextRequest) {
                 },
             },
 
-            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/cancel`,
+            success_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard/cancel`,
         });
 
         return NextResponse.json({

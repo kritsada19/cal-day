@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Stripe from "stripe";
+import { redis } from "@/lib/db/redis";
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getPeriodEnd } from "@/lib/stripe/getPeriodEnd";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { env } from "@/lib/env";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
 export async function POST(req: NextRequest) {
     const rateLimit = await checkRateLimit(req, "webhook", 300, 60);
@@ -23,7 +26,7 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    if (!env.STRIPE_WEBHOOK_SECRET) {
         return NextResponse.json(
             { error: "STRIPE_WEBHOOK_SECRET is not defined" },
             { status: 500 }
@@ -39,8 +42,17 @@ export async function POST(req: NextRequest) {
         event = stripe.webhooks.constructEvent(
             body,
             signature,
-            process.env.STRIPE_WEBHOOK_SECRET
+            env.STRIPE_WEBHOOK_SECRET
         );
+        // Idempotency check: ensure we haven't processed this event before
+        const processed = await redis.get(`webhook:${event.id}`);
+        if (processed) {
+          console.log(`Duplicate webhook event ${event.id} ignored.`);
+          return NextResponse.json({ received: true }, { status: 200 });
+        }
+        // Mark event as processed with a TTL (e.g., 24 hours)
+        await redis.set(`webhook:${event.id}`, "1", "EX", 60 * 60 * 24);
+
     } catch (err: any) {
         console.error(`Webhook Error: ${err.message}`);
         return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });

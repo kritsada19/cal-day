@@ -2,42 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/sesstion";
 import prisma from "@/lib/db/prisma";
 import { redis } from "@/lib/db/redis";
-import { AI_LIMIT_FREE } from "@/lib/services/ai-quota";
-import { AI_LIMIT_PRO } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-type MealTypeValue = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
-
-type MockAiAnalysis = {
-  summary: string;
-  estimatedCalories: number;
-  estimatedProtein: number;
-  note: string;
-};
-
-function normalizeMealType(value: string | undefined): MealTypeValue {
-  if (
-    value === "BREAKFAST" ||
-    value === "LUNCH" ||
-    value === "DINNER" ||
-    value === "SNACK"
-  ) {
-    return value;
-  }
-
-  return "SNACK";
-}
-
-function mockAiAnalyzeMeal(mealText: string): MockAiAnalysis {
-  const cleanedText = mealText.trim();
-
-  return {
-    summary: `Mock AI received: ${cleanedText}`,
-    estimatedCalories: 300,
-    estimatedProtein: 15,
-    note: "This is a temporary mock analysis. Real AI integration can replace it later.",
-  };
-}
+import { analyzeFood } from "@/lib/services/ai";
+import { checkAndComsumeAiQuota } from "@/lib/services/ai-quota";
+import { mealSchema } from "@/lib/validation/meal";
 
 export async function POST(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
@@ -62,25 +30,24 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const rawText = typeof body?.mealText === "string" ? body.mealText : "";
-  const mealType = normalizeMealType(
-    typeof body?.mealType === "string" ? body.mealType : undefined,
-  );
-  const localDateStr = typeof body?.date === "string" ? body.date : null;
+  const validation = mealSchema.safeParse(body);
 
-  if (!rawText.trim()) {
+  if (!validation.success) {
     return NextResponse.json(
-      { message: "Please describe the food you ate" },
+      { message: validation.error.issues[0]?.message || "Invalid input" },
       { status: 400 },
     );
   }
 
-  const aiAnalysis = mockAiAnalyzeMeal(rawText);
+  const { mealText: rawText, mealType, date: localDateStr } = validation.data;
+
+  const aiAnalysis = await analyzeFood(rawText);
+
   const userId = Number(session.user.id);
   let startOfDay: Date;
   let endOfDay: Date;
 
-  if (localDateStr && /^\d{4}-\d{2}-\d{2}$/.test(localDateStr)) {
+  if (localDateStr) {
     // ถ้ารับมาถูกต้อง เช่น "2026-08-18"
     // เราจับมันประกอบกับเวลา 00:00:00Z และ 23:59:59Z ได้เลย
     startOfDay = new Date(`${localDateStr}T00:00:00.000Z`);
@@ -106,29 +73,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const AI_RATE_LIMIT_KEY = `ai_limit:${userId}`;
-  const currentCount = await redis.incr(AI_RATE_LIMIT_KEY);
-
-  if (currentCount === 1) {
-    await redis.expire(AI_RATE_LIMIT_KEY, 60 * 60 * 24);
-  }
-
-  const isFreePlan = !user.subscription || user.subscription.plan === "FREE";
-  const isProPlan = user.subscription?.plan === "PRO";
-
-  if (isFreePlan && currentCount > AI_LIMIT_FREE) {
-    return NextResponse.json(
-      { message: "AI limit reached. Please upgrade to premium to continue." },
-      { status: 429 },
-    );
-  }
-
-  if (isProPlan && currentCount > AI_LIMIT_PRO) {
-    return NextResponse.json(
-      { message: "Pro AI limit reached. Please contact support for assistance." },
-      { status: 429 },
-    );
-  }
+  // Check and consume AI quota 
+  const quotaResponse = await checkAndComsumeAiQuota(userId, user.subscription?.plan as string);
+  if (quotaResponse) return quotaResponse;
 
   try {
     const { meal, totalCalories, totalProtein } = await prisma.$transaction(async (tx) => {
@@ -139,16 +86,29 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      await tx.foodEntry.create({
-        data: {
-          mealId: meal.id,
-          foodName: rawText,
-          amount: 1,
-          unit: "text",
-          calories: aiAnalysis.estimatedCalories,
-          protein: aiAnalysis.estimatedProtein,
-        },
-      });
+      if (aiAnalysis.foods && aiAnalysis.foods.length > 0) {
+        await tx.foodEntry.createMany({
+          data: aiAnalysis.foods.map((food) => ({
+            mealId: meal.id,
+            foodName: food.name,
+            amount: food.amount || 1,
+            unit: food.unit || "serving",
+            calories: food.calories || 0,
+            protein: food.protein || 0,
+          })),
+        });
+      } else {
+        await tx.foodEntry.create({
+          data: {
+            mealId: meal.id,
+            foodName: rawText,
+            amount: 1,
+            unit: "text",
+            calories: aiAnalysis.estimatedCalories || 0,
+            protein: aiAnalysis.estimatedProtein || 0,
+          },
+        });
+      }
 
       const totalCalories = aiAnalysis.estimatedCalories;
       const totalProtein = aiAnalysis.estimatedProtein;
@@ -205,13 +165,11 @@ export async function POST(request: NextRequest) {
       totalProtein: Number(totalProtein.toFixed(1)),
     });
   } catch (error) {
-    if (currentCount <= AI_LIMIT_FREE) {
-      await redis.decr(AI_RATE_LIMIT_KEY);
-    }
+    await redis.decr(`ai_limit:${userId}`);
 
     console.error("Meal POST error:", error);
     return NextResponse.json(
-      { message: "Database unavailable", error: String(error) },
+      { message: "Internal server error" },
       { status: 503 },
     );
   }

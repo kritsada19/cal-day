@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 
 // ใช้จัดการ request / response ของ Next.js
 import { NextResponse, NextRequest } from 'next/server';
+import { env } from '@/lib/env';
 
 
 // middleware หลัก
@@ -38,7 +39,9 @@ export async function proxy(request: NextRequest) {
         pathname.startsWith('/dashboard') ||
         pathname.startsWith('/profile') ||
         pathname.startsWith('/subscription') ||
-        pathname.startsWith('/admin');
+        pathname.startsWith('/admin') ||
+        pathname.startsWith('/meal') ||
+        pathname.startsWith('/analytics')
 
     // ถ้าเป็น protected route
     if (isProtectedPath) {
@@ -46,7 +49,7 @@ export async function proxy(request: NextRequest) {
         // ดึง JWT token จาก cookie
         const token = await getToken({
             req: request,
-            secret: process.env.NEXTAUTH_SECRET
+            secret: env.NEXTAUTH_SECRET
         });
 
         // ถ้าไม่มี token => ยังไม่ได้ login

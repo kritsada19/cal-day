@@ -5,7 +5,7 @@ import { signupSchema } from "@/lib/validation/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 // นี่คือ Dummy Hash ระดับ 12 Rounds (สังเกตตรง $2a$12$) เพื่อให้หน่วงเวลาเท่ากับตอนสร้าง User 
-const DUMMY_HASH_12 = "";
+const DUMMY_HASH_12 = "$2a$12$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 export async function POST(req: NextRequest) {
   try {
