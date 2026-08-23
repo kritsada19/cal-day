@@ -1,5 +1,9 @@
 "use client";
 
+// 🧪 TEST ONLY — ลบออกหลังทดสอบ
+// throw ตรงนี้เพื่อให้เห็นหน้า Error Boundary ของ /dashboard
+// throw new Error("ทดสอบ Error Boundary — ลบออกหลังดู UI แล้ว");
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import axios from "axios";
