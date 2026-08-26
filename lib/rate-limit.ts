@@ -1,11 +1,17 @@
 import { redis } from "./db/redis";
 
+export interface RateLimitResult {
+    success: boolean;
+    limit: number;
+    remaining: number;
+}
+
 export async function checkRateLimit(
     request: Request,
     apiName: string,
     limit: number = 10,
     windowSec: number = 60
-) {
+) : Promise<RateLimitResult> {
     const forwardedFor = request.headers.get("x-forwarded-for");
     const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
 
