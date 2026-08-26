@@ -142,7 +142,7 @@
 
 ## 🟢 P3 — Features & Enhancements
 
-- [ ] **19. สร้าง Prisma Seed Script**
+- [x] **19. สร้าง Prisma Seed Script**
   - ไฟล์ใหม่: `prisma/seed.ts`
   - ทำอะไร: seed ข้อมูล test user + sample meals สำหรับ development
 

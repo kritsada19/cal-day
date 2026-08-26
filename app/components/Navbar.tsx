@@ -13,6 +13,9 @@ interface NavItem {
 }
 
 type ProfileApiResponse = {
+  subscription?: {
+    plan?: string | null;
+  } | null;
   dailyProgress: {
     calories: { consumed: number; target: number; percent: number };
     protein: { consumed: number; target: number; percent: number };
@@ -172,7 +175,7 @@ export default function Navbar() {
                   <div className="bg-linear-to-r from-obsidian-900 to-obsidian-800 border border-white/10 hover:border-gold-accent/50 px-4 py-1.5 flex items-center gap-3 transition-colors duration-300">
                     <div className="flex flex-col text-right">
                       <span className="text-xs font-bold tracking-wider text-white">{session?.user?.name}</span>
-                      <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">PREMIUM</span>
+                      <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">{userData?.subscription?.plan} PLAN</span>
                     </div>
                     {/* Avatar Frame (Sharp Box) */}
                     <div className="w-8 h-8 bg-obsidian-700 border border-gold-accent flex items-center justify-center text-xs font-bold text-gold-accent group-hover:bg-gold-accent group-hover:text-black transition-all duration-300">
@@ -269,8 +272,8 @@ export default function Navbar() {
                 KS
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-bold tracking-wider text-white">KRIT S.</span>
-                <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">PREMIUM MEMBER</span>
+                <span className="text-xs font-bold tracking-wider text-white">{session?.user?.name || "MEMBER"}</span>
+                <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">{userData?.subscription?.plan} PLAN</span>
               </div>
             </div>
           </div>

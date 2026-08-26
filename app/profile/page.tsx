@@ -16,6 +16,9 @@ type ProfileData = {
 };
 
 type ProfileApiResponse = {
+  subscription?: {
+    plan?: string | null;
+  } | null;
   profile: ProfileData | null;
   bmi: number | null;
   bmiStatus: { label: string; tone: string } | null;
@@ -122,7 +125,7 @@ export default function ProfilePage() {
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <div className="inline-flex border border-emerald-accent/30 bg-emerald-glow px-3 py-1 text-[10px] font-semibold tracking-[0.25em] text-emerald-accent uppercase">
-                    Premium access
+                    {profileData?.subscription?.plan} plan
                   </div>
                   <Link
                     href="/profile/form"
@@ -219,6 +222,12 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
                   <span className="text-white/45">ROLE</span>
                   <span className="font-semibold text-white">{session?.user?.role || "USER"}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span className="text-white/45">PLAN</span>
+                  <Link href="/subscription" className="font-semibold text-gold-accent transition hover:text-white">
+                    {profileData?.subscription?.plan}
+                  </Link>
                 </div>
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
                   <span className="text-white/45">AI REMAINING</span>
