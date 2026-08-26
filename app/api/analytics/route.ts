@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const rateLimit = await checkRateLimit(request, "analytics", 100, 60);
@@ -125,7 +126,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
-    console.error("Analytics GET error:", error);
+    logger.error({ err: error }, "Analytics GET error");
     return NextResponse.json({ message: "Database unavailable" }, { status: 503 });
   }
 }

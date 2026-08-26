@@ -1,6 +1,7 @@
 "use client"; // ต้องเป็น Client Component เสมอ เพราะ Error Boundary ใช้ React state ในการ catch error
 
 import { useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 /**
  * MealsNewError — Error Boundary สำหรับ /meals/new
@@ -25,7 +26,7 @@ export default function MealsNewError({
 }) {
   // Log error ไปยัง console — ควรใช้ error tracking service ใน production
   useEffect(() => {
-    console.error("[Meals/New Error Boundary]", error);
+    logger.error({ err: error, digest: error.digest }, "New meal error boundary triggered");
   }, [error]);
 
   return (

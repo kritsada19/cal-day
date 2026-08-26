@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 export const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
             status: 200,
         });
     } catch (error) {
-        console.error("Checkout error:", error);
+        logger.error({ err: error }, "Checkout error");
 
         return NextResponse.json(
             {

@@ -1,6 +1,7 @@
 "use client"; // ต้องเป็น Client Component เสมอ เพราะ Error Boundary ใช้ React state ในการ catch error
 
 import { useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 /**
  * SubscriptionError — Error Boundary สำหรับ /subscription
@@ -23,7 +24,7 @@ export default function SubscriptionError({
   // Log error ไปยัง console และควร report ไปยัง Sentry สำหรับ payment error
   // เพราะปัญหาในหน้า subscription อาจส่งผลต่อรายได้
   useEffect(() => {
-    console.error("[Subscription Error Boundary]", error);
+    logger.error({ err: error, digest: error.digest }, "Subscription error boundary triggered");
   }, [error]);
 
   return (

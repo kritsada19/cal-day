@@ -5,6 +5,7 @@ import prisma from "@/lib/db/prisma";
 import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/lib/nutrition";
 import { getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       aiRemaining: aiQuota.remaining
     });
   } catch (error) {
-    console.error("Profile GET error:", error);
+    logger.error({ err: error, userId: session.user.id }, "Profile GET error");
     return NextResponse.json({ message: "Database unavailable" }, { status: 503 });
   }
 }
@@ -154,7 +155,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ profile, ...summary, message: "Profile saved successfully" });
   } catch (error) {
-    console.error("Profile POST error:", error);
+    logger.error({ err: error, userId: session.user.id }, "Profile POST error");
     return NextResponse.json({ message: "Database unavailable" }, { status: 503 });
   }
 }

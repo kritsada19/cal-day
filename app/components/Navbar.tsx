@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { logger } from "@/lib/logger";
 
 interface NavItem {
   label: string;
@@ -44,7 +45,7 @@ export default function Navbar() {
         const response = await axios.get<ProfileApiResponse>("/api/profile");
         setUserData(response.data);
       } catch (error) {
-        console.error("Error fetching profile data:", error);
+        logger.error({ err: error }, "Error fetching profile data");
       }
     };
 

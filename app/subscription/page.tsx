@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { logger } from "@/lib/logger";
 
 export default function SubscriptionPage() {
   const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ export default function SubscriptionPage() {
         window.location.href = res.data.url;
       }
     } catch (error) {
-      console.error("Subscription error:", error);
+      logger.error({ err: error }, "Subscription error");
     } finally {
       setLoading(false);
     }

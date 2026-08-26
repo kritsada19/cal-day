@@ -2,13 +2,14 @@ import "dotenv/config";
 import prisma from "../lib/db/prisma";
 import { Role, Gender, ExerciseLevel, Goal, MealType, Plan, SubscriptionStatus } from "../app/generated/prisma/client";
 import bcrypt from "bcryptjs";
+import { logger } from "../lib/logger";
 
 
 async function main() {
-  console.log("🌱 เริ่มต้นการ Seed ข้อมูลระบบ...");
+  logger.info("Starting database seed");
 
   // 1. ล้างข้อมูลเก่าออกก่อนเพื่อป้องกันปัญหา Duplicate Key หรือข้อมูลชนกันเมื่อรันซ้ำ
-  console.log("🧹 กำลังล้างข้อมูลเก่าในฐานข้อมูล...");
+  logger.info("Removing existing database records");
   await prisma.subscription.deleteMany({});
   await prisma.dailySummary.deleteMany({});
   await prisma.foodEntry.deleteMany({});
@@ -16,15 +17,15 @@ async function main() {
   await prisma.profile.deleteMany({});
   await prisma.account.deleteMany({});
   await prisma.user.deleteMany({});
-  console.log("✅ ล้างข้อมูลเสร็จสิ้น");
+  logger.info("Existing database records removed");
 
   // 2. เข้ารหัสรหัสผ่านสำหรับบัญชีทดสอบ
-  console.log("🔒 กำลังเตรียมแฮชรหัสผ่าน...");
+  logger.info("Hashing seed user passwords");
   const userPasswordHash = bcrypt.hashSync("password123", 10);
   const adminPasswordHash = bcrypt.hashSync("admin123", 10);
 
   // 3. สร้างข้อมูลผู้ใช้งานทดสอบ (Test User)
-  console.log("👤 กำลังสร้างผู้ใช้งานทั่วไปสำหรับทดสอบ (test@example.com)...");
+  logger.info({ email: "test@example.com" }, "Creating seed test user");
   const testUser = await prisma.user.create({
     data: {
       name: "Test User",
@@ -36,7 +37,7 @@ async function main() {
   });
 
   // 4. สร้างข้อมูลผู้ดูแลระบบทดสอบ (Admin User)
-  console.log("🔑 กำลังสร้างผู้ดูแลระบบสำหรับทดสอบ (admin@example.com)...");
+  logger.info({ email: "admin@example.com" }, "Creating seed admin user");
   const adminUser = await prisma.user.create({
     data: {
       name: "Admin User",
@@ -48,7 +49,7 @@ async function main() {
   });
 
   // 5. สร้างข้อมูลโปรไฟล์โภชนาการสำหรับ Test User (ใช้สำหรับคำนวณแคลอรีและโปรตีนเป้าหมาย)
-  console.log("📋 กำลังสร้างข้อมูลโปรไฟล์ของ Test User...");
+  logger.info("Creating seed test user profile");
   const targetCalories = 1800; // แคลอรีเป้าหมายต่อวัน
   const targetProtein = 135;   // โปรตีนเป้าหมายต่อวัน (กรัม)
   await prisma.profile.create({
@@ -68,7 +69,7 @@ async function main() {
   });
 
   // 6. สร้างข้อมูลการสมัครสมาชิก (Subscription) ให้เป็นแบบ FREE ในตอนเริ่มต้น
-  console.log("💳 กำลังสร้างข้อมูลการสมัครสมาชิก...");
+  logger.info("Creating seed subscription");
   await prisma.subscription.create({
     data: {
       userId: testUser.id,
@@ -96,7 +97,7 @@ async function main() {
   };
 
   // 8. ข้อมูลจำลองมื้ออาหารและรายการอาหารย้อนหลัง 3 วัน (2 วันก่อน, เมื่อวานนี้, วันนี้)
-  console.log("🍽️ กำลังสร้างข้อมูลจำลองมื้ออาหารย้อนหลัง...");
+  logger.info("Creating seed meal history");
 
   const sampleMealsData = [
     {
@@ -222,7 +223,7 @@ async function main() {
     }
 
     // สร้าง DailySummary สำหรับแต่ละวันเพื่อให้ค่าสอดคล้องกับมื้ออาหารที่บันทึกไว้
-    console.log(`📊 กำลังบันทึกสรุปโภชนาการรายวันสำหรับ ${dayData.daysAgo === 0 ? 'วันนี้' : `${dayData.daysAgo} วันก่อนหน้า`}...`);
+    logger.info({ daysAgo: dayData.daysAgo }, "Creating seed daily nutrition summary");
     await prisma.dailySummary.create({
       data: {
         userId: testUser.id,
@@ -235,7 +236,7 @@ async function main() {
     });
   }
 
-  console.log("🎉 การ Seed ข้อมูลทั้งหมดสำเร็จสมบูรณ์แล้ว!");
+  logger.info("Database seed completed");
 }
 
 main()
@@ -245,7 +246,7 @@ main()
     process.exit(0);
   })
   .catch(async (e) => {
-    console.error("❌ เกิดข้อผิดพลาดขณะทำการ Seed ข้อมูล:", e);
+    logger.error({ err: e }, "Database seed failed");
     // ปิดการเชื่อมต่อฐานข้อมูลหากมีข้อผิดพลาด
     await prisma.$disconnect();
     process.exit(1);

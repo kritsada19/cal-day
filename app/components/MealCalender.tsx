@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { logger } from "@/lib/logger";
 
 interface DailySummary {
     totalCalories: number
@@ -64,7 +65,7 @@ export default function MealCalendar() {
             .then((res) => {
                 setSummaries(res.data.summaries || []);
             })
-            .catch((err) => console.error("Failed to load month summaries", err));
+            .catch((err) => logger.error({ err, year, month }, "Failed to load month summaries"));
     }, [currentDate]);
 
     // ฟังก์ชันย้อนกลับไป 1 เดือน
@@ -103,7 +104,7 @@ export default function MealCalendar() {
             // 4. เอาข้อมูลรายการอาหารมาเก็บไว้ใน State
             setDailyMeals(res.data.meals || []);
         } catch (error) {
-            console.error("Failed to load daily meals", error);
+            logger.error({ err: error }, "Failed to load daily meals");
         } finally {
             setIsLoadingDaily(false); // ปิดโหมดโหลดข้อมูล
         }

@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { analyzeFood } from "@/lib/services/ai";
 import { checkAndComsumeAiQuota } from "@/lib/services/ai-quota";
 import { mealSchema } from "@/lib/validation/meal";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     await redis.decr(`ai_limit:${userId}`);
 
-    console.error("Meal POST error:", error);
+    logger.error({ err: error, userId }, "Meal POST error");
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 503 },

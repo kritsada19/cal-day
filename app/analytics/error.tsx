@@ -1,6 +1,7 @@
 "use client"; // ต้องเป็น Client Component เสมอ เพราะ Error Boundary ใช้ React state ในการ catch error
 
 import { useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 /**
  * AnalyticsError — Error Boundary สำหรับ /analytics
@@ -21,7 +22,7 @@ export default function AnalyticsError({
 }) {
   // Log error ไปยัง console (หรือ error tracking service เช่น Sentry)
   useEffect(() => {
-    console.error("[Analytics Error Boundary]", error);
+    logger.error({ err: error, digest: error.digest }, "Analytics error boundary triggered");
   }, [error]);
 
   return (

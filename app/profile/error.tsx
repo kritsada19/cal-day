@@ -1,6 +1,7 @@
 "use client"; // ต้องเป็น Client Component เสมอ เพราะ Error Boundary ใช้ React state ในการ catch error
 
 import { useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 /**
  * ProfileError — Error Boundary สำหรับ /profile
@@ -21,7 +22,7 @@ export default function ProfileError({
 }) {
   // Log error ทุกครั้งที่ error object เปลี่ยนแปลง (เช่น เกิด error ซ้ำ)
   useEffect(() => {
-    console.error("[Profile Error Boundary]", error);
+    logger.error({ err: error, digest: error.digest }, "Profile error boundary triggered");
   }, [error]);
 
   return (

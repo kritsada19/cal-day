@@ -7,6 +7,7 @@ import prisma from "@/lib/db/prisma";
 import { getPeriodEnd } from "@/lib/stripe/getPeriodEnd";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
@@ -47,14 +48,14 @@ export async function POST(req: NextRequest) {
         // Idempotency check: ensure we haven't processed this event before
         const processed = await redis.get(`webhook:${event.id}`);
         if (processed) {
-          console.log(`Duplicate webhook event ${event.id} ignored.`);
+          logger.info({ eventId: event.id, eventType: event.type }, "Duplicate webhook event ignored");
           return NextResponse.json({ received: true }, { status: 200 });
         }
         // Mark event as processed with a TTL (e.g., 24 hours)
         await redis.set(`webhook:${event.id}`, "1", "EX", 60 * 60 * 24);
 
     } catch (err: any) {
-        console.error(`Webhook Error: ${err.message}`);
+        logger.error({ err }, "Webhook signature verification failed");
         return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
     }
 
@@ -144,12 +145,12 @@ export async function POST(req: NextRequest) {
             }
 
             default:
-                console.log(`Unhandled event type ${event.type}`);
+                logger.info({ eventId: event.id, eventType: event.type }, "Unhandled webhook event type");
         }
 
         return NextResponse.json({ received: true }, { status: 200 });
     } catch (error) {
-        console.error("Webhook Error Handled:", error);
+        logger.error({ err: error, eventId: event.id, eventType: event.type }, "Webhook handler failed");
         return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
     }
 }

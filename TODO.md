@@ -150,11 +150,11 @@
   - ไฟล์ใหม่: `app/api/health/route.ts`
   - ทำอะไร: เช็ค Database + Redis connection status
 
-- [ ] **21. เพิ่ม Structured Logging**
+- [x] **21. เพิ่ม Structured Logging**
   - ทำอะไร:
     - ติดตั้ง Pino
     - สร้าง `lib/logger.ts`
-    - แทนที่ `console.error` ด้วย structured logger ทุกที่
+    - บันทึก error ผ่าน structured logger ทุกจุด
 
 - [ ] **22. สร้าง DELETE API สำหรับ Meal**
   - ไฟล์ใหม่: `app/api/meals/[id]/route.ts`

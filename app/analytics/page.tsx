@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { logger } from "@/lib/logger";
 
 // Types for the Analytics API Response
 interface DailyData {
@@ -56,7 +57,7 @@ export default function AnalyticsPage() {
           setData(response.data.weeklyData);
           setStats(response.data.stats);
         } catch (error) {
-          console.error("Error fetching analytics data:", error);
+          logger.error({ err: error, timeRange }, "Error fetching analytics data");
         } finally {
           setLoading(false);
         }
@@ -294,4 +295,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-

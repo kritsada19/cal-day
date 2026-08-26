@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/sesstion";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
     const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ meals }, { status: 200 });
 
     } catch (error) {
-        console.error("Daily meals GET error:", error);
+        logger.error({ err: error, userId }, "Daily meals GET error");
         return NextResponse.json(
             { message: "Internal server error" },
             { status: 500 }

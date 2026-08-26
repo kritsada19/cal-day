@@ -3,6 +3,7 @@ import prisma from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
 import { signupSchema } from "@/lib/validation/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 // นี่คือ Dummy Hash ระดับ 12 Rounds (สังเกตตรง $2a$12$) เพื่อให้หน่วงเวลาเท่ากับตอนสร้าง User 
 const DUMMY_HASH_12 = "$2a$12$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
       { status: 201, headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {
-    console.error("Error creating user:", error);
+    logger.error({ err: error }, "Error creating user");
     return NextResponse.json(
       { message: "We could not create your account right now" },
       { status: 500, headers: { "Cache-Control": "no-store" } }
