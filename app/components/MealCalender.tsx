@@ -16,11 +16,11 @@ interface DailySummary {
 
 interface MealEntry {
     id: number;
-    name: string;
+    foodName: string;
     calories: number;
     protein: number;
-    carbs: number;
-    fats: number;
+    amount: number;
+    unit: string;
     mealId: number;
 }
 
@@ -35,6 +35,8 @@ export default function MealCalendar() {
     const [currentDate, setCurrentDate] = useState(new Date());
     // State สำหรับเก็บข้อมูลที่ดึงมาจาก Database (ที่เคยทำ API /api/meals ไว้)
     const [summaries, setSummaries] = useState<DailySummary[]>([]);
+    const [deletingMealId, setDeletingMealId] = useState<number | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const [selectedDate, setSelectedDate] = useState<Date | null>(null); // เก็บว่ากำลังกดดูวันที่เท่าไหร่
     const [dailyMeals, setDailyMeals] = useState<Meal[]>([]); // เก็บรายการอาหารของวันนั้น
@@ -110,7 +112,24 @@ export default function MealCalendar() {
         }
     };
 
+    const handleDeleteMeal = async (mealId: number) => {
+        if (!window.confirm("Delete this meal? This action cannot be undone.")) {
+            return;
+        }
 
+        setDeletingMealId(mealId);
+        setDeleteError(null);
+
+        try {
+            await axios.delete(`/api/meals/${mealId}`);
+            setDailyMeals((meals) => meals.filter((meal) => meal.id !== mealId));
+        } catch (error) {
+            logger.error({ err: error, mealId }, "Failed to delete meal");
+            setDeleteError("Unable to delete this meal. Please try again.");
+        } finally {
+            setDeletingMealId(null);
+        }
+    };
 
     return (
         <div className="mt-10 relative overflow-hidden border border-white/10 bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
@@ -270,14 +289,27 @@ export default function MealCalendar() {
                         <p className="text-sm text-white/50">No meals recorded for this day.</p>
                     ) : (
                         <div className="space-y-4">
+                            {deleteError && (
+                                <p role="alert" className="text-sm text-red-300">{deleteError}</p>
+                            )}
                             {dailyMeals.map((meal) => (
                                 <div key={meal.id} className="bg-obsidian-950/50 border border-white/5 p-4 rounded">
-                                    <p className="text-xs font-mono text-white/40 uppercase mb-2">
-                                        {meal.mealType}
-                                    </p>
+                                    <div className="mb-2 flex items-center justify-between gap-4">
+                                        <p className="text-xs font-mono text-white/40 uppercase">
+                                            {meal.mealType}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteMeal(meal.id)}
+                                            disabled={deletingMealId === meal.id}
+                                            className="rounded border border-red-400/30 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-red-300 transition-colors hover:border-red-300 hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            {deletingMealId === meal.id ? "Deleting..." : "Delete"}
+                                        </button>
+                                    </div>
 
                                     {/* วนลูปแสดงอาหารแต่ละอย่างในมื้อนั้น */}
-                                    {meal.foodEntries?.map((food: any) => (
+                                    {meal.foodEntries.map((food) => (
                                         <div key={food.id} className="flex justify-between items-center text-sm text-white/80 mt-1">
                                             <span>{food.foodName}</span>
                                             <div className="flex gap-4 text-xs font-mono">
