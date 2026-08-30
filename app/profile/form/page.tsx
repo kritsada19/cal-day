@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 export default function ProfileFormPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [formData, setFormData] = useState({
     gender: "",
     age: "",
@@ -17,8 +18,6 @@ export default function ProfileFormPage() {
     goal: "",
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-
   useEffect(() => {
     if (status === "authenticated") {
       fetch("/api/profile")
@@ -36,7 +35,7 @@ export default function ProfileFormPage() {
           }
         })
         .catch(() => {
-          setMessage({ text: "Unable to load your profile data", type: "error" });
+          toast.error("Unable to load your profile data");
         });
     }
   }, [status]);
@@ -44,7 +43,6 @@ export default function ProfileFormPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSaving(true);
-    setMessage(null);
 
     try {
       const response = await fetch("/api/profile", {
@@ -59,13 +57,11 @@ export default function ProfileFormPage() {
         throw new Error(data.message || "Unable to save your profile");
       }
 
-      setMessage({ text: data.message || "Profile saved successfully", type: "success" });
+      // Toast stays on screen through the short redirect to the profile page.
+      toast.success(data.message || "Profile saved successfully");
       setTimeout(() => router.push("/profile"), 800);
     } catch (error) {
-      setMessage({
-        text: error instanceof Error ? error.message : "Unable to save your profile",
-        type: "error",
-      });
+      toast.error(error instanceof Error ? error.message : "Unable to save your profile");
     } finally {
       setIsSaving(false);
     }
@@ -193,12 +189,6 @@ export default function ProfileFormPage() {
               </select>
             </label>
           </div>
-
-          {message && (
-            <div className={`rounded border px-4 py-3 text-sm ${message.type === "error" ? "border-red-500/30 bg-red-500/10 text-red-300" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"}`}>
-              {message.text}
-            </div>
-          )}
 
           <button
             type="submit"

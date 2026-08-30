@@ -3,6 +3,7 @@
 import axios from "axios";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -10,27 +11,17 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-
   const passwordMismatch = Boolean(confirmPassword && password && password !== confirmPassword);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setMessage(null);
-
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      setMessage({
-        text: "Please provide name, email, password and confirm password",
-        type: "error",
-      });
+      toast.error("Please provide name, email, password and confirm password");
       return;
     }
 
     if (passwordMismatch) {
-      setMessage({
-        text: "Passwords do not match",
-        type: "error",
-      });
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -44,10 +35,7 @@ export default function SignupPage() {
         confirmPassword,
       });
 
-      setMessage({
-        text: res.data?.message || "User created successfully",
-        type: "success",
-      });
+      toast.success(res.data?.message || "User created successfully");
       setName("");
       setEmail("");
       setPassword("");
@@ -57,10 +45,7 @@ export default function SignupPage() {
         ? err.response?.data?.message || "Signup failed"
         : "Unexpected error";
 
-      setMessage({
-        text: message,
-        type: "error",
-      });
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -103,41 +88,6 @@ export default function SignupPage() {
             </span>
           </div>
         </div>
-
-        {message && (
-          <div
-            className={`mb-6 border p-4 relative overflow-hidden ${
-              message.type === "error"
-                ? "bg-red-950/20 border-red-500/30"
-                : "bg-emerald-950/20 border-emerald-500/30"
-            }`}
-          >
-            <span className="absolute -top-px -left-px w-1.5 h-1.5 border-t border-l border-white/20"></span>
-            <span className="absolute -bottom-px -right-px w-1.5 h-1.5 border-b border-r border-white/20"></span>
-            <div className="flex items-center gap-3">
-              <svg
-                className={`w-5 h-5 shrink-0 ${message.type === "error" ? "text-red-500" : "text-emerald-500"}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {message.type === "error" ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                )}
-              </svg>
-              <span className={`text-[10px] tracking-wider font-mono leading-tight ${message.type === "error" ? "text-red-400" : "text-emerald-400"}`}>
-                {message.text}
-              </span>
-            </div>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">

@@ -1,30 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { toast } from "sonner";
 
 export default function NewMealPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [mealType, setMealType] = useState("BREAKFAST");
   const [mealText, setMealText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMessage({ text: "Please sign in to add a meal", type: "error" });
-    }
-  }, [status]);
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSaving(true);
-    setMessage(null);
 
     try {
       const now = new Date();
@@ -40,7 +31,8 @@ export default function NewMealPage() {
       });
 
       // ไม่ต้องเช็ค response.data.ok เพราะ axios จะ throw error อัตโนมัติถ้า status ไม่ใช่ 2xx
-      setMessage({ text: response.data.message || "Meal saved successfully", type: "success" });
+      // Toast remains visible while the page redirects, unlike an inline success message.
+      toast.success(response.data.message || "Meal saved successfully");
       setTimeout(() => router.push("/dashboard"), 900);
     } catch (error) {
       let errorMessage = "Unable to save your meal";
@@ -50,10 +42,7 @@ export default function NewMealPage() {
         errorMessage = error.message;
       }
 
-      setMessage({
-        text: errorMessage,
-        type: "error",
-      });
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -121,12 +110,6 @@ export default function NewMealPage() {
               required
             />
           </label>
-
-          {message && (
-            <div className={`rounded border px-4 py-3 text-sm ${message.type === "error" ? "border-red-500/30 bg-red-500/10 text-red-300" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"}`}>
-              {message.text}
-            </div>
-          )}
 
           <button
             type="submit"

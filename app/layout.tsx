@@ -5,6 +5,7 @@ import Navbar from "@/app/components/Navbar";
 import SessionProvider from "@/app/components/SesstionProvider";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { Toaster } from "sonner";
 
 
 const geistSans = Geist({
@@ -40,6 +41,8 @@ export default async function RootLayout({
           <main className="flex-1 flex flex-col">
             {children}
           </main>
+          {/* A single root-level host lets every client page show consistent toast feedback. */}
+          <Toaster theme="dark" richColors position="top-right" />
         </SessionProvider>
       </body>
     </html >
