@@ -38,7 +38,7 @@ async function main() {
 
   // 4. สร้างข้อมูลผู้ดูแลระบบทดสอบ (Admin User)
   logger.info({ email: "admin@example.com" }, "Creating seed admin user");
-  const adminUser = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Admin User",
       email: "admin@example.com",
@@ -81,7 +81,7 @@ async function main() {
 
   // 7. ตัวช่วยจัดการเกี่ยวกับวันที่เพื่อสร้างข้อมูลมื้ออาหารย้อนหลัง
   const now = new Date();
-  
+
   // ฟังก์ชันหาเวลาเริ่มต้นของวัน (00:00:00 UTC) สำหรับฟิลด์ date ใน DailySummary
   const getPastDateStart = (daysAgo: number) => {
     const d = new Date(now);
@@ -193,7 +193,7 @@ async function main() {
 
     for (const mealData of dayData.meals) {
       const mealCreatedAt = getPastDateWithTime(dayData.daysAgo, mealData.time.hours, mealData.time.minutes);
-      
+
       // สร้างมื้ออาหาร
       const createdMeal = await prisma.meal.create({
         data: {

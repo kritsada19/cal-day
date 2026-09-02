@@ -132,8 +132,8 @@ export default function MealCalendar() {
     };
 
     return (
-        <div className="mt-10 relative overflow-hidden border border-white/10 bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.05),transparent_45%)] pointer-events-none" />
+        <div className="mt-10 relative overflow-hidden border border-black/10 dark:border-white/10 bg-[#f8f6f1] dark:bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.05),transparent_45%)] pointer-events-none dark:block hidden" />
 
             {/* ขอบมุมตกแต่ง (สไตล์เดียวกับโปรเจกต์คุณ) */}
             <span className="absolute -top-px -left-px h-3 w-3 border-l border-t border-gold-accent" />
@@ -146,18 +146,18 @@ export default function MealCalendar() {
                     <p className="text-[10px] tracking-[0.35em] text-gold-accent font-mono uppercase">
                         History
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-[0.18em] text-white">
+                    <h2 className="mt-2 text-2xl font-semibold tracking-[0.18em] text-obsidian-950 dark:text-white">
                         Daily Meals Calendar
                     </h2>
                 </div>
             </div>
 
-            <div className="rounded border border-white/10 bg-obsidian-950/60 p-10 text-center text-white/50">
+            <div className="rounded border border-black/10 dark:border-white/10 bg-white/70 dark:bg-obsidian-950/60 p-10 text-center text-obsidian-950/50 dark:text-white/50">
                 {/* แถบหัวตารางและปุ่มเปลี่ยนเดือน */}
                 <div className="mb-4 flex items-center justify-between px-2">
                     <button
                         onClick={handlePrevMonth}
-                        className="text-xs font-mono uppercase tracking-wider text-white/40 hover:text-white/80 transition-colors px-2 py-1 border border-white/5 bg-white/5 rounded"
+                        className="text-xs font-mono uppercase tracking-wider text-obsidian-950/40 dark:text-white/40 hover:text-obsidian-950/80 dark:hover:text-white/80 transition-colors px-2 py-1 border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 rounded"
                     >
                         &larr; Prev
                     </button>
@@ -168,7 +168,7 @@ export default function MealCalendar() {
 
                     <button
                         onClick={handleNextMonth}
-                        className="text-xs font-mono uppercase tracking-wider text-white/40 hover:text-white/80 transition-colors px-2 py-1 border border-white/5 bg-white/5 rounded"
+                        className="text-xs font-mono uppercase tracking-wider text-obsidian-950/40 dark:text-white/40 hover:text-obsidian-950/80 dark:hover:text-white/80 transition-colors px-2 py-1 border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 rounded"
                     >
                         Next &rarr;
                     </button>
@@ -180,7 +180,7 @@ export default function MealCalendar() {
 
                     {/* 1. หัวตาราง วันอาทิตย์ - เสาร์ */}
                     {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                        <div key={day} className="py-2 text-white/40 font-mono text-[10px] uppercase tracking-wider">
+                        <div key={day} className="py-2 text-obsidian-950/40 dark:text-white/40 font-mono text-[10px] uppercase tracking-wider">
                             {day}
                         </div>
                     ))}
@@ -214,10 +214,10 @@ export default function MealCalendar() {
                                 // -- ปรับแก้ className ตรงนี้ เพื่อเพิ่มสีของ isToday --
                                 className={`flex flex-col items-center justify-center min-h-16 p-1 border rounded transition-colors 
                                             ${selectedDate?.getDate() === dayNumber
-                                        ? "bg-white/20 border-white/40" // สีตอนถูกคลิกเลือก
+                                        ? "bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/40" // สีตอนถูกคลิกเลือก
                                         : isToday
-                                            ? "border-emerald-accent/50 bg-emerald-accent/10 text-emerald-accent" // สีพิเศษสำหรับ "วันนี้" (ใช้สีเขียว emerald ให้ดูต่างจากปุ่มอื่น)
-                                            : "border-white/5 bg-obsidian-950/40 hover:bg-white/10 text-white/80" // สีปกติ
+                                            ? "border-emerald-accent/50 bg-emerald-accent/10 text-emerald-accent" // สีพิเศษสำหรับ "วันนี้"
+                                            : "border-black/5 dark:border-white/5 bg-white dark:bg-obsidian-950/40 hover:bg-black/5 dark:hover:bg-white/10 text-obsidian-950/80 dark:text-white/80" // สีปกติ
                                     }`}
                             >
                                 <span className={isToday ? "font-bold" : ""}>{dayNumber}</span>
@@ -240,7 +240,7 @@ export default function MealCalendar() {
             </div>
             {/* --- ส่วนแสดงรายการอาหารรายวัน (จะแสดงก็ต่อเมื่อมีการกดเลือกวันที่) --- */}
             {selectedDate && (
-                <div className="mt-8 pt-6 border-t border-white/10 text-left">
+                <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 text-left">
                     <h3 className="text-sm font-semibold tracking-widest text-gold-accent uppercase mb-4">
                         Meals on {selectedDate.toLocaleDateString()}
                     </h3>
@@ -257,24 +257,24 @@ export default function MealCalendar() {
 
                         return (
                             <div className="mb-6 grid grid-cols-2 gap-4">
-                                <div className="rounded border border-gold-accent/20 bg-obsidian-950/70 p-4">
-                                    <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Total Calories</p>
+                                <div className="rounded border border-gold-accent/20 bg-white dark:bg-obsidian-950/70 p-4">
+                                    <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Total Calories</p>
                                     <p className="mt-1 text-lg font-semibold text-gold-accent">
-                                        {selectedDaySummary.totalCalories} <span className="text-xs text-white/50">kcal</span>
+                                        {selectedDaySummary.totalCalories} <span className="text-xs text-obsidian-950/50 dark:text-white/50">kcal</span>
                                     </p>
                                     {selectedDaySummary.targetCalories > 0 && (
-                                        <p className="mt-1 text-[10px] text-white/40">
+                                        <p className="mt-1 text-[10px] text-obsidian-950/40 dark:text-white/40">
                                             Target: {selectedDaySummary.targetCalories} kcal
                                         </p>
                                     )}
                                 </div>
-                                <div className="rounded border border-emerald-accent/20 bg-obsidian-950/70 p-4">
-                                    <p className="text-[9px] tracking-[0.3em] text-white/40 font-mono uppercase">Total Protein</p>
+                                <div className="rounded border border-emerald-accent/20 bg-white dark:bg-obsidian-950/70 p-4">
+                                    <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Total Protein</p>
                                     <p className="mt-1 text-lg font-semibold text-emerald-accent">
-                                        {selectedDaySummary.totalProtein} <span className="text-xs text-white/50">g</span>
+                                        {selectedDaySummary.totalProtein} <span className="text-xs text-obsidian-950/50 dark:text-white/50">g</span>
                                     </p>
                                     {selectedDaySummary.targetProtein > 0 && (
-                                        <p className="mt-1 text-[10px] text-white/40">
+                                        <p className="mt-1 text-[10px] text-obsidian-950/40 dark:text-white/40">
                                             Target: {selectedDaySummary.targetProtein} g
                                         </p>
                                     )}
@@ -284,25 +284,25 @@ export default function MealCalendar() {
                     })()}
 
                     {isLoadingDaily ? (
-                        <p className="text-sm text-white/50">Loading meals...</p>
+                        <p className="text-sm text-obsidian-950/50 dark:text-white/50">Loading meals...</p>
                     ) : dailyMeals.length === 0 ? (
-                        <p className="text-sm text-white/50">No meals recorded for this day.</p>
+                        <p className="text-sm text-obsidian-950/50 dark:text-white/50">No meals recorded for this day.</p>
                     ) : (
                         <div className="space-y-4">
                             {deleteError && (
                                 <p role="alert" className="text-sm text-red-300">{deleteError}</p>
                             )}
                             {dailyMeals.map((meal) => (
-                                <div key={meal.id} className="bg-obsidian-950/50 border border-white/5 p-4 rounded">
+                                <div key={meal.id} className="bg-white dark:bg-obsidian-950/50 border border-black/5 dark:border-white/5 p-4 rounded">
                                     <div className="mb-2 flex items-center justify-between gap-4">
-                                        <p className="text-xs font-mono text-white/40 uppercase">
+                                        <p className="text-xs font-mono text-obsidian-950/40 dark:text-white/40 uppercase">
                                             {meal.mealType}
                                         </p>
                                         <button
                                             type="button"
                                             onClick={() => handleDeleteMeal(meal.id)}
                                             disabled={deletingMealId === meal.id}
-                                            className="rounded border border-red-400/30 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-red-300 transition-colors hover:border-red-300 hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="rounded border border-red-400/30 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-red-500 dark:text-red-300 transition-colors hover:border-red-300 hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             {deletingMealId === meal.id ? "Deleting..." : "Delete"}
                                         </button>
@@ -310,7 +310,7 @@ export default function MealCalendar() {
 
                                     {/* วนลูปแสดงอาหารแต่ละอย่างในมื้อนั้น */}
                                     {meal.foodEntries.map((food) => (
-                                        <div key={food.id} className="flex justify-between items-center text-sm text-white/80 mt-1">
+                                        <div key={food.id} className="flex justify-between items-center text-sm text-obsidian-950/80 dark:text-white/80 mt-1">
                                             <span>{food.foodName}</span>
                                             <div className="flex gap-4 text-xs font-mono">
                                                 <span className="text-gold-accent">{food.calories} kcal</span>

@@ -36,13 +36,13 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-[85vh] flex-1 flex items-center justify-center px-4 relative overflow-hidden bg-obsidian-950">
+    <div className="min-h-[85vh] flex-1 flex items-center justify-center px-4 relative overflow-hidden bg-[#f8f6f1] dark:bg-obsidian-950">
       {/* Premium Ambient Grid Backgrounds */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.06),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
       {/* Main Container Card */}
-      <div className="max-w-md w-full bg-obsidian-900 border border-white/10 p-8 md:p-10 shadow-glow-gold relative overflow-hidden">
+      <div className="max-w-md w-full bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-8 md:p-10 shadow-glow-gold relative overflow-hidden">
         {/* Top Golden Laser Line Accent */}
         <div className="absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent via-gold-accent to-transparent"></div>
 
@@ -55,7 +55,7 @@ export default function SignInPage() {
         {/* Logo and Headers Section */}
         <div className="flex flex-col items-center mb-8 select-none">
           {/* Geometric Logo Container */}
-          <div className="relative w-12 h-12 flex items-center justify-center bg-obsidian-950 border border-gold-accent/40 group hover:border-gold-accent transition-colors duration-300">
+          <div className="relative w-12 h-12 flex items-center justify-center bg-black/5 dark:bg-obsidian-950 border border-gold-accent/40 group hover:border-gold-accent transition-colors duration-300">
             <span className="absolute -top-px -left-px w-1.25 h-1.25 border-t border-l border-gold-accent"></span>
             <span className="absolute -bottom-px -right-px w-1.25 h-1.25 border-b border-r border-gold-accent"></span>
 
@@ -72,10 +72,10 @@ export default function SignInPage() {
           </div>
 
           <div className="flex flex-col items-center mt-4 text-center">
-            <span className="text-xl font-bold tracking-[0.3em] text-white font-sans">
+            <span className="text-xl font-bold tracking-[0.3em] text-obsidian-950 dark:text-white font-sans">
               CALDAY
             </span>
-            <span className="text-[9px] tracking-[0.45em] text-white/40 font-mono mt-1 uppercase">
+            <span className="text-[9px] tracking-[0.45em] text-obsidian-950/40 dark:text-white/40 font-mono mt-1 uppercase">
               SIGN IN
             </span>
           </div>
@@ -85,7 +85,7 @@ export default function SignInPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email input field */}
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
               EMAIL ADDRESS
             </label>
             <div className="relative group">
@@ -98,7 +98,7 @@ export default function SignInPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
                 placeholder="Enter your email address"
               />
             </div>
@@ -107,7 +107,7 @@ export default function SignInPage() {
           {/* Password input field */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+              <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
                 PASSWORD
               </label>
             </div>
@@ -121,7 +121,7 @@ export default function SignInPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
                 placeholder="Enter your password"
               />
             </div>
@@ -133,7 +133,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full relative px-6 py-3.5 bg-obsidian-950 border border-gold-accent/40 text-gold-accent hover:text-white hover:bg-gold-accent/10 hover:border-gold-accent text-xs font-bold tracking-[0.25em] font-sans transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group rounded-none"
+              className="w-full relative px-6 py-3.5 bg-black/5 dark:bg-obsidian-950 border border-gold-accent/40 text-gold-accent hover:text-obsidian-950 dark:hover:text-white hover:bg-gold-accent/10 hover:border-gold-accent text-xs font-bold tracking-[0.25em] font-sans transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group rounded-none"
             >
               {/* Corner decorative brackets on hover */}
               <span className="absolute bottom-1.5 left-2.5 w-1.5 h-1.5 border-b border-l border-gold-accent/0 group-hover:border-gold-accent/60 transition-all duration-300"></span>
@@ -146,16 +146,16 @@ export default function SignInPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-white/10"></div>
-          <span className="text-[9px] tracking-[0.3em] text-white/30 font-mono">OR</span>
-          <div className="flex-1 h-px bg-white/10"></div>
+          <div className="flex-1 h-px bg-black/10 dark:bg-white/10"></div>
+          <span className="text-[9px] tracking-[0.3em] text-obsidian-950/30 dark:text-white/30 font-mono">OR</span>
+          <div className="flex-1 h-px bg-black/10 dark:bg-white/10"></div>
         </div>
 
         {/* Google Sign In Button */}
         <button
           type="button"
           onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="w-full relative flex items-center justify-center gap-3 px-6 py-3.5 bg-obsidian-950 border border-white/10 hover:border-white/30 text-white/70 hover:text-white text-xs font-bold tracking-[0.2em] font-sans transition-all duration-300 cursor-pointer group rounded-none"
+          className="w-full relative flex items-center justify-center gap-3 px-6 py-3.5 bg-black/5 dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30 text-obsidian-950/70 dark:text-white/70 hover:text-obsidian-950 dark:hover:text-white text-xs font-bold tracking-[0.2em] font-sans transition-all duration-300 cursor-pointer group rounded-none"
         >
           {/* Corner decorative brackets on hover */}
           <span className="absolute bottom-1.5 left-2.5 w-1.5 h-1.5 border-b border-l border-white/0 group-hover:border-white/30 transition-all duration-300"></span>
@@ -173,8 +173,8 @@ export default function SignInPage() {
         </button>
 
         {/* Footer links */}
-        <div className="mt-8 pt-6 border-t border-white/5 text-center relative">
-          <span className="text-[9px] tracking-widest text-white/30 font-mono">
+        <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 text-center relative">
+          <span className="text-[9px] tracking-widest text-obsidian-950/30 dark:text-white/30 font-mono">
             NEW USER?{" "}
             <Link
               href="/signup"

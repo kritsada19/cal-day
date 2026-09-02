@@ -1,25 +1,37 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+import type Stripe from "stripe";
+
 /**
  * คำนวณหาวันที่สิ้นสุดรอบบิลปัจจุบันของการสมัครสมาชิก (Subscription)
- * 
+ *
  * @param subscription - Object ข้อมูล Subscription จาก Stripe
  * @returns Date object ที่แสดงถึงวันที่สิ้นสุดรอบบิล
  */
-function getPeriodEnd(subscription: any) {
-    // ถ้าระบุ current_period_end มาให้แล้ว (timestamp หน่วยเป็นวินาที)
-    if (subscription.current_period_end) {
-        return new Date(subscription.current_period_end * 1000);
+function getPeriodEnd(subscription: Stripe.Subscription): Date {
+    // Stripe API เวอร์ชันใหม่ย้าย current_period_end ไปอยู่ระดับ item
+    // เช็คทั้งสองที่เผื่อ pin API version คนละแบบ
+    const itemPeriodEnd = subscription.items?.data?.[0]?.current_period_end;
+    const topLevelPeriodEnd = (subscription as unknown as { current_period_end?: number })
+        .current_period_end;
+
+    const periodEnd = itemPeriodEnd ?? topLevelPeriodEnd;
+    if (periodEnd) {
+        return new Date(periodEnd * 1000);
     }
 
-    // ถ้าไม่มี ให้คำนวณจาก billing_cycle_anchor และรอบเวลา (interval)
+    // Fallback: คำนวณจาก billing_cycle_anchor และรอบเวลา (interval)
     const anchor = subscription.billing_cycle_anchor;
-    const interval = subscription.plan?.interval;
-    const count = subscription.plan?.interval_count ?? 1;
+    const price = subscription.items?.data?.[0]?.price;
+    const interval = price?.recurring?.interval;
+    const count = price?.recurring?.interval_count ?? 1;
 
-    // แปลง anchor timestamp (วินาที) เป็น Date object
+    if (!anchor || !interval) {
+        throw new Error(
+            `getPeriodEnd: ไม่สามารถคำนวณวันสิ้นสุดรอบบิลได้ (subscription: ${subscription.id})`
+        );
+    }
+
     const date = new Date(anchor * 1000);
 
-    // บวกเวลาเพิ่มตามรอบบิล
     if (interval === "month") {
         date.setMonth(date.getMonth() + count);
     } else if (interval === "year") {

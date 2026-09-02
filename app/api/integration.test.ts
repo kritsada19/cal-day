@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
+import { getSession } from "@/lib/auth/session";
 import { GET as getMeals, POST as createMeal } from "@/app/api/meals/route";
 import { GET as getProfile, POST as saveProfile } from "@/app/api/profile/route";
 import prisma from "@/lib/db/prisma";
@@ -11,6 +11,10 @@ import { checkAndComsumeAiQuota, getUserAiQuota } from "@/lib/services/ai-quota"
 import { checkRateLimit } from "@/lib/rate-limit";
 import type { Session } from "next-auth";
 import type { RateLimitResult } from "@/lib/rate-limit";
+
+vi.mock("@/lib/auth/session", () => ({
+  getSession: vi.fn(),
+}));
 
 vi.mock("@/lib/rate-limit", () => ({
   checkRateLimit: vi.fn().mockResolvedValue({
@@ -30,7 +34,7 @@ vi.mock("@/lib/services/ai-quota", () => ({
 }));
 
 describe("API Integration Tests", () => {
-  const mockSession = vi.mocked(getServerSession);
+  const mockSession = vi.mocked(getSession);
   const mockRateLimit = vi.mocked(checkRateLimit);
   const mockAnalyzeFood = vi.mocked(analyzeFood);
   const mockQuotaCheck = vi.mocked(checkAndComsumeAiQuota);
@@ -68,9 +72,12 @@ describe("API Integration Tests", () => {
 
     mockQuotaCheck.mockResolvedValue(undefined);
 
+
+
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 7,
       subscription: { plan: "FREE" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     const tx = {
@@ -94,6 +101,7 @@ describe("API Integration Tests", () => {
       },
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockPrisma.$transaction.mockImplementation(async (callback) => callback(tx as any));
 
     const request = new NextRequest("http://localhost/api/meals", {
@@ -178,6 +186,7 @@ describe("API Integration Tests", () => {
         targetProtein: 126,
         updatedAt: new Date(),
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     mockPrisma.dailySummary.findFirst.mockResolvedValue({

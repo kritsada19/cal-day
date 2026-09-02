@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/sesstion";
+import { getSession } from "@/lib/auth/session";
 import prisma from "@/lib/db/prisma";
 import { redis } from "@/lib/db/redis";
 import { checkRateLimit } from "@/lib/rate-limit";

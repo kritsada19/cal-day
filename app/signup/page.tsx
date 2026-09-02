@@ -52,11 +52,11 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-[85vh] flex-1 flex items-center justify-center px-4 relative overflow-hidden bg-obsidian-950">
+    <div className="min-h-[85vh] flex-1 flex items-center justify-center px-4 relative overflow-hidden bg-[#f8f6f1] dark:bg-obsidian-950">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.06),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
-      <div className="max-w-md w-full bg-obsidian-900 border border-white/10 p-8 md:p-10 shadow-glow-gold relative overflow-hidden">
+      <div className="max-w-md w-full bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-8 md:p-10 shadow-glow-gold relative overflow-hidden">
         <div className="absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent via-gold-accent to-transparent"></div>
 
         <span className="absolute -top-px -left-px w-2.5 h-2.5 border-t border-l border-gold-accent"></span>
@@ -65,7 +65,7 @@ export default function SignupPage() {
         <span className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b border-r border-gold-accent"></span>
 
         <div className="flex flex-col items-center mb-8 select-none">
-          <div className="relative w-12 h-12 flex items-center justify-center bg-obsidian-950 border border-gold-accent/40 group hover:border-gold-accent transition-colors duration-300">
+          <div className="relative w-12 h-12 flex items-center justify-center bg-black/5 dark:bg-obsidian-950 border border-gold-accent/40 group hover:border-gold-accent transition-colors duration-300">
             <span className="absolute -top-px -left-px w-1.25 h-1.25 border-t border-l border-gold-accent"></span>
             <span className="absolute -bottom-px -right-px w-1.25 h-1.25 border-b border-r border-gold-accent"></span>
 
@@ -82,8 +82,8 @@ export default function SignupPage() {
           </div>
 
           <div className="flex flex-col items-center mt-4 text-center">
-            <span className="text-xl font-bold tracking-[0.3em] text-white font-sans">CALDAY</span>
-            <span className="text-[9px] tracking-[0.45em] text-white/40 font-mono mt-1 uppercase">
+            <span className="text-xl font-bold tracking-[0.3em] text-obsidian-950 dark:text-white font-sans">CALDAY</span>
+            <span className="text-[9px] tracking-[0.45em] text-obsidian-950/40 dark:text-white/40 font-mono mt-1 uppercase">
               CREATE YOUR ACCOUNT
             </span>
           </div>
@@ -91,7 +91,7 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
               FULL NAME
             </label>
             <div className="relative group">
@@ -102,14 +102,14 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
                 placeholder="Enter your full name"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
               EMAIL ADDRESS
             </label>
             <div className="relative group">
@@ -121,14 +121,14 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
                 placeholder="Enter your email address"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
               PASSWORD
             </label>
             <div className="relative group">
@@ -141,14 +141,14 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
                 placeholder="Enter a password"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-white/50 font-mono font-bold uppercase">
+            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
               CONFIRM PASSWORD
             </label>
             <div className="relative group">
@@ -161,7 +161,7 @@ export default function SignupPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full bg-obsidian-950 border border-white/10 hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-white placeholder-white/20 transition-all duration-300 font-mono rounded-none"
+                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
                 placeholder="Repeat your password"
               />
             </div>
@@ -174,7 +174,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || passwordMismatch}
-              className="w-full relative px-6 py-3.5 bg-obsidian-950 border border-gold-accent/40 text-gold-accent hover:text-white hover:bg-gold-accent/10 hover:border-gold-accent text-xs font-bold tracking-[0.25em] font-sans transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group rounded-none"
+              className="w-full relative px-6 py-3.5 bg-black/5 dark:bg-obsidian-950 border border-gold-accent/40 text-gold-accent hover:text-obsidian-950 dark:hover:text-white hover:bg-gold-accent/10 hover:border-gold-accent text-xs font-bold tracking-[0.25em] font-sans transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group rounded-none"
             >
               <span className="absolute bottom-1.5 left-2.5 w-1.5 h-1.5 border-b border-l border-gold-accent/0 group-hover:border-gold-accent/60 transition-all duration-300"></span>
               <span className="absolute top-1.5 right-2.5 w-1.5 h-1.5 border-t border-r border-gold-accent/0 group-hover:border-gold-accent/60 transition-all duration-300"></span>
@@ -184,8 +184,8 @@ export default function SignupPage() {
           </div>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-white/5 text-center relative">
-          <span className="text-[9px] tracking-widest text-white/30 font-mono">
+        <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 text-center relative">
+          <span className="text-[9px] tracking-widest text-obsidian-950/30 dark:text-white/30 font-mono">
             ALREADY HAVE AN ACCOUNT?{" "}
             <Link
               href="/signin"

@@ -1,12 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getSession } from "@/lib/auth/session";
 import prisma from "@/lib/db/prisma";
 import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/lib/nutrition";
 import { getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
 
@@ -23,7 +21,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -91,7 +89,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
