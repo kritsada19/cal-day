@@ -21,12 +21,12 @@ jobs:
         SKIP_ENV_VERIFICATION: 1
 
     services:
-        postgres:
-          image: postgres:15-alpine
-          env:
-            POSTGRES_USER: user
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: db
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: db
         # Mapping Port จากเครื่องรัน (5432) เข้า Service (5432)
         ports:
           - 5432:5432
