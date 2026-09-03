@@ -18,6 +18,9 @@ jobs:
         STRIPE_SECRET_KEY: sk_test_51U1zU016a22NhhGw0yF1G9ZcRQPW5LEpaS0PKkg90UHhMNUvrwbkOQkC7GOWag0Dj7382vDtWVDPWXROQdLmrlSe00mnE2BeIo
         STRIPE_WEBHOOK_SECRET: whsec_72f4f0d8f4e2a00f4872c7a138c0383b804137e284d88b4402fd85f9384d0665
         STRIPE_PRO_PRICE_ID: price_1U2SCJ16a22NhhGwefJ6IUrw
+        GOOGLE_CLIENT_ID: 539496422078-0dods44i3goq9ot6lsnrm7romf3igm0f.apps.googleusercontent.com
+        GOOGLE_CLIENT_SECRET: [OAUTH_CLIENT_SECRET]
+        GOOGLE_GENERATIVE_AI_API_KEY: [GCP_API_KEY]
         
         SKIP_ENV_VERIFICATION: 1
 
@@ -37,16 +40,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
-      redis:
-          image: redis:7-alpine
-          ports:
-            - 6379:6379
-          options: >-
-            --health-cmd redis-cli ping
-            --health-interval 10s
-            --health-timeout 5s
-            --health-retries 5
 
     steps:
       - name: Checkout code
