@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-gold-50: #FDFBF7;
   --color-gold-100: #FBF7EE;
@@ -24,4 +26,19 @@
 
   --color-emerald-accent: #00DF89;
   --color-emerald-glow: rgba(0, 223, 137, 0.15);
+
+  --shadow-glow-gold: 0 0 15px rgba(212, 175, 55, 0.25);
+  --shadow-glow-emerald: 0 0 15px rgba(0, 223, 137, 0.25);
+}
+
+/* ── Light mode base ────────────────────────────────────── */
+html {
+  background-color: #f8f6f1;
+  color: #0c0c0e;
+}
+
+/* ── Dark mode base ─────────────────────────────────────── */
+html.dark {
+  background-color: #050506;
+  color: #ffffff;
 }

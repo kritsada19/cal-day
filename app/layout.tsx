@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/app/components/Navbar";
+import Navbar from "@/components/ui/Navbar";
+import SessionProvider from "@/components/providers/SessionProvider";
+import { getSession } from "@/lib/auth/session";
+import ThemeProvider from "@/components/providers/ThemeProvider";
+import ThemedToaster from "@/components/ui/ThemedToaster";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,26 +19,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CalDay // Daily Calorie Tracker",
-  description: "Luxurious and precise daily calorie and metabolic chronometer.",
+  title: "CalDay — Simple daily calorie tracking",
+  description: "A simple and clear way to track calories, habits, and daily progress.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getSession();
+
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-obsidian-950 text-white selection:bg-gold-accent selection:text-black antialiased">
-        <Navbar />
-        <main className="flex-1 flex flex-col">
-          {children}
-        </main>
+      <body className="min-h-full flex flex-col bg-[#f8f6f1] dark:bg-obsidian-950 text-obsidian-950 dark:text-white selection:bg-gold-accent selection:text-black antialiased transition-colors duration-300">
+        <SessionProvider session={session}>
+          <ThemeProvider>
+            <Navbar />
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+            {/* ThemedToaster reads the resolved theme from next-themes and passes it to Sonner */}
+            <ThemedToaster />
+          </ThemeProvider>
+        </SessionProvider>
       </body>
-    </html>
+    </html >
   );
 }
