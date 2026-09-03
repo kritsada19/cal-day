@@ -11,18 +11,17 @@ jobs:
     runs-on: ubuntu-latest
       
     env:
-        DATABASE_URL: postgresql://user:password@localhost:5432/db?schema=public
-        REDIS_URL: redis://localhost:6379
-        NEXTAUTH_SECRET: d6e3d2c0c6a564a2e8f79a61f6a9547036100229112b521cb1e0a704dweddddh
-        NEXTAUTH_URL: http://localhost:3000
-        STRIPE_SECRET_KEY: sk_test_51U1zU016a22NhhGw0yF1G9ZcRQPW5LEpaS0PKkg90UHhMNUvrwbkOQkC7GOWag0Dj7382vDtWVDPWXROQdLmrlSe00mnE2BeIo
-        STRIPE_WEBHOOK_SECRET: whsec_72f4f0d8f4e2a00f4872c7a138c0383b804137e284d88b4402fd85f9384d0665
-        STRIPE_PRO_PRICE_ID: price_1U2SCJ16a22NhhGwefJ6IUrw
-        GOOGLE_CLIENT_ID: 539496422078-0dods44i3goq9ot6lsnrm7romf3igm0f.apps.googleusercontent.com
-        GOOGLE_CLIENT_SECRET: [OAUTH_CLIENT_SECRET]
-        GOOGLE_GENERATIVE_AI_API_KEY: [GCP_API_KEY]
-        
-        SKIP_ENV_VERIFICATION: 1
+      DATABASE_URL: postgresql://user:password@localhost:5432/db?schema=public
+      REDIS_URL: redis://localhost:6379
+      NEXTAUTH_SECRET: d6e3d2c0c6a564a2e8f79a61f6a9547036100229112b521cb1e0a704dweddddh
+      NEXTAUTH_URL: http://localhost:3000
+      STRIPE_SECRET_KEY: sk_test_51U1zU016a22NhhGw0yF1G9ZcRQPW5LEpaS0PKkg90UHhMNUvrwbkOQkC7GOWag0Dj7382vDtWVDPWXROQdLmrlSe00mnE2BeIo
+      STRIPE_WEBHOOK_SECRET: whsec_72f4f0d8f4e2a00f4872c7a138c0383b804137e284d88b4402fd85f9384d0665
+      STRIPE_PRO_PRICE_ID: price_1U2SCJ16a22NhhGwefJ6IUrw
+      GOOGLE_CLIENT_ID: dummy-client-id
+      GOOGLE_CLIENT_SECRET: dummy-client-secret
+      GOOGLE_GENERATIVE_AI_API_KEY: dummy-gen-ai-key
+      SKIP_ENV_VERIFICATION: 1
 
     services:
       postgres:
