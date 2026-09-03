@@ -32,5 +32,6 @@ export const env = createEnv({
         STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
         STRIPE_PRO_PRICE_ID: process.env.STRIPE_PRO_PRICE_ID,
         GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-    }
+    },
+    skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 })
