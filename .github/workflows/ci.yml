@@ -7,11 +7,10 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    build-and-test:
-      runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest
       
-      env:
+    env:
         DATABASE_URL: postgresql://user:password@localhost:5432/db?schema=public
         NEXTAUTH_SECRET: d6e3d2c0c6a564a2e8f79a61f6a9547036100229112b521cb1e0a704bc8ef196
         NEXTAUTH_URL: http://localhost:3000
@@ -21,12 +20,12 @@ jobs:
         
         SKIP_ENV_VERIFICATION: 1
 
-      services:
+    services:
         postgres:
           image: postgres:15-alpine
           env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
           POSTGRES_DB: db
         # Mapping Port จากเครื่องรัน (5432) เข้า Service (5432)
         ports:
