@@ -113,6 +113,8 @@ jobs:
       # สร้าง Prisma Client อีกครั้งเพื่อเตรียมรองรับการ Build
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       # รัน Seed Database
       - name: Run seed
