@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import type { NutritionTargets } from "@/lib/nutrition";
-import MealCalendar from "../components/ui/MealCalender";
+import MealCalendar from "@/components/ui/MealCalender";
 
 type ProfileApiResponse = {
   profile: {

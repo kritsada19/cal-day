@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import axios from "axios";
 import { logger } from "@/lib/logger";
-import ThemeToggle from "@/app/components/ui/ThemeToggle";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 interface NavItem {
   label: string;
