@@ -76,7 +76,6 @@ jobs:
         run: npm run build
   
   deploy:
-    # ระบุว่าต้องรอให้งาน 'build-and-test' ผ่านก่อน
     needs: build-and-test
     # รันเฉพาะเมื่อเป็นเหตุการณ์ Push และอยู่ที่ Branch 'main' เท่านั้น
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
