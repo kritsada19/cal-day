@@ -127,6 +127,9 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Remove Vercel config
+        run: rm -rf .vercel
+  
       # ดึงข้อมูลการตั้งค่าและ Environment จาก Vercel ลงมาเตรียมไว้
       - name: Pull Vercel env
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
