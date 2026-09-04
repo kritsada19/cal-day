@@ -129,6 +129,14 @@ jobs:
 
       - name: Remove Vercel config
         run: rm -rf .vercel
+
+      - name: Debug Vercel vars
+        run: |
+          echo "ORG_ID length: ${#VERCEL_ORG_ID}"
+          echo "PROJECT_ID length: ${#VERCEL_PROJECT_ID}"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   
       # ดึงข้อมูลการตั้งค่าและ Environment จาก Vercel ลงมาเตรียมไว้
       - name: Pull Vercel env
