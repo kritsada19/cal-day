@@ -122,45 +122,4 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SKIP_ENV_VALIDATION: "true"
         run: npx prisma db seed
-
-      # ติดตั้งเครื่องมือ Vercel CLI แบบ Global
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Remove Vercel config
-        run: rm -rf .vercel
-  
-      # ดึงข้อมูลการตั้งค่าและ Environment จาก Vercel ลงมาเตรียมไว้
-      - name: Pull Vercel env
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }} 
-          
-
-      - name: Debug - check env file
-        run: |
-          echo "--- .vercel directory ---"
-          ls -la .vercel/
-          echo "--- env file line count ---"
-          wc -l .vercel/.env.production.local 2>/dev/null || echo "FILE NOT FOUND"
-          echo "--- env file keys (no values) ---"
-          cut -d'=' -f1 .vercel/.env.production.local 2>/dev/null || echo "EMPTY OR MISSING"
-          echo "--- linked project ---"
-          cat .vercel/project.json
-        
-      - name: Debug - check env value lengths
-        run: |
-          while IFS='=' read -r key value; do
-            [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
-            echo "$key : length=${#value}"
-          done < .vercel/.env.production.local
-
-      # ทำการ Build แอปพลิเคชันด้วยคำสั่งของ Vercel (เพื่อให้ได้ไฟล์ที่ Optimize แล้ว)
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      # ส่งไฟล์ที่ Build เสร็จแล้วขึ้นไปรันบน Vercel ทันที
-      - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           
