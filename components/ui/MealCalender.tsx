@@ -163,7 +163,7 @@ export default function MealCalendar() {
                     </button>
 
                     <span className="text-sm font-semibold tracking-widest text-gold-accent uppercase">
-                        {currentDate.toLocaleString("default", { month: "long" })} {currentDate.getFullYear()}
+                        {currentDate.toLocaleString("en-US", { month: "long" })} {currentDate.getFullYear()}
                     </span>
 
                     <button
@@ -242,7 +242,7 @@ export default function MealCalendar() {
             {selectedDate && (
                 <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 text-left">
                     <h3 className="text-sm font-semibold tracking-widest text-gold-accent uppercase mb-4">
-                        Meals on {selectedDate.toLocaleDateString()}
+                        Meals on {selectedDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                     </h3>
 
                     {(() => {

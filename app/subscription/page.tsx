@@ -42,22 +42,26 @@ export default function SubscriptionPage() {
         {/* Subtle background glow effect */}
         <div className="absolute inset-0 bg-gold-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
-        <div className="text-center mb-10 relative z-10">
-          <h2 className="text-xl font-bold tracking-[0.2em] text-gold-accent font-sans mb-2">
-            PREMIUM ACCESS
+        <div className="text-center mb-8 relative z-10">
+          <h2 className="text-2xl font-bold tracking-[0.2em] text-gold-accent font-sans mb-2">
+            PRO PLAN
           </h2>
-          <p className="text-xs text-obsidian-950/50 dark:text-white/50 font-mono tracking-widest">
-            UNLOCK YOUR FULL POTENTIAL
+          <p className="text-xs text-obsidian-950/50 dark:text-white/50 font-mono tracking-widest mb-4">
+            MASTER YOUR NUTRITION
           </p>
+          <div className="flex justify-center items-end gap-1">
+            <span className="text-3xl font-bold text-obsidian-950 dark:text-white font-sans">฿199</span>
+            <span className="text-xs text-obsidian-950/50 dark:text-white/50 font-mono mb-1">/ month</span>
+          </div>
         </div>
 
         {/* Feature List */}
-        <div className="space-y-6 mb-12 relative z-10">
+        <div className="space-y-5 mb-10 relative z-10">
           {[
-            "UNLIMITED MEAL LOGGING",
-            "ADVANCED ANALYTICS & INSIGHTS",
-            "CUSTOM MACRO TARGETS",
-            "PRIORITY CUSTOMER SUPPORT"
+            "UNLIMITED DAILY MEAL LOGGING",
+            "TRACK CALORIES & MACROS",
+            "PERSONALIZED NUTRITION GOALS",
+            "FULL PROGRESS CALENDAR ACCESS"
           ].map((feature, i) => (
             <div key={i} className="flex items-center gap-4 group/feature">
               {/* Custom checkbox/bullet */}

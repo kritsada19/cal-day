@@ -26,9 +26,9 @@ export default function ProfileError({
   }, [error]);
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 text-center">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 text-center bg-[#f8f6f1] dark:bg-obsidian-950">
       {/* Icon แสดงสถานะ error */}
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-red-600">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -47,17 +47,17 @@ export default function ProfileError({
 
       {/* ข้อความแจ้ง error */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          โปรไฟล์โหลดไม่ได้
+        <h2 className="text-2xl font-semibold tracking-tight text-obsidian-950 dark:text-white">
+          Unable to load profile
         </h2>
-        <p className="max-w-md text-muted-foreground">
-          เกิดข้อผิดพลาดขณะโหลดข้อมูลโปรไฟล์ของคุณ
-          กรุณาลองรีเฟรชหน้าหรือลองใหม่อีกครั้ง
+        <p className="max-w-md text-obsidian-950/60 dark:text-white/60">
+          An error occurred while loading your profile data.
+          Please try refreshing the page or try again.
         </p>
 
         {/* แสดง error digest เฉพาะ development mode เพื่อช่วย debug */}
         {error.digest && (
-          <p className="text-xs text-muted-foreground/60">
+          <p className="text-xs text-obsidian-950/40 dark:text-white/40">
             Error ID: {error.digest}
           </p>
         )}
@@ -66,9 +66,9 @@ export default function ProfileError({
       {/* ปุ่ม retry — เรียก reset() เพื่อให้ Next.js ลอง render segment ใหม่ */}
       <button
         onClick={reset}
-        className="rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="rounded-md bg-black/5 dark:bg-white/10 px-6 py-2.5 text-sm font-medium text-obsidian-950 dark:text-white transition-colors hover:bg-black/10 dark:hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-accent"
       >
-        ลองใหม่อีกครั้ง
+        Try again
       </button>
     </div>
   );

@@ -174,8 +174,13 @@ export default function Navbar() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center w-48 py-2">
-                    <span className="text-[10px] tracking-widest text-obsidian-950/50 dark:text-white/50 font-mono">ยังไม่ได้กรอกโปรไฟล์</span>
+                  <div className="flex items-center justify-center w-48 py-1.5">
+                    <Link
+                      href="/profile/form"
+                      className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
+                    >
+                      FILL PROFILE
+                    </Link>
                   </div>
                 )}
               </div>
@@ -191,7 +196,7 @@ export default function Navbar() {
                       <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">{userData?.subscription?.plan} PLAN</span>
                     </div>
                     {/* Avatar Frame (Sharp Box) */}
-                    <div className="w-8 h-8 bg-obsidian-700 border border-gold-accent flex items-center justify-center text-xs font-bold text-gold-accent group-hover:bg-gold-accent group-hover:text-black transition-all duration-300">
+                    <div className="w-8 h-8 bg-black/5 dark:bg-obsidian-700 border border-gold-accent flex items-center justify-center text-xs font-bold text-gold-accent group-hover:bg-gold-accent group-hover:text-obsidian-950 transition-all duration-300">
                       {session?.user?.name?.substring(0, 2)}
                     </div>
                   </div>
@@ -290,8 +295,14 @@ export default function Navbar() {
                       </div>
                     </>
                   ) : (
-                    <div className="flex items-center justify-center py-2">
-                      <span className="text-[10px] tracking-widest text-obsidian-950/50 dark:text-white/50 font-mono">ยังไม่ได้กรอกโปรไฟล์</span>
+                    <div className="flex items-center justify-center pt-2">
+                      <Link
+                        href="/profile/form"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2.5 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
+                      >
+                        FILL PROFILE
+                      </Link>
                     </div>
                   )}
                 </div>
@@ -302,7 +313,7 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 border-t border-black/10 dark:border-white/10 pt-4 px-1"
                 >
-                  <div className="w-10 h-10 bg-obsidian-700 border border-gold-accent flex items-center justify-center text-sm font-bold text-gold-accent">
+                  <div className="w-10 h-10 bg-black/5 dark:bg-obsidian-700 border border-gold-accent flex items-center justify-center text-sm font-bold text-gold-accent">
                     {session?.user?.name?.substring(0, 2) || "?"}
                   </div>
                   <div className="flex flex-col">

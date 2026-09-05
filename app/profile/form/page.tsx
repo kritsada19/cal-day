@@ -69,20 +69,20 @@ export default function ProfileFormPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-obsidian-950 px-4 py-10">
-        <p className="text-sm uppercase tracking-[0.35em] text-white/60">Loading...</p>
+      <div className="min-h-[85vh] flex items-center justify-center bg-[#f8f6f1] dark:bg-obsidian-950 px-4 py-10">
+        <p className="text-sm uppercase tracking-[0.35em] text-obsidian-950/60 dark:text-white/60">Loading...</p>
       </div>
     );
   }
 
   if (status !== "authenticated") {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-obsidian-950 px-4 py-10">
-        <div className="w-full max-w-md rounded border border-white/10 bg-obsidian-900 p-8 text-center">
+      <div className="min-h-[85vh] flex items-center justify-center bg-[#f8f6f1] dark:bg-obsidian-950 px-4 py-10">
+        <div className="w-full max-w-md rounded border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-8 text-center">
           <p className="text-[10px] uppercase tracking-[0.35em] text-gold-accent">Access required</p>
-          <h1 className="mt-3 text-2xl font-semibold text-white">Please sign in first</h1>
-          <p className="mt-3 text-sm text-white/60">You need to log in before filling in your personal information.</p>
-          <Link href="/signin" className="mt-6 inline-flex w-full items-center justify-center border border-gold-accent/40 bg-obsidian-950 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/10 hover:text-white">
+          <h1 className="mt-3 text-2xl font-semibold text-obsidian-950 dark:text-white">Please sign in first</h1>
+          <p className="mt-3 text-sm text-obsidian-950/60 dark:text-white/60">You need to log in before filling in your personal information.</p>
+          <Link href="/signin" className="mt-6 inline-flex w-full items-center justify-center border border-gold-accent/40 bg-black/5 dark:bg-obsidian-950 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/10 hover:text-obsidian-950 dark:hover:text-white">
             Go to sign in
           </Link>
         </div>
@@ -91,26 +91,26 @@ export default function ProfileFormPage() {
   }
 
   return (
-    <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 bg-obsidian-950">
-      <div className="mx-auto max-w-3xl rounded border border-white/10 bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
+    <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 bg-[#f8f6f1] dark:bg-obsidian-950">
+      <div className="mx-auto max-w-3xl rounded border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-[0.35em] text-gold-accent">Personal information</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[0.2em] text-white">Fill your profile</h1>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[0.2em] text-obsidian-950 dark:text-white">Fill your profile</h1>
           </div>
-          <Link href="/profile" className="inline-flex items-center justify-center border border-white/10 bg-obsidian-950 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-white/70 transition-all duration-300 hover:border-gold-accent/50 hover:text-gold-accent">
+          <Link href="/profile" className="inline-flex items-center justify-center border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-obsidian-950/70 dark:text-white/70 transition-all duration-300 hover:border-gold-accent/50 hover:text-gold-accent">
             Back to profile
           </Link>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div className="grid gap-5 md:grid-cols-2">
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-white/45">Gender</span>
+            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Gender</span>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full border border-white/10 bg-obsidian-950 px-3 py-3 text-white outline-none transition focus:border-gold-accent"
+                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
                 required
               >
                 <option value="">Select</option>
@@ -119,50 +119,50 @@ export default function ProfileFormPage() {
               </select>
             </label>
 
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-white/45">Age</span>
+            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Age</span>
               <input
                 type="number"
                 min="1"
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                className="w-full border border-white/10 bg-obsidian-950 px-3 py-3 text-white outline-none transition focus:border-gold-accent"
+                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
                 required
               />
             </label>
 
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-white/45">Weight (kg)</span>
+            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Weight (kg)</span>
               <input
                 type="number"
                 min="1"
                 step="0.1"
                 value={formData.weight}
                 onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                className="w-full border border-white/10 bg-obsidian-950 px-3 py-3 text-white outline-none transition focus:border-gold-accent"
+                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
                 required
               />
             </label>
 
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-white/45">Height (cm)</span>
+            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Height (cm)</span>
               <input
                 type="number"
                 min="1"
                 step="0.1"
                 value={formData.height}
                 onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                className="w-full border border-white/10 bg-obsidian-950 px-3 py-3 text-white outline-none transition focus:border-gold-accent"
+                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
                 required
               />
             </label>
 
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-white/45">Exercise level</span>
+            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Exercise level</span>
               <select
                 value={formData.exerciseLevel}
                 onChange={(e) => setFormData({ ...formData, exerciseLevel: e.target.value })}
-                className="w-full border border-white/10 bg-obsidian-950 px-3 py-3 text-white outline-none transition focus:border-gold-accent"
+                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
                 required
               >
                 <option value="">Select</option>
@@ -174,12 +174,12 @@ export default function ProfileFormPage() {
               </select>
             </label>
 
-            <label className="space-y-2 text-sm text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-white/45">Goal</span>
+            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Goal</span>
               <select
                 value={formData.goal}
                 onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                className="w-full border border-white/10 bg-obsidian-950 px-3 py-3 text-white outline-none transition focus:border-gold-accent"
+                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
                 required
               >
                 <option value="">Select</option>
@@ -193,7 +193,7 @@ export default function ProfileFormPage() {
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 disabled:cursor-not-allowed disabled:opacity-70 hover:text-obsidian-950 dark:hover:text-white"
           >
             {isSaving ? "Saving..." : "Save profile"}
           </button>
