@@ -6,6 +6,7 @@ import SessionProvider from "@/components/providers/SessionProvider";
 import { getSession } from "@/lib/auth/session";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import ThemedToaster from "@/components/ui/ThemedToaster";
+import { env } from "@/lib/env";
 
 
 const geistSans = Geist({
@@ -21,6 +22,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CalDay — Simple daily calorie tracking",
   description: "A simple and clear way to track calories, habits, and daily progress.",
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+  icons: {
+    icon: "/logo.png",
+  }
 };
 
 export default async function RootLayout({
