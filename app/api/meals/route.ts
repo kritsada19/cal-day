@@ -156,8 +156,6 @@ export async function POST(request: NextRequest) {
       .toLowerCase()
       .replace(/\s+/g, "");
 
-  const normalizedInput = normalize(rawText);
-
   // =========================
   // หาเมนูเดิมจาก FoodEntry
   // =========================
@@ -191,16 +189,16 @@ export async function POST(request: NextRequest) {
   for (const menuItem of menuItems) {
     let remainingText = normalize(menuItem);
 
-  for (const food of existingFoods) {
-    const normalizedFoodName = normalize(food.foodName);
+    for (const food of existingFoods) {
+      const normalizedFoodName = normalize(food.foodName);
 
-    if (remainingText.includes(normalizedFoodName)) {
-      foundFoods.push(food);
+      if (remainingText.includes(normalizedFoodName)) {
+        foundFoods.push(food);
 
-      remainingText = remainingText.replace(
-        normalizedFoodName,
-        ""
-      );
+        remainingText = remainingText.replace(
+          normalizedFoodName,
+          ""
+        );
       }
     }
 
@@ -219,7 +217,7 @@ export async function POST(request: NextRequest) {
     ReturnType<typeof analyzeFood>
   > | null = null;
 
-  let aiQuotaConsumed = false;
+  const aiQuotaConsumed = false;
 
   if (unknownMenuItems.length > 0) {
     // ส่งเฉพาะเมนูที่ไม่พบใน DB ให้ AI วิเคราะห์
