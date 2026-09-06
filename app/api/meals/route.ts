@@ -55,6 +55,22 @@ export async function POST(request: NextRequest) {
   const userId = Number(session.user.id);
 
   // =========================
+  // แบ่งแต่ละเมนูด้วย ","
+  // =========================
+
+  const menuItems = rawText
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
+  if (menuItems.length === 0) {
+    return NextResponse.json(
+      { message: "Invalid input" },
+      { status: 400 }
+    );
+  }
+
+  // =========================
   // Date
   // =========================
 
@@ -166,11 +182,14 @@ export async function POST(request: NextRequest) {
   );
 
   const foundFoods: typeof existingFoods = [];
-  let remainingText = normalizedInput;
+  const unknownMenuItems: string[] = [];
 
   // =========================
-  // Match เมนูจาก DB
+  // Match เมนูจาก DB (ทีละเมนู)
   // =========================
+
+  for (const menuItem of menuItems) {
+    let remainingText = normalize(menuItem);
 
   for (const food of existingFoods) {
     const normalizedFoodName = normalize(food.foodName);
@@ -182,6 +201,12 @@ export async function POST(request: NextRequest) {
         normalizedFoodName,
         ""
       );
+      }
+    }
+
+    // เมนูนี้ไม่เจอใน DB → ส่งให้ AI วิเคราะห์
+    if (remainingText.trim().length > 0) {
+      unknownMenuItems.push(menuItem);
     }
   }
 
@@ -196,9 +221,11 @@ export async function POST(request: NextRequest) {
 
   let aiQuotaConsumed = false;
 
-  if (remainingText.trim().length > 0) {
-    // ใช้ข้อความต้นฉบับให้ AI วิเคราะห์
-    aiAnalysis = await analyzeFood(rawText);
+  if (unknownMenuItems.length > 0) {
+    // ส่งเฉพาะเมนูที่ไม่พบใน DB ให้ AI วิเคราะห์
+    aiAnalysis = await analyzeFood(
+      unknownMenuItems.join(", ")
+    );
   }
 
   try {
