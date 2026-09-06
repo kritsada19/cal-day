@@ -9,7 +9,7 @@ import { mealSchema } from "@/lib/validation/meal";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
+  const rateLimit = await checkRateLimit(request, "meals", 100, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(
@@ -17,9 +17,9 @@ export async function POST(request: NextRequest) {
       {
         status: 429,
         headers: {
-          'X-RateLimit-Limit': rateLimit.limit.toString(),
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-        }
+          "X-RateLimit-Limit": rateLimit.limit.toString(),
+          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+        },
       }
     );
   }
@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
   const session = await getSession();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
   const body = await request.json();
@@ -35,51 +38,200 @@ export async function POST(request: NextRequest) {
 
   if (!validation.success) {
     return NextResponse.json(
-      { message: validation.error.issues[0]?.message || "Invalid input" },
-      { status: 400 },
+      {
+        message:
+          validation.error.issues[0]?.message || "Invalid input",
+      },
+      { status: 400 }
     );
   }
 
-  const { mealText: rawText, mealType, date: localDateStr } = validation.data;
-
-  const aiAnalysis = await analyzeFood(rawText);
+  const {
+    mealText: rawText,
+    mealType,
+    date: localDateStr,
+  } = validation.data;
 
   const userId = Number(session.user.id);
+
+  // =========================
+  // แบ่งแต่ละเมนูด้วย ","
+  // =========================
+
+  const menuItems = rawText
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
+  if (menuItems.length === 0) {
+    return NextResponse.json(
+      { message: "Invalid input" },
+      { status: 400 }
+    );
+  }
+
+  // =========================
+  // Date
+  // =========================
+
   let startOfDay: Date;
   let endOfDay: Date;
 
   if (localDateStr) {
-    // ถ้ารับมาถูกต้อง เช่น "2026-08-18"
-    // เราจับมันประกอบกับเวลา 00:00:00Z และ 23:59:59Z ได้เลย
-    startOfDay = new Date(`${localDateStr}T00:00:00.000Z`);
-    endOfDay = new Date(`${localDateStr}T23:59:59.999Z`);
+    startOfDay = new Date(
+      `${localDateStr}T00:00:00.000Z`
+    );
+
+    endOfDay = new Date(
+      `${localDateStr}T23:59:59.999Z`
+    );
   } else {
-    // Fallback เผื่อไว้กรณี Client เก่า หรือไม่ได้ส่งมา
     const now = new Date();
-    startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+
+    startOfDay = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0,
+        0,
+        0,
+        0
+      )
+    );
+
+    endOfDay = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        23,
+        59,
+        59,
+        999
+      )
+    );
   }
 
+  // =========================
+  // User
+  // =========================
+
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: {
+      id: userId,
+    },
     include: {
-      subscription: true
-    }
+      subscription: true,
+    },
   });
 
   if (!user) {
     return NextResponse.json(
       { message: "User not found" },
-      { status: 404 },
+      { status: 404 }
     );
   }
 
-  // Check and consume AI quota 
-  const quotaResponse = await checkAndComsumeAiQuota(userId, user.subscription?.plan as string);
-  if (quotaResponse) return quotaResponse;
+  // =========================
+  // AI Quota
+  // =========================
+
+  const quotaResponse = await checkAndComsumeAiQuota(
+    userId,
+    user.subscription?.plan as string
+  );
+
+  if (quotaResponse) {
+    return quotaResponse;
+  }
+
+  // =========================
+  // Normalize text
+  // =========================
+
+  const normalize = (text: string) =>
+    text
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "");
+
+  // =========================
+  // หาเมนูเดิมจาก FoodEntry
+  // =========================
+
+  const existingFoods = await prisma.foodEntry.findMany({
+    distinct: ["foodName"],
+    select: {
+      foodName: true,
+      amount: true,
+      unit: true,
+      calories: true,
+      protein: true,
+    },
+  });
+
+  // เรียงชื่อยาวก่อน
+  // ป้องกัน "ไข่" match ก่อน "ไข่ต้ม"
+  existingFoods.sort(
+    (a, b) =>
+      normalize(b.foodName).length -
+      normalize(a.foodName).length
+  );
+
+  const foundFoods: typeof existingFoods = [];
+  const unknownMenuItems: string[] = [];
+
+  // =========================
+  // Match เมนูจาก DB (ทีละเมนู)
+  // =========================
+
+  for (const menuItem of menuItems) {
+    let remainingText = normalize(menuItem);
+
+    for (const food of existingFoods) {
+      const normalizedFoodName = normalize(food.foodName);
+
+      if (remainingText.includes(normalizedFoodName)) {
+        foundFoods.push(food);
+
+        remainingText = remainingText.replace(
+          normalizedFoodName,
+          ""
+        );
+      }
+    }
+
+    // เมนูนี้ไม่เจอใน DB → ส่งให้ AI วิเคราะห์
+    if (remainingText.trim().length > 0) {
+      unknownMenuItems.push(menuItem);
+    }
+  }
+
+  // =========================
+  // ถ้ายังมีเมนูที่ไม่รู้จัก
+  // → AI
+  // =========================
+
+  let aiAnalysis: Awaited<
+    ReturnType<typeof analyzeFood>
+  > | null = null;
+
+  const aiQuotaConsumed = false;
+
+  if (unknownMenuItems.length > 0) {
+    // ส่งเฉพาะเมนูที่ไม่พบใน DB ให้ AI วิเคราะห์
+    aiAnalysis = await analyzeFood(
+      unknownMenuItems.join(", ")
+    );
+  }
 
   try {
-    const { meal, totalCalories, totalProtein } = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
+      // =========================
+      // Create Meal
+      // =========================
+
       const meal = await tx.meal.create({
         data: {
           userId,
@@ -87,59 +239,128 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      if (aiAnalysis.foods && aiAnalysis.foods.length > 0) {
-        await tx.foodEntry.createMany({
-          data: aiAnalysis.foods.map((food) => ({
-            mealId: meal.id,
-            foodName: food.name,
-            amount: food.amount || 1,
-            unit: food.unit || "serving",
-            calories: food.calories || 0,
-            protein: food.protein || 0,
-          })),
-        });
-      } else {
+      // =========================
+      // เตรียม FoodEntry
+      // =========================
+
+      const foodEntries = [
+        // เมนูที่เจอใน DB
+        ...foundFoods.map((food) => ({
+          mealId: meal.id,
+          foodName: food.foodName,
+          amount: food.amount || 1,
+          unit: food.unit || "serving",
+          calories: food.calories || 0,
+          protein: food.protein || 0,
+        })),
+
+        // เมนูที่ AI วิเคราะห์
+        ...(aiAnalysis?.foods ?? []).map((food) => ({
+          mealId: meal.id,
+          foodName: food.name,
+          amount: food.amount || 1,
+          unit: food.unit || "serving",
+          calories: food.calories || 0,
+          protein: food.protein || 0,
+        })),
+      ];
+
+      // =========================
+      // ถ้าไม่มี food เลย
+      // =========================
+
+      if (foodEntries.length === 0) {
         await tx.foodEntry.create({
           data: {
             mealId: meal.id,
             foodName: rawText,
             amount: 1,
             unit: "text",
-            calories: aiAnalysis.estimatedCalories || 0,
-            protein: aiAnalysis.estimatedProtein || 0,
+            calories: aiAnalysis?.estimatedCalories ?? 0,
+            protein: aiAnalysis?.estimatedProtein ?? 0,
           },
+        });
+      } else {
+        await tx.foodEntry.createMany({
+          data: foodEntries,
         });
       }
 
-      const totalCalories = aiAnalysis.estimatedCalories;
-      const totalProtein = aiAnalysis.estimatedProtein;
+      // =========================
+      // Calculate total
+      // =========================
 
-      const profile = await tx.profile.findUnique({ where: { userId } });
-      const targetCalories = profile?.targetCalories ?? 0;
-      const targetProtein = profile?.targetProtein ?? 0;
+      const totalCalories =
+        foodEntries.length > 0
+          ? foodEntries.reduce(
+            (sum, food) =>
+              sum + food.calories * food.amount,
+            0
+          )
+          : aiAnalysis?.estimatedCalories ?? 0;
 
-      const existingSummary = await tx.dailySummary.findFirst({
+      const totalProtein =
+        foodEntries.length > 0
+          ? foodEntries.reduce(
+            (sum, food) =>
+              sum + food.protein * food.amount,
+            0
+          )
+          : aiAnalysis?.estimatedProtein ?? 0;
+
+      // =========================
+      // Profile
+      // =========================
+
+      const profile = await tx.profile.findUnique({
         where: {
           userId,
-          date: {
-            gte: startOfDay,
-            lt: endOfDay,
-          },
         },
       });
 
+      const targetCalories =
+        profile?.targetCalories ?? 0;
+
+      const targetProtein =
+        profile?.targetProtein ?? 0;
+
+      // =========================
+      // Daily Summary
+      // =========================
+
+      const existingSummary =
+        await tx.dailySummary.findFirst({
+          where: {
+            userId,
+            date: {
+              gte: startOfDay,
+              lt: endOfDay,
+            },
+          },
+        });
+
       if (existingSummary) {
         await tx.dailySummary.update({
-          where: { id: existingSummary.id },
+          where: {
+            id: existingSummary.id,
+          },
           data: {
             totalCalories: Number(
-              (existingSummary.totalCalories + totalCalories).toFixed(1),
+              (
+                existingSummary.totalCalories +
+                totalCalories
+              ).toFixed(1)
             ),
+
             totalProtein: Number(
-              (existingSummary.totalProtein + totalProtein).toFixed(1),
+              (
+                existingSummary.totalProtein +
+                totalProtein
+              ).toFixed(1)
             ),
-            targetCalories: targetCalories,
-            targetProtein: targetProtein,
+
+            targetCalories,
+            targetProtein,
           },
         });
       } else {
@@ -147,38 +368,67 @@ export async function POST(request: NextRequest) {
           data: {
             userId,
             date: startOfDay,
-            totalCalories: Number(totalCalories.toFixed(1)),
-            totalProtein: Number(totalProtein.toFixed(1)),
-            targetCalories: targetCalories,
-            targetProtein: targetProtein,
+
+            totalCalories: Number(
+              totalCalories.toFixed(1)
+            ),
+
+            totalProtein: Number(
+              totalProtein.toFixed(1)
+            ),
+
+            targetCalories,
+            targetProtein,
           },
         });
       }
 
-      return { meal, totalCalories, totalProtein };
+      return {
+        meal,
+        totalCalories,
+        totalProtein,
+      };
     });
+
+    // =========================
+    // Response
+    // =========================
 
     return NextResponse.json({
-      message: "Meal received and sent to mock AI",
+      message: "Meal created successfully",
       aiAnalysis,
-      mealId: meal.id,
-      totalCalories: Number(totalCalories.toFixed(1)),
-      totalProtein: Number(totalProtein.toFixed(1)),
+      mealId: result.meal.id,
+      totalCalories: result.totalCalories,
+      totalProtein: result.totalProtein,
+      status: 201
     });
   } catch (error) {
-    await redis.decr(`ai_limit:${userId}`);
+    // คืน quota เฉพาะกรณีที่ consume ไปแล้ว
+    if (aiQuotaConsumed) {
+      await redis.decr(`ai_limit:${userId}`);
+    }
 
-    logger.error({ err: error, userId }, "Meal POST error");
+    logger.error(
+      {
+        err: error,
+        userId,
+      },
+      "Meal POST error"
+    );
+
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 503 },
+      {
+        message: "Internal server error",
+      },
+      {
+        status: 503,
+      }
     );
   }
 }
 
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
-
   if (!rateLimit.success) {
     return NextResponse.json(
       { message: "Rate limit exceeded. Please try again later." },
@@ -191,26 +441,19 @@ export async function GET(request: NextRequest) {
       }
     );
   }
-
   const session = await getSession();
   const userId = Number(session?.user?.id);
-
-
   if (!userId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-
   const year = Number(request.nextUrl.searchParams.get("year"));
   const month = Number(request.nextUrl.searchParams.get("month"));
-
   if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
     return NextResponse.json({ message: "Invalid date parameters" }, { status: 400 });
   }
-
   // concept
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 0, 23, 59, 59, 999);
-
   const summaries = await prisma.dailySummary.findMany({
     where: {
       userId,
@@ -223,6 +466,6 @@ export async function GET(request: NextRequest) {
       date: "asc",
     },
   });
-
   return NextResponse.json({ summaries }, { status: 200 });
 }
+

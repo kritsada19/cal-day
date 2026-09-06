@@ -6,7 +6,7 @@ import { getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 export async function GET(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
+  const rateLimit = await checkRateLimit(request, 'profile', 200, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(
