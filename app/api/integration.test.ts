@@ -80,6 +80,8 @@ describe("API Integration Tests", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
+    mockPrisma.foodEntry.findMany.mockResolvedValue([]);
+
     const tx = {
       meal: {
         create: vi.fn().mockResolvedValue({ id: 12 }),
