@@ -105,10 +105,13 @@ export default function NewMealPage() {
               value={mealText}
               onChange={(event) => setMealText(event.target.value)}
               rows={6}
-              placeholder="เช่น ข้าว 250 กรัม อกไก่ 200 กรัม"
+              placeholder="e.g. Rice 250g, grilled chicken 200g, fruit 1 serving"
               className="w-full border border-black/10 dark:border-white/10 bg-white dark:bg-obsidian-950 text-obsidian-950 dark:text-white px-3 py-3 outline-none transition focus:border-gold-accent placeholder:text-obsidian-950/30 dark:placeholder:text-white/30"
               required
             />
+            <span className="block text-xs text-obsidian-950/55 dark:text-white/60">
+              Add multiple items by separating them with a comma, for example: rice, grilled chicken, orange
+            </span>
           </label>
 
           <button

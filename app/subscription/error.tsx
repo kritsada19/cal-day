@@ -55,7 +55,7 @@ export default function SubscriptionError({
         <p className="max-w-md text-obsidian-950/60 dark:text-white/60">
           An error occurred while loading your Subscription data.
           <strong className="block mt-1">
-            If you were in the middle of a payment, don't worry — it has not been processed.
+            If you were in the middle of a payment, don&apos;t worry — it has not been processed.
           </strong>
         </p>
 
