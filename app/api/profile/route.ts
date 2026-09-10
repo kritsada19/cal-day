@@ -5,6 +5,8 @@ import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/
 import { getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { getCache, setCache, deleteUserCache } from "@/lib/cache";
+
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, 'profile', 200, 60);
 
@@ -28,6 +30,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+
+    const cacheKey = `cache:user:${session.user.id}:profile`;
+    const cachedData = await getCache<any>(cacheKey);
+
+    if (cachedData) {
+      return NextResponse.json(cachedData, { status: 200 });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: Number(session.user.id) },
       include: {
@@ -59,6 +69,9 @@ export async function GET(request: NextRequest) {
       dailySummary?.totalCalories ?? 0,
       dailySummary?.totalProtein ?? 0
     );
+
+
+    await setCache(cacheKey, { ...user, ...summary, aiQuota }, 300);
 
     return NextResponse.json({
       ...user,
@@ -150,6 +163,8 @@ export async function POST(request: Request) {
       });
 
     const summary = buildProfileNutritionSummary(profile, 0, 0);
+
+    await deleteUserCache(userId);
 
     return NextResponse.json({ profile, ...summary, message: "Profile saved successfully" });
   } catch (error) {

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth/session";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { getCache, setCache } from "@/lib/cache";
 
 export async function GET(request: Request) {
   const rateLimit = await checkRateLimit(request, "analytics", 100, 60);
@@ -31,6 +32,11 @@ export async function GET(request: Request) {
 
   try {
     const userId = Number(session.user.id);
+    const cacheKey = `cache:user:${userId}:analytics:${days}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
     const now = new Date();
 
     // Calculate start date
@@ -114,15 +120,18 @@ export async function GET(request: Request) {
     const averageCalories = Math.round(totalCal / days);
     const consistencyScore = Math.round((daysOnTarget / days) * 100);
 
+    const stats = {
+      averageCalories,
+      consistencyScore,
+      currentStreak,
+      activeDays,
+      targetCal,
+    };
+
+    await setCache(cacheKey, { weeklyData, stats }, 300); // cache for 5 minutes
     return NextResponse.json({
       weeklyData,
-      stats: {
-        averageCalories,
-        consistencyScore,
-        currentStreak,
-        activeDays,
-        targetCal
-      }
+      stats,
     });
   } catch (error) {
     logger.error({ err: error }, "Analytics GET error");

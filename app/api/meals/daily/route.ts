@@ -3,6 +3,27 @@ import { getSession } from "@/lib/auth/session";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { getCache, setCache } from "@/lib/cache";
+import { number } from "zod";
+import { MealType } from "@/app/generated/prisma/enums";
+
+interface FoodEntry {
+    id: number;
+    mealId: number;
+    foodName: string;
+    amount: number;
+    unit: string;
+    calories: number;
+    protein: number;
+}
+
+interface Meal {
+    id: number;
+    userId: number;
+    mealType: MealType;
+    createdAt: Date;
+    foodEntries: FoodEntry[];
+}
 
 export async function GET(request: NextRequest) {
     const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
@@ -49,7 +70,17 @@ export async function GET(request: NextRequest) {
         const endOfDay = new Date(targetDate);
         endOfDay.setHours(23, 59, 59, 999);
 
-        // 4. ค้นหามื้ออาหารทั้งหมดของ user ในวันนั้น พร้อมดึงรายการอาหาร (foodEntries) มาด้วย
+        // สร้าง Cache key สำหรับวันนี้
+        const cacheKey = `cache:user:${userId}:meals:daily:${dateParam}`;
+
+        // 4. ดึงข้อมูลจาก Cache ก่อน (ใช้ Redis)
+        const cachedMeals = await getCache<Meal[]>(cacheKey);
+
+        if (cachedMeals) {
+            return NextResponse.json({ meals: cachedMeals }, { status: 200 });
+        }
+
+        // 5. ค้นหามื้ออาหารทั้งหมดของ user ในวันนั้น พร้อมดึงรายการอาหาร (foodEntries) มาด้วย
         const meals = await prisma.meal.findMany({
             where: {
                 userId,
@@ -66,7 +97,10 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        // 5. ส่งข้อมูลกลับไปให้ Frontend
+        // 6. บันทึกข้อมูลลง Cache ก่อนส่งกลับ (TTL 1 ชั่วโมง)
+        await setCache(cacheKey, meals, 60 * 60);
+
+        // 7. ส่งข้อมูลกลับไปให้ Frontend
         return NextResponse.json({ meals }, { status: 200 });
 
     } catch (error) {
