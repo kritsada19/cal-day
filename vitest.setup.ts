@@ -13,6 +13,7 @@ vi.mock('@/lib/db/redis', () => ({
     del: vi.fn().mockResolvedValue(1),
     get: vi.fn().mockResolvedValue(0),
     set: vi.fn().mockResolvedValue('OK'),
+    keys: vi.fn().mockResolvedValue([]),
   },
 }));
 

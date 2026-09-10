@@ -7,6 +7,17 @@ import { analyzeFood } from "@/lib/services/ai";
 import { checkAndComsumeAiQuota } from "@/lib/services/ai-quota";
 import { mealSchema } from "@/lib/validation/meal";
 import { logger } from "@/lib/logger";
+import { getCache, setCache, deleteUserCache } from "@/lib/cache";
+
+interface DailySummary {
+  userId: number;
+  id: number;
+  date: Date;
+  totalCalories: number;
+  totalProtein: number;
+  targetCalories: number;
+  targetProtein: number;
+}
 
 export async function POST(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, "meals", 100, 60);
@@ -391,6 +402,11 @@ export async function POST(request: NextRequest) {
     });
 
     // =========================
+    // Delete cache
+    // =========================
+    await deleteUserCache(userId);
+
+    // =========================
     // Response
     // =========================
 
@@ -448,6 +464,12 @@ export async function GET(request: NextRequest) {
   }
   const year = Number(request.nextUrl.searchParams.get("year"));
   const month = Number(request.nextUrl.searchParams.get("month"));
+
+  const cacheKey = `cache:user:${userId}:meals:month:${year}:${month}`;
+  const cached = await getCache<DailySummary[]>(cacheKey);
+  if (cached) {
+    return NextResponse.json({ summaries: cached }, { status: 200 });
+  }
   if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
     return NextResponse.json({ message: "Invalid date parameters" }, { status: 400 });
   }
@@ -466,6 +488,7 @@ export async function GET(request: NextRequest) {
       date: "asc",
     },
   });
+  await setCache(cacheKey, summaries, 60);
   return NextResponse.json({ summaries }, { status: 200 });
 }
 

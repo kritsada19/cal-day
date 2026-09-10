@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getSession } from "@/lib/auth/session";
 import { logger } from "@/lib/logger";
+import { deleteUserCache } from "@/lib/cache";
 
 export async function DELETE(
   _request: NextRequest,
@@ -34,11 +35,54 @@ export async function DELETE(
       );
     }
 
-    await prisma.meal.delete({
+    // recalculate dailySummary of the day before meal deleted
+    const meal = await prisma.meal.findUnique({
       where: {
         id: mealId,
       },
+      include: {
+        foodEntries: true,
+      }
     });
+
+    if (!meal) {
+      return NextResponse.json(
+        { message: "Meal not found" },
+        { status: 404 },
+      );
+    }
+
+    const dailySummary = await prisma.dailySummary.findFirst({
+      where: {
+        userId: userId,
+        date: meal.createdAt
+      },
+    });
+
+    if (!dailySummary) {
+      return NextResponse.json(
+        { message: "Daily summary not found" },
+        { status: 404 },
+      );
+    }
+
+    const updatedDailySummary = {
+      ...dailySummary,
+      totalCalories: dailySummary.totalCalories - meal.foodEntries.reduce((acc, foodEntry) => acc + foodEntry.calories, 0),
+      totalProtein: dailySummary.totalProtein - meal.foodEntries.reduce((acc, foodEntry) => acc + foodEntry.protein, 0)
+    };
+
+    await prisma.$transaction([
+      prisma.dailySummary.update({
+        where: { id: dailySummary.id },
+        data: updatedDailySummary,
+      }),
+      prisma.meal.delete({
+        where: { id: mealId },
+      }),
+    ]);
+
+    await deleteUserCache(userId);
 
     return NextResponse.json({ message: "Meal deleted successfully" });
   } catch (error) {
