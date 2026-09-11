@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Stripe from "stripe";
 import { redis } from "@/lib/db/redis";
-
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getPeriodEnd } from "@/lib/stripe/getPeriodEnd";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { deleteUserCache } from "@/lib/cache";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
         // Idempotency check: ensure we haven't processed this event before
         const processed = await redis.get(`webhook:${event.id}`);
         if (processed) {
-          logger.info({ eventId: event.id, eventType: event.type }, "Duplicate webhook event ignored");
-          return NextResponse.json({ received: true }, { status: 200 });
+            logger.info({ eventId: event.id, eventType: event.type }, "Duplicate webhook event ignored");
+            return NextResponse.json({ received: true }, { status: 200 });
         }
         // Mark event as processed with a TTL (e.g., 24 hours)
         await redis.set(`webhook:${event.id}`, "1", "EX", 60 * 60 * 24);
@@ -82,6 +82,10 @@ export async function POST(req: NextRequest) {
                     },
                 });
 
+                // Delete user's cached data to force a refresh on next request
+                await deleteUserCache(Number(session.metadata.userId));
+                logger.info({ userId: session.metadata.userId }, "Cleared cache after subscription update");
+
                 break;
             }
 
@@ -100,6 +104,11 @@ export async function POST(req: NextRequest) {
                         endAt: getPeriodEnd(subscription),
                     },
                 });
+
+                // Delete user's cached data to force a refresh on next request
+                await deleteUserCache(Number(session.metadata.userId));
+                logger.info({ userId: session.metadata.userId }, "Cleared cache after subscription update");
+
                 break;
             }
 
@@ -118,6 +127,11 @@ export async function POST(req: NextRequest) {
                         endAt: getPeriodEnd(subscription),
                     },
                 });
+
+                // Delete user's cached data to force a refresh on next request
+                await deleteUserCache(Number(session.metadata.userId));
+                logger.info({ userId: session.metadata.userId }, "Cleared cache after subscription update");
+
                 break;
             }
 
@@ -128,6 +142,11 @@ export async function POST(req: NextRequest) {
                         plan: "FREE",
                     },
                 });
+
+                // Delete user's cached data to force a refresh on next request
+                await deleteUserCache(Number(session.metadata.userId));
+                logger.info({ userId: session.metadata.userId }, "Cleared cache after subscription update");
+
                 break;
             }
 
@@ -141,6 +160,11 @@ export async function POST(req: NextRequest) {
                         endAt: getPeriodEnd(subscription),
                     },
                 });
+
+                // Delete user's cached data to force a refresh on next request
+                await deleteUserCache(Number(session.metadata.userId));
+                logger.info({ userId: session.metadata.userId }, "Cleared cache after subscription update");
+
                 break;
             }
 
