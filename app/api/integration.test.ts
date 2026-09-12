@@ -1,9 +1,11 @@
 /** @vitest-environment node */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { GET as getMeals, POST as createMeal } from "@/app/api/meals/route";
+import { DELETE as deleteMeal } from "@/app/api/meals/[id]/route";
+import { GET as getDailyMeals } from "@/app/api/meals/daily/route";
 import { GET as getProfile, POST as saveProfile } from "@/app/api/profile/route";
 import prisma from "@/lib/db/prisma";
 import { analyzeFood } from "@/lib/services/ai";
@@ -269,5 +271,176 @@ describe("API Integration Tests", () => {
     });
     expect(body.message).toBe("Profile saved successfully");
     expect(body.profile.targetCalories).toBe(2056);
+  });
+
+  it("POST /api/meals should return 429 and not call the AI when the AI quota is already used up", async () => {
+    // โควต้า AI ถูกหักไปแล้ว → ต้องได้ 429 พร้อมข้อความจากตัวเช็คโควต้า และห้ามเรียก AI ซ้ำ
+    mockSession.mockResolvedValue({
+      user: { id: 7, email: "alice@example.com", name: "Alice" },
+    } as Session);
+
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 7,
+      subscription: { plan: "FREE" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    mockQuotaCheck.mockResolvedValue(
+      NextResponse.json(
+        { message: "AI limit reached. Please upgrade to premium to continue." },
+        { status: 429 },
+      ),
+    );
+
+    const request = new NextRequest("http://localhost/api/meals", {
+      method: "POST",
+      body: JSON.stringify({
+        mealText: "Shrimp pad thai",
+        mealType: "DINNER",
+        date: "2026-08-26",
+      }),
+    });
+
+    const response = await createMeal(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.message).toBe("AI limit reached. Please upgrade to premium to continue.");
+    expect(mockAnalyzeFood).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/meals should reject a month outside 1-12", async () => {
+    // พารามิเตอร์เดือนผิด → 400 และไม่ต้องแตะฐานข้อมูลเลย
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    const response = await getMeals(
+      new NextRequest("http://localhost/api/meals?year=2026&month=13"),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ message: "Invalid date parameters" });
+    expect(mockPrisma.dailySummary.findMany).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/meals/daily should return the meals logged on that date", async () => {
+    // เทสต์นี้มองพฤติกรรมที่ผู้ใช้เห็น: ส่งวันที่เข้าไป → ได้รายการมื้ออาหารของวันนั้นกลับมา
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    mockPrisma.meal.findMany.mockResolvedValue([
+      {
+        id: 12,
+        userId: 7,
+        mealType: "LUNCH",
+        createdAt: new Date("2026-08-26T03:00:00.000Z"),
+        foodEntries: [
+          {
+            id: 1,
+            mealId: 12,
+            foodName: "Salmon rice bowl",
+            amount: 1,
+            unit: "bowl",
+            calories: 540,
+            protein: 30,
+          },
+        ],
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ] as any);
+
+    const response = await getDailyMeals(
+      new NextRequest("http://localhost/api/meals/daily?date=2026-08-26"),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.meals).toHaveLength(1);
+    expect(body.meals[0].foodEntries[0].foodName).toBe("Salmon rice bowl");
+  });
+
+  it("GET /api/meals/daily should return 400 when the date is missing", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    const response = await getDailyMeals(new NextRequest("http://localhost/api/meals/daily"));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ message: "Date is required" });
+  });
+
+  it("DELETE /api/meals/:id should delete the meal and roll its calories back from the daily summary", async () => {
+    // มื้อนี้มี 2 จาน จานละ 300 kcal / 20 g → ต้องหักออก 600 kcal / 40 g (ไม่ใช่ 300/20)
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    mockPrisma.meal.findFirst.mockResolvedValue({
+      id: 12,
+      userId: 7,
+      mealType: "LUNCH",
+      createdAt: new Date("2026-08-26T03:00:00.000Z"),
+      foodEntries: [
+        {
+          id: 1,
+          mealId: 12,
+          foodName: "Salmon rice bowl",
+          amount: 2,
+          unit: "bowl",
+          calories: 300,
+          protein: 20,
+        },
+      ],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    mockPrisma.dailySummary.findFirst.mockResolvedValue({
+      id: 99,
+      userId: 7,
+      date: new Date("2026-08-26T00:00:00.000Z"),
+      totalCalories: 1450,
+      totalProtein: 100,
+      targetCalories: 2100,
+      targetProtein: 130,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const tx = {
+      dailySummary: { update: vi.fn().mockResolvedValue({}) },
+      meal: { delete: vi.fn().mockResolvedValue({}) },
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockPrisma.$transaction.mockImplementation(async (callback) => callback(tx as any));
+
+    const response = await deleteMeal(
+      new NextRequest("http://localhost/api/meals/12", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "12" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(tx.dailySummary.update).toHaveBeenCalledWith({
+      where: { id: 99 },
+      data: { totalCalories: 850, totalProtein: 60 },
+    });
+    expect(tx.meal.delete).toHaveBeenCalledWith({ where: { id: 12 } });
+  });
+
+  it("DELETE /api/meals/:id should return 404 when the meal belongs to someone else", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+    mockPrisma.meal.findFirst.mockResolvedValue(null);
+
+    const response = await deleteMeal(
+      new NextRequest("http://localhost/api/meals/999", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "999" }) },
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it("DELETE /api/meals/:id should return 401 when the user is not logged in", async () => {
+    mockSession.mockResolvedValue(null);
+
+    const response = await deleteMeal(
+      new NextRequest("http://localhost/api/meals/12", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "12" }) },
+    );
+
+    expect(response.status).toBe(401);
   });
 });

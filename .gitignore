@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env
 
+# local tool config (symlink ที่ npx skills สร้างให้เครื่องนี้เท่านั้น)
+/.claude
+
 # vercel
 .vercel
 
