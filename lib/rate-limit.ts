@@ -12,7 +12,7 @@ export async function checkRateLimit(
     apiName: string,
     limit: number = 10,
     windowSec: number = 60
-) : Promise<RateLimitResult> {
+): Promise<RateLimitResult> {
     const forwardedFor = request.headers.get("x-forwarded-for");
     const ip = forwardedFor ? forwardedFor.split(",")[0].trim() : "127.0.0.1";
 

@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger";
 import { getCache, setCache, deleteUserCache } from "@/lib/cache";
 
 export async function GET(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'profile', 300, 60);
+  const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
 
   if (!rateLimit.success) {
     return NextResponse.json(
