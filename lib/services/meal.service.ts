@@ -98,7 +98,7 @@ export class MealService {
    * รับ repository เข้ามาทาง constructor (มีค่าเริ่มต้นเป็น instance จริง)
    * ทำให้ตอนเทสต์สลับเป็นตัวปลอมได้ง่าย โดยไม่ต้องแก้โค้ดข้างใน
    */
-  constructor(private readonly repository: MealRepository = mealRepository) {}
+  constructor(private readonly repository: MealRepository = mealRepository) { }
 
   /**
    * สร้างมื้ออาหาร 1 มื้อ: แยกเมนู → เทียบกับ DB → ให้ AI วิเคราะห์ส่วนที่ไม่รู้ →
@@ -213,7 +213,7 @@ export class MealService {
 
     const cacheKey = `cache:user:${userId}:meals:month:${year}:${month}`;
 
-    const cached = await getCache<DailySummary[]>(cacheKey);
+    const cached = await getCache(cacheKey);
     if (cached) return cached;
 
     const { start, end } = getUtcMonthRange(year, month);
@@ -242,7 +242,7 @@ export class MealService {
 
     const cacheKey = `cache:user:${userId}:meals:daily:${date}`;
 
-    const cached = await getCache<MealWithFoodEntries[]>(cacheKey);
+    const cached = await getCache(cacheKey);
     if (cached) return cached;
 
     const { startOfDay, endOfDay } = getUtcDayRange(targetDate);
