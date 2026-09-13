@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   try {
 
     const cacheKey = `cache:user:${session.user.id}:profile`;
-    const cachedData = await getCache<any>(cacheKey);
+    const cachedData = await getCache(cacheKey);
 
     if (cachedData) {
       return NextResponse.json(cachedData, { status: 200 });

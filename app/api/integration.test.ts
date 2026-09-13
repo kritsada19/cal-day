@@ -9,14 +9,27 @@ import { GET as getDailyMeals } from "@/app/api/meals/daily/route";
 import { GET as getProfile, POST as saveProfile } from "@/app/api/profile/route";
 import { GET as getAnalytics } from "@/app/api/analytics/route";
 import { POST as handleWebhook } from "@/app/api/webhook/route";
-import { getCache } from "@/lib/cache";
 import prisma from "@/lib/db/prisma";
 import { analyzeFood } from "@/lib/services/ai";
 import { checkAndComsumeAiQuota, getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
-import Stripe from "stripe";
 import type { Session } from "next-auth";
 import type { RateLimitResult } from "@/lib/rate-limit";
+
+interface StripeMockInstance {
+  webhooks: {
+    constructEvent: typeof mockConstructEvent;
+  };
+  subscriptions: {
+    retrieve: typeof mockRetrieveSubscription;
+  };
+}
+
+type MockPrisma = {
+  subscription: {
+    update: ReturnType<typeof vi.fn>;
+  };
+};
 
 const { mockConstructEvent, mockRetrieveSubscription, mockGetCache } = vi.hoisted(() => ({
   mockConstructEvent: vi.fn(),
@@ -32,13 +45,13 @@ vi.mock("@/lib/env", () => ({
 }));
 
 vi.mock("@/lib/cache", () => ({
-  getCache: (...args: any[]) => mockGetCache(...args),
+  getCache: mockGetCache,
   setCache: vi.fn().mockResolvedValue(undefined),
   deleteUserCache: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("stripe", () => {
-  const StripeMock = function (this: any) {
+  const StripeMock = function (this: StripeMockInstance) {
     this.webhooks = {
       constructEvent: mockConstructEvent,
     };
@@ -564,7 +577,7 @@ describe("API Integration Tests", () => {
       current_period_end: 1702592000,
     });
 
-    (mockPrisma as any).subscription = {
+    (mockPrisma as MockPrisma).subscription = {
       update: vi.fn().mockResolvedValueOnce({
         id: 1,
         userId: 7,
@@ -586,7 +599,7 @@ describe("API Integration Tests", () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ received: true });
-    expect((mockPrisma as any).subscription.update).toHaveBeenCalledWith({
+    expect((mockPrisma as MockPrisma).subscription.update).toHaveBeenCalledWith({
       where: { userId: 7 },
       data: expect.objectContaining({
         stripeCustomerId: "cus_123",
