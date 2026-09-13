@@ -2,6 +2,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getCache, setCache, deleteUserCache } from '@/lib/cache';
 import { redis } from '@/lib/db/redis';
 
+vi.mock('@/lib/db/redis', () => ({
+    redis: {
+        get: vi.fn(),
+        set: vi.fn(),
+        keys: vi.fn(),
+        del: vi.fn(),
+    },
+}));
+
 /**
  * Ensure all mocks are cleared before each test to avoid cross‑test interference.
  */
@@ -25,9 +34,9 @@ describe('cache', () => {
         expect(redis.set).toHaveBeenCalledWith(key, JSON.stringify(value), 'EX', ttl);
 
         // Mock the next call to `redis.get` to return the JSON string we just set.
-        (redis.get as any).mockResolvedValueOnce(JSON.stringify(value));
+        vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify(value));
 
-        const cached = await getCache<typeof value>(key);
+        const cached = await getCache(key);
         expect(cached).toEqual(value);
     });
 
@@ -37,8 +46,8 @@ describe('cache', () => {
      */
     it('returns null on cache miss', async () => {
         const key = 'test:miss';
-        (redis.get as any).mockResolvedValueOnce(null);
-        const cached = await getCache<any>(key);
+        vi.mocked(redis.get).mockResolvedValueOnce(null);
+        const cached = await getCache(key);
         expect(cached).toBeNull();
     });
 
@@ -54,7 +63,7 @@ describe('cache', () => {
             `cache:user:${userId}:profile`,
         ];
 
-        (redis.keys as any).mockResolvedValueOnce(mockKeys);
+        vi.mocked(redis.keys).mockResolvedValueOnce(mockKeys);
         await deleteUserCache(userId);
         expect(redis.keys).toHaveBeenCalledWith(`cache:user:${userId}:*`);
         expect(redis.del).toHaveBeenCalledWith(mockKeys);
