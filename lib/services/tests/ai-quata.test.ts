@@ -1,8 +1,8 @@
 /** @vitest-environment node */
 
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { getUserAiQuota, checkAndComsumeAiQuota } from "./ai-quota";
-import { redis } from "../db/redis";
+import { getUserAiQuota, checkAndComsumeAiQuota } from "../ai-quota";
+import { redis } from "@/lib/db/redis";
 
 describe("getUserAiQuota", () => {
   it("return remaining 5 for paln free", async () => {

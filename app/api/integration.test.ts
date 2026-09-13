@@ -7,12 +7,49 @@ import { GET as getMeals, POST as createMeal } from "@/app/api/meals/route";
 import { DELETE as deleteMeal } from "@/app/api/meals/[id]/route";
 import { GET as getDailyMeals } from "@/app/api/meals/daily/route";
 import { GET as getProfile, POST as saveProfile } from "@/app/api/profile/route";
+import { GET as getAnalytics } from "@/app/api/analytics/route";
+import { POST as handleWebhook } from "@/app/api/webhook/route";
+import { getCache } from "@/lib/cache";
 import prisma from "@/lib/db/prisma";
 import { analyzeFood } from "@/lib/services/ai";
 import { checkAndComsumeAiQuota, getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
+import Stripe from "stripe";
 import type { Session } from "next-auth";
 import type { RateLimitResult } from "@/lib/rate-limit";
+
+const { mockConstructEvent, mockRetrieveSubscription, mockGetCache } = vi.hoisted(() => ({
+  mockConstructEvent: vi.fn(),
+  mockRetrieveSubscription: vi.fn(),
+  mockGetCache: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/env", () => ({
+  env: {
+    STRIPE_SECRET_KEY: "sk_test_mock",
+    STRIPE_WEBHOOK_SECRET: "whsec_mock",
+  },
+}));
+
+vi.mock("@/lib/cache", () => ({
+  getCache: (...args: any[]) => mockGetCache(...args),
+  setCache: vi.fn().mockResolvedValue(undefined),
+  deleteUserCache: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("stripe", () => {
+  const StripeMock = function (this: any) {
+    this.webhooks = {
+      constructEvent: mockConstructEvent,
+    };
+    this.subscriptions = {
+      retrieve: mockRetrieveSubscription,
+    };
+  };
+  return {
+    default: StripeMock,
+  };
+});
 
 vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn(),
@@ -442,5 +479,135 @@ describe("API Integration Tests", () => {
     );
 
     expect(response.status).toBe(401);
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                             ANALYTICS ENDPOINTS                            */
+  /* -------------------------------------------------------------------------- */
+  it("GET /api/analytics should return weekly data and stats for logged in user", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    mockPrisma.dailySummary.findMany.mockResolvedValue([
+      {
+        id: 1,
+        userId: 7,
+        date: new Date(),
+        totalCalories: 1900,
+        totalProtein: 110,
+        targetCalories: 2000,
+        targetProtein: 100,
+      },
+    ]);
+
+    mockPrisma.profile.findUnique.mockResolvedValue({
+      id: 1,
+      userId: 7,
+      targetCalories: 2000,
+      targetProtein: 100,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const request = new NextRequest("http://localhost/api/analytics?days=7");
+    const response = await getAnalytics(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.weeklyData).toHaveLength(7);
+    expect(body.stats).toBeDefined();
+    expect(body.stats.targetCal).toBe(2000);
+  });
+
+  it("GET /api/analytics should return cached result if available", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+    const cachedData = {
+      weeklyData: [{ day: "Mon", calories: 2000 }],
+      stats: { averageCalories: 2000 },
+    };
+    mockGetCache.mockResolvedValueOnce(cachedData);
+
+    const request = new NextRequest("http://localhost/api/analytics?days=7");
+    const response = await getAnalytics(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual(cachedData);
+  });
+
+  it("GET /api/analytics should return 401 when user is not logged in", async () => {
+    mockSession.mockResolvedValue(null);
+
+    const request = new NextRequest("http://localhost/api/analytics?days=7");
+    const response = await getAnalytics(request);
+
+    expect(response.status).toBe(401);
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                              WEBHOOK ENDPOINTS                             */
+  /* -------------------------------------------------------------------------- */
+  it("POST /api/webhook should process checkout.session.completed event successfully", async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: "evt_123",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          subscription: "sub_123",
+          customer: "cus_123",
+          created: 1700000000,
+          metadata: { userId: "7" },
+        },
+      },
+    });
+
+    mockRetrieveSubscription.mockResolvedValueOnce({
+      status: "active",
+      current_period_end: 1702592000,
+    });
+
+    (mockPrisma as any).subscription = {
+      update: vi.fn().mockResolvedValueOnce({
+        id: 1,
+        userId: 7,
+        stripeCustomerId: "cus_123",
+        plan: "PRO",
+        startAt: new Date(1700000000 * 1000),
+        endAt: new Date(1702592000 * 1000),
+      }),
+    };
+
+    const request = new NextRequest("http://localhost/api/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": "sig_mock" },
+      body: JSON.stringify({ event: "dummy" }),
+    });
+
+    const response = await handleWebhook(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ received: true });
+    expect((mockPrisma as any).subscription.update).toHaveBeenCalledWith({
+      where: { userId: 7 },
+      data: expect.objectContaining({
+        stripeCustomerId: "cus_123",
+        plan: "PRO",
+      }),
+    });
+  });
+
+  it("POST /api/webhook should return 400 when stripe signature is invalid", async () => {
+    mockConstructEvent.mockImplementationOnce(() => {
+      throw new Error("Invalid signature");
+    });
+
+    const request = new NextRequest("http://localhost/api/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": "invalid_sig" },
+      body: JSON.stringify({ event: "dummy" }),
+    });
+
+    const response = await handleWebhook(request);
+
+    expect(response.status).toBe(400);
   });
 });
