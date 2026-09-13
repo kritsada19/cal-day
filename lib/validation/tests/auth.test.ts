@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sessionSchema, signupSchema } from "./auth";
+import { sessionSchema, signupSchema } from "../auth";
 
 describe("signupSchema", () => {
   // Happy path: ข้อมูลที่ถูกต้องทุก field ควรผ่าน validation

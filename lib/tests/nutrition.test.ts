@@ -3,7 +3,7 @@ import {
   buildProfileNutritionSummary,
   calculateDailyNutritionTargets,
   getBmiStatus,
-} from "./nutrition";
+} from "../nutrition";
 
 describe("calculateDailyNutritionTargets", () => {
   it("returns null when required profile information is missing", () => {

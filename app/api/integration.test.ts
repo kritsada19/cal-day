@@ -1,16 +1,55 @@
 /** @vitest-environment node */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { GET as getMeals, POST as createMeal } from "@/app/api/meals/route";
+import { DELETE as deleteMeal } from "@/app/api/meals/[id]/route";
+import { GET as getDailyMeals } from "@/app/api/meals/daily/route";
 import { GET as getProfile, POST as saveProfile } from "@/app/api/profile/route";
+import { GET as getAnalytics } from "@/app/api/analytics/route";
+import { POST as handleWebhook } from "@/app/api/webhook/route";
+import { getCache } from "@/lib/cache";
 import prisma from "@/lib/db/prisma";
 import { analyzeFood } from "@/lib/services/ai";
 import { checkAndComsumeAiQuota, getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
+import Stripe from "stripe";
 import type { Session } from "next-auth";
 import type { RateLimitResult } from "@/lib/rate-limit";
+
+const { mockConstructEvent, mockRetrieveSubscription, mockGetCache } = vi.hoisted(() => ({
+  mockConstructEvent: vi.fn(),
+  mockRetrieveSubscription: vi.fn(),
+  mockGetCache: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/env", () => ({
+  env: {
+    STRIPE_SECRET_KEY: "sk_test_mock",
+    STRIPE_WEBHOOK_SECRET: "whsec_mock",
+  },
+}));
+
+vi.mock("@/lib/cache", () => ({
+  getCache: (...args: any[]) => mockGetCache(...args),
+  setCache: vi.fn().mockResolvedValue(undefined),
+  deleteUserCache: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("stripe", () => {
+  const StripeMock = function (this: any) {
+    this.webhooks = {
+      constructEvent: mockConstructEvent,
+    };
+    this.subscriptions = {
+      retrieve: mockRetrieveSubscription,
+    };
+  };
+  return {
+    default: StripeMock,
+  };
+});
 
 vi.mock("@/lib/auth/session", () => ({
   getSession: vi.fn(),
@@ -269,5 +308,306 @@ describe("API Integration Tests", () => {
     });
     expect(body.message).toBe("Profile saved successfully");
     expect(body.profile.targetCalories).toBe(2056);
+  });
+
+  it("POST /api/meals should return 429 and not call the AI when the AI quota is already used up", async () => {
+    // โควต้า AI ถูกหักไปแล้ว → ต้องได้ 429 พร้อมข้อความจากตัวเช็คโควต้า และห้ามเรียก AI ซ้ำ
+    mockSession.mockResolvedValue({
+      user: { id: 7, email: "alice@example.com", name: "Alice" },
+    } as Session);
+
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 7,
+      subscription: { plan: "FREE" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    mockQuotaCheck.mockResolvedValue(
+      NextResponse.json(
+        { message: "AI limit reached. Please upgrade to premium to continue." },
+        { status: 429 },
+      ),
+    );
+
+    const request = new NextRequest("http://localhost/api/meals", {
+      method: "POST",
+      body: JSON.stringify({
+        mealText: "Shrimp pad thai",
+        mealType: "DINNER",
+        date: "2026-08-26",
+      }),
+    });
+
+    const response = await createMeal(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body.message).toBe("AI limit reached. Please upgrade to premium to continue.");
+    expect(mockAnalyzeFood).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/meals should reject a month outside 1-12", async () => {
+    // พารามิเตอร์เดือนผิด → 400 และไม่ต้องแตะฐานข้อมูลเลย
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    const response = await getMeals(
+      new NextRequest("http://localhost/api/meals?year=2026&month=13"),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ message: "Invalid date parameters" });
+    expect(mockPrisma.dailySummary.findMany).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/meals/daily should return the meals logged on that date", async () => {
+    // เทสต์นี้มองพฤติกรรมที่ผู้ใช้เห็น: ส่งวันที่เข้าไป → ได้รายการมื้ออาหารของวันนั้นกลับมา
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    mockPrisma.meal.findMany.mockResolvedValue([
+      {
+        id: 12,
+        userId: 7,
+        mealType: "LUNCH",
+        createdAt: new Date("2026-08-26T03:00:00.000Z"),
+        foodEntries: [
+          {
+            id: 1,
+            mealId: 12,
+            foodName: "Salmon rice bowl",
+            amount: 1,
+            unit: "bowl",
+            calories: 540,
+            protein: 30,
+          },
+        ],
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ] as any);
+
+    const response = await getDailyMeals(
+      new NextRequest("http://localhost/api/meals/daily?date=2026-08-26"),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.meals).toHaveLength(1);
+    expect(body.meals[0].foodEntries[0].foodName).toBe("Salmon rice bowl");
+  });
+
+  it("GET /api/meals/daily should return 400 when the date is missing", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    const response = await getDailyMeals(new NextRequest("http://localhost/api/meals/daily"));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ message: "Date is required" });
+  });
+
+  it("DELETE /api/meals/:id should delete the meal and roll its calories back from the daily summary", async () => {
+    // มื้อนี้มี 2 จาน จานละ 300 kcal / 20 g → ต้องหักออก 600 kcal / 40 g (ไม่ใช่ 300/20)
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    mockPrisma.meal.findFirst.mockResolvedValue({
+      id: 12,
+      userId: 7,
+      mealType: "LUNCH",
+      createdAt: new Date("2026-08-26T03:00:00.000Z"),
+      foodEntries: [
+        {
+          id: 1,
+          mealId: 12,
+          foodName: "Salmon rice bowl",
+          amount: 2,
+          unit: "bowl",
+          calories: 300,
+          protein: 20,
+        },
+      ],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    mockPrisma.dailySummary.findFirst.mockResolvedValue({
+      id: 99,
+      userId: 7,
+      date: new Date("2026-08-26T00:00:00.000Z"),
+      totalCalories: 1450,
+      totalProtein: 100,
+      targetCalories: 2100,
+      targetProtein: 130,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const tx = {
+      dailySummary: { update: vi.fn().mockResolvedValue({}) },
+      meal: { delete: vi.fn().mockResolvedValue({}) },
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockPrisma.$transaction.mockImplementation(async (callback) => callback(tx as any));
+
+    const response = await deleteMeal(
+      new NextRequest("http://localhost/api/meals/12", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "12" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(tx.dailySummary.update).toHaveBeenCalledWith({
+      where: { id: 99 },
+      data: { totalCalories: 850, totalProtein: 60 },
+    });
+    expect(tx.meal.delete).toHaveBeenCalledWith({ where: { id: 12 } });
+  });
+
+  it("DELETE /api/meals/:id should return 404 when the meal belongs to someone else", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+    mockPrisma.meal.findFirst.mockResolvedValue(null);
+
+    const response = await deleteMeal(
+      new NextRequest("http://localhost/api/meals/999", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "999" }) },
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it("DELETE /api/meals/:id should return 401 when the user is not logged in", async () => {
+    mockSession.mockResolvedValue(null);
+
+    const response = await deleteMeal(
+      new NextRequest("http://localhost/api/meals/12", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "12" }) },
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                             ANALYTICS ENDPOINTS                            */
+  /* -------------------------------------------------------------------------- */
+  it("GET /api/analytics should return weekly data and stats for logged in user", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    mockPrisma.dailySummary.findMany.mockResolvedValue([
+      {
+        id: 1,
+        userId: 7,
+        date: new Date(),
+        totalCalories: 1900,
+        totalProtein: 110,
+        targetCalories: 2000,
+        targetProtein: 100,
+      },
+    ]);
+
+    mockPrisma.profile.findUnique.mockResolvedValue({
+      id: 1,
+      userId: 7,
+      targetCalories: 2000,
+      targetProtein: 100,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const request = new NextRequest("http://localhost/api/analytics?days=7");
+    const response = await getAnalytics(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.weeklyData).toHaveLength(7);
+    expect(body.stats).toBeDefined();
+    expect(body.stats.targetCal).toBe(2000);
+  });
+
+  it("GET /api/analytics should return cached result if available", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+    const cachedData = {
+      weeklyData: [{ day: "Mon", calories: 2000 }],
+      stats: { averageCalories: 2000 },
+    };
+    mockGetCache.mockResolvedValueOnce(cachedData);
+
+    const request = new NextRequest("http://localhost/api/analytics?days=7");
+    const response = await getAnalytics(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual(cachedData);
+  });
+
+  it("GET /api/analytics should return 401 when user is not logged in", async () => {
+    mockSession.mockResolvedValue(null);
+
+    const request = new NextRequest("http://localhost/api/analytics?days=7");
+    const response = await getAnalytics(request);
+
+    expect(response.status).toBe(401);
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                              WEBHOOK ENDPOINTS                             */
+  /* -------------------------------------------------------------------------- */
+  it("POST /api/webhook should process checkout.session.completed event successfully", async () => {
+    mockConstructEvent.mockReturnValueOnce({
+      id: "evt_123",
+      type: "checkout.session.completed",
+      data: {
+        object: {
+          subscription: "sub_123",
+          customer: "cus_123",
+          created: 1700000000,
+          metadata: { userId: "7" },
+        },
+      },
+    });
+
+    mockRetrieveSubscription.mockResolvedValueOnce({
+      status: "active",
+      current_period_end: 1702592000,
+    });
+
+    (mockPrisma as any).subscription = {
+      update: vi.fn().mockResolvedValueOnce({
+        id: 1,
+        userId: 7,
+        stripeCustomerId: "cus_123",
+        plan: "PRO",
+        startAt: new Date(1700000000 * 1000),
+        endAt: new Date(1702592000 * 1000),
+      }),
+    };
+
+    const request = new NextRequest("http://localhost/api/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": "sig_mock" },
+      body: JSON.stringify({ event: "dummy" }),
+    });
+
+    const response = await handleWebhook(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ received: true });
+    expect((mockPrisma as any).subscription.update).toHaveBeenCalledWith({
+      where: { userId: 7 },
+      data: expect.objectContaining({
+        stripeCustomerId: "cus_123",
+        plan: "PRO",
+      }),
+    });
+  });
+
+  it("POST /api/webhook should return 400 when stripe signature is invalid", async () => {
+    mockConstructEvent.mockImplementationOnce(() => {
+      throw new Error("Invalid signature");
+    });
+
+    const request = new NextRequest("http://localhost/api/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": "invalid_sig" },
+      body: JSON.stringify({ event: "dummy" }),
+    });
+
+    const response = await handleWebhook(request);
+
+    expect(response.status).toBe(400);
   });
 });

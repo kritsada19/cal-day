@@ -1,494 +1,100 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import prisma from "@/lib/db/prisma";
-import { redis } from "@/lib/db/redis";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { analyzeFood } from "@/lib/services/ai";
-import { checkAndComsumeAiQuota } from "@/lib/services/ai-quota";
+import { errorResponse, rateLimitResponse } from "@/lib/http";
 import { mealSchema } from "@/lib/validation/meal";
-import { logger } from "@/lib/logger";
-import { getCache, setCache, deleteUserCache } from "@/lib/cache";
+import { mealService } from "@/lib/services/meal.service";
 
-interface DailySummary {
-  userId: number;
-  id: number;
-  date: Date;
-  totalCalories: number;
-  totalProtein: number;
-  targetCalories: number;
-  targetProtein: number;
-}
+/**
+ * route handler = "พนักงานต้อนรับ" ของร้านอาหาร
+ * หน้าที่มีแค่: รับ request → ตรวจ rate limit / session / ข้อมูล → เรียก service → ตอบกลับ
+ * ส่วนกฎธุรกิจทั้งหมดอยู่ใน lib/services/meal.service.ts
+ */
 
+/**
+ * POST /api/meals — บันทึกมื้ออาหาร 1 มื้อ
+ */
 export async function POST(request: NextRequest) {
+  // 1) จำกัดจำนวนครั้งที่เรียกต่อ IP (100 ครั้ง / 60 วินาที)
   const rateLimit = await checkRateLimit(request, "meals", 100, 60);
-
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": rateLimit.limit.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-        },
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
+  // 2) ต้องล็อกอินก่อน
   const session = await getSession();
-
   if (!session?.user?.id) {
-    return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = Number(session.user.id);
+
+  // 3) ตรวจรูปแบบข้อมูลที่ส่งมา (mealText / mealType / date)
   const body = await request.json();
   const validation = mealSchema.safeParse(body);
 
   if (!validation.success) {
     return NextResponse.json(
-      {
-        message:
-          validation.error.issues[0]?.message || "Invalid input",
-      },
-      { status: 400 }
-    );
-  }
-
-  const {
-    mealText: rawText,
-    mealType,
-    date: localDateStr,
-  } = validation.data;
-
-  const userId = Number(session.user.id);
-
-  // =========================
-  // แบ่งแต่ละเมนูด้วย ","
-  // =========================
-
-  const menuItems = rawText
-    .split(",")
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-
-  if (menuItems.length === 0) {
-    return NextResponse.json(
-      { message: "Invalid input" },
-      { status: 400 }
-    );
-  }
-
-  // =========================
-  // Date
-  // =========================
-
-  let startOfDay: Date;
-  let endOfDay: Date;
-
-  if (localDateStr) {
-    startOfDay = new Date(
-      `${localDateStr}T00:00:00.000Z`
-    );
-
-    endOfDay = new Date(
-      `${localDateStr}T23:59:59.999Z`
-    );
-  } else {
-    const now = new Date();
-
-    startOfDay = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0,
-        0,
-        0,
-        0
-      )
-    );
-
-    endOfDay = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        23,
-        59,
-        59,
-        999
-      )
-    );
-  }
-
-  // =========================
-  // User
-  // =========================
-
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-    include: {
-      subscription: true,
-    },
-  });
-
-  if (!user) {
-    return NextResponse.json(
-      { message: "User not found" },
-      { status: 404 }
-    );
-  }
-
-  // =========================
-  // AI Quota
-  // =========================
-
-  const quotaResponse = await checkAndComsumeAiQuota(
-    userId,
-    user.subscription?.plan as string
-  );
-
-  if (quotaResponse) {
-    return quotaResponse;
-  }
-
-  // =========================
-  // Normalize text
-  // =========================
-
-  const normalize = (text: string) =>
-    text
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "");
-
-  // =========================
-  // หาเมนูเดิมจาก FoodEntry
-  // =========================
-
-  const existingFoods = await prisma.foodEntry.findMany({
-    distinct: ["foodName"],
-    select: {
-      foodName: true,
-      amount: true,
-      unit: true,
-      calories: true,
-      protein: true,
-    },
-  });
-
-  // เรียงชื่อยาวก่อน
-  // ป้องกัน "ไข่" match ก่อน "ไข่ต้ม"
-  existingFoods.sort(
-    (a, b) =>
-      normalize(b.foodName).length -
-      normalize(a.foodName).length
-  );
-
-  const foundFoods: typeof existingFoods = [];
-  const unknownMenuItems: string[] = [];
-
-  // =========================
-  // Match เมนูจาก DB (ทีละเมนู)
-  // =========================
-
-  for (const menuItem of menuItems) {
-    let remainingText = normalize(menuItem);
-
-    for (const food of existingFoods) {
-      const normalizedFoodName = normalize(food.foodName);
-
-      if (remainingText.includes(normalizedFoodName)) {
-        foundFoods.push(food);
-
-        remainingText = remainingText.replace(
-          normalizedFoodName,
-          ""
-        );
-      }
-    }
-
-    // เมนูนี้ไม่เจอใน DB → ส่งให้ AI วิเคราะห์
-    if (remainingText.trim().length > 0) {
-      unknownMenuItems.push(menuItem);
-    }
-  }
-
-  // =========================
-  // ถ้ายังมีเมนูที่ไม่รู้จัก
-  // → AI
-  // =========================
-
-  let aiAnalysis: Awaited<
-    ReturnType<typeof analyzeFood>
-  > | null = null;
-
-  const aiQuotaConsumed = false;
-
-  if (unknownMenuItems.length > 0) {
-    // ส่งเฉพาะเมนูที่ไม่พบใน DB ให้ AI วิเคราะห์
-    aiAnalysis = await analyzeFood(
-      unknownMenuItems.join(", ")
+      { message: validation.error.issues[0]?.message || "Invalid input" },
+      { status: 400 },
     );
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      // =========================
-      // Create Meal
-      // =========================
+    // 4) งานทั้งหมดเป็นของ service — บรรทัดเดียวจบ
+    const result = await mealService.createMeal(userId, validation.data);
 
-      const meal = await tx.meal.create({
-        data: {
-          userId,
-          mealType,
-        },
-      });
-
-      // =========================
-      // เตรียม FoodEntry
-      // =========================
-
-      const foodEntries = [
-        // เมนูที่เจอใน DB
-        ...foundFoods.map((food) => ({
-          mealId: meal.id,
-          foodName: food.foodName,
-          amount: food.amount || 1,
-          unit: food.unit || "serving",
-          calories: food.calories || 0,
-          protein: food.protein || 0,
-        })),
-
-        // เมนูที่ AI วิเคราะห์
-        ...(aiAnalysis?.foods ?? []).map((food) => ({
-          mealId: meal.id,
-          foodName: food.name,
-          amount: food.amount || 1,
-          unit: food.unit || "serving",
-          calories: food.calories || 0,
-          protein: food.protein || 0,
-        })),
-      ];
-
-      // =========================
-      // ถ้าไม่มี food เลย
-      // =========================
-
-      if (foodEntries.length === 0) {
-        await tx.foodEntry.create({
-          data: {
-            mealId: meal.id,
-            foodName: rawText,
-            amount: 1,
-            unit: "text",
-            calories: aiAnalysis?.estimatedCalories ?? 0,
-            protein: aiAnalysis?.estimatedProtein ?? 0,
-          },
-        });
-      } else {
-        await tx.foodEntry.createMany({
-          data: foodEntries,
-        });
-      }
-
-      // =========================
-      // Calculate total
-      // =========================
-
-      const totalCalories =
-        foodEntries.length > 0
-          ? foodEntries.reduce(
-            (sum, food) =>
-              sum + food.calories * food.amount,
-            0
-          )
-          : aiAnalysis?.estimatedCalories ?? 0;
-
-      const totalProtein =
-        foodEntries.length > 0
-          ? foodEntries.reduce(
-            (sum, food) =>
-              sum + food.protein * food.amount,
-            0
-          )
-          : aiAnalysis?.estimatedProtein ?? 0;
-
-      // =========================
-      // Profile
-      // =========================
-
-      const profile = await tx.profile.findUnique({
-        where: {
-          userId,
-        },
-      });
-
-      const targetCalories =
-        profile?.targetCalories ?? 0;
-
-      const targetProtein =
-        profile?.targetProtein ?? 0;
-
-      // =========================
-      // Daily Summary
-      // =========================
-
-      const existingSummary =
-        await tx.dailySummary.findFirst({
-          where: {
-            userId,
-            date: {
-              gte: startOfDay,
-              lt: endOfDay,
-            },
-          },
-        });
-
-      if (existingSummary) {
-        await tx.dailySummary.update({
-          where: {
-            id: existingSummary.id,
-          },
-          data: {
-            totalCalories: Number(
-              (
-                existingSummary.totalCalories +
-                totalCalories
-              ).toFixed(1)
-            ),
-
-            totalProtein: Number(
-              (
-                existingSummary.totalProtein +
-                totalProtein
-              ).toFixed(1)
-            ),
-
-            targetCalories,
-            targetProtein,
-          },
-        });
-      } else {
-        await tx.dailySummary.create({
-          data: {
-            userId,
-            date: startOfDay,
-
-            totalCalories: Number(
-              totalCalories.toFixed(1)
-            ),
-
-            totalProtein: Number(
-              totalProtein.toFixed(1)
-            ),
-
-            targetCalories,
-            targetProtein,
-          },
-        });
-      }
-
-      return {
-        meal,
-        totalCalories,
-        totalProtein,
-      };
-    });
-
-    // =========================
-    // Delete cache
-    // =========================
-    await deleteUserCache(userId);
-
-    // =========================
-    // Response
-    // =========================
-
+    // 5) ตอบกลับผลลัพธ์
     return NextResponse.json({
       message: "Meal created successfully",
-      aiAnalysis,
-      mealId: result.meal.id,
+      aiAnalysis: result.aiAnalysis,
+      mealId: result.mealId,
       totalCalories: result.totalCalories,
       totalProtein: result.totalProtein,
-      status: 201
+      status: 201,
     });
   } catch (error) {
-    // คืน quota เฉพาะกรณีที่ consume ไปแล้ว
-    if (aiQuotaConsumed) {
-      await redis.decr(`ai_limit:${userId}`);
-    }
-
-    logger.error(
-      {
-        err: error,
-        userId,
-      },
-      "Meal POST error"
-    );
-
-    return NextResponse.json(
-      {
-        message: "Internal server error",
-      },
-      {
-        status: 503,
-      }
-    );
+    return errorResponse(error, {
+      status: 503,
+      message: "Internal server error",
+      log: "Meal POST error",
+      context: { userId },
+    });
   }
 }
 
+/**
+ * GET /api/meals?year=2026&month=8 — ดึงสรุปรายวันของเดือนนั้น (ใช้ทำปฏิทิน)
+ */
 export async function GET(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'meals', 100, 60);
+  // 1) จำกัดจำนวนครั้งที่เรียกต่อ IP
+  const rateLimit = await checkRateLimit(request, "meals", 100, 60);
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': rateLimit.limit.toString(),
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-        }
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
+
+  // 2) ต้องล็อกอินก่อน
   const session = await getSession();
   const userId = Number(session?.user?.id);
   if (!userId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+
+  // 3) อ่านพารามิเตอร์จาก URL
   const year = Number(request.nextUrl.searchParams.get("year"));
   const month = Number(request.nextUrl.searchParams.get("month"));
 
-  const cacheKey = `cache:user:${userId}:meals:month:${year}:${month}`;
-  const cached = await getCache<DailySummary[]>(cacheKey);
-  if (cached) {
-    return NextResponse.json({ summaries: cached }, { status: 200 });
-  }
-  if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-    return NextResponse.json({ message: "Invalid date parameters" }, { status: 400 });
-  }
-  // concept
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59, 999);
-  const summaries = await prisma.dailySummary.findMany({
-    where: {
-      userId,
-      date: {
-        gte: start,
-        lte: end,
-      },
-    },
-    orderBy: {
-      date: "asc",
-    },
-  });
-  await setCache(cacheKey, summaries, 60);
-  return NextResponse.json({ summaries }, { status: 200 });
-}
+  try {
+    // 4) service เป็นคนตรวจค่าที่ส่งมา + จัดการ cache ให้
+    const summaries = await mealService.getMonthlySummaries(userId, year, month);
 
+    return NextResponse.json({ summaries }, { status: 200 });
+  } catch (error) {
+    return errorResponse(error, {
+      status: 500,
+      message: "Internal server error",
+      log: "Meals GET error",
+      context: { userId, year, month },
+    });
+  }
+}
