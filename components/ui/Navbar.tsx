@@ -44,7 +44,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (!session?.user) {
+    if (!session?.user || session.user.role === "ADMIN") {
       return;
     }
 
@@ -62,11 +62,17 @@ export default function Navbar() {
 
   if (!mounted) return null;
 
-  const navItems: NavItem[] = [
+  const navItemsForUser: NavItem[] = [
     { label: "Dashboard", href: "/dashboard", active: pathname === "/dashboard" },
     { label: "New Entry", href: "/meals/new", active: pathname === "/meals/new" },
     { label: "Analytics", href: "/analytics", active: pathname === "/analytics" },
     { label: "Subscription", href: "/subscription", active: pathname === "/subscription" },
+  ];
+
+  const navItemsForAdmin: NavItem[] = [
+    { label: "Dashboard", href: "/admin/dashboard", active: pathname === "/admin/dashboard" },
+    { label: "Users", href: "/admin/users", active: pathname === "/admin/users" },
+    { label: "Foods", href: "/admin/foods", active: pathname === "/admin/foods" },
   ];
 
   return (
@@ -114,7 +120,7 @@ export default function Navbar() {
           {/* Middle Section: Navigation Menu Items (desktop, login-only) */}
           {session?.user && (
             <div className="hidden lg:flex space-x-1">
-              {navItems.map((item) => (
+              {(session.user?.role === "ADMIN" ? navItemsForAdmin : navItemsForUser).map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
@@ -143,50 +149,53 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-6">
 
               {/* Calorie Stats Card (Geometric, Sharp) */}
-              <div className="bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 px-4 py-2 flex items-center gap-4 relative overflow-hidden group">
-                {/* Corner decor */}
-                <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-black/20 dark:border-white/20"></span>
-                <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-black/20 dark:border-white/20"></span>
+              {session?.user?.role !== "ADMIN" && (
+                <div className="bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 px-4 py-2 flex items-center gap-4 relative overflow-hidden group">
+                  {/* Corner decor */}
+                  <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-black/20 dark:border-white/20"></span>
+                  <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-black/20 dark:border-white/20"></span>
 
-                {target > 0 ? (
-                  <div className="flex flex-col">
-                    <div className="flex justify-between items-baseline gap-8 text-[10px] tracking-wider text-obsidian-950/50 dark:text-white/50 font-mono">
-                      <span>DAILY BALANCE</span>
-                      <span className="text-obsidian-950 dark:text-white font-semibold">
-                        <span className="text-emerald-accent text-glow-emerald font-bold">{consumed}</span> / {target} kcal
-                      </span>
-                    </div>
 
-                    {/* Target Progress Bar */}
-                    <div className="w-48 h-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 mt-1.5 relative">
-                      <div
-                        className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
-                        style={{ width: `${percentage}%` }}
-                      />
-                      {/* Subtle target ticks */}
-                      <span className="absolute top-0 left-1/2 w-px h-full bg-black/20 dark:bg-white/20"></span>
-                      <span className="absolute top-0 left-3/4 w-px h-full bg-black/20 dark:bg-white/20"></span>
-                    </div>
+                  {target > 0 ? (
+                    <div className="flex flex-col">
+                      <div className="flex justify-between items-baseline gap-8 text-[10px] tracking-wider text-obsidian-950/50 dark:text-white/50 font-mono">
+                        <span>DAILY BALANCE</span>
+                        <span className="text-obsidian-950 dark:text-white font-semibold">
+                          <span className="text-emerald-accent text-glow-emerald font-bold">{consumed}</span> / {target} kcal
+                        </span>
+                      </div>
 
-                    <div className="flex justify-between text-[9px] tracking-widest text-obsidian-950/30 dark:text-white/30 font-mono mt-1">
-                      <span>PROGRESS</span>
-                      <span className="text-gold-accent text-glow-gold font-semibold">{remaining} KCAL LEFT</span>
+                      {/* Target Progress Bar */}
+                      <div className="w-48 h-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 mt-1.5 relative">
+                        <div
+                          className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
+                          style={{ width: `${percentage}%` }}
+                        />
+                        {/* Subtle target ticks */}
+                        <span className="absolute top-0 left-1/2 w-px h-full bg-black/20 dark:bg-white/20"></span>
+                        <span className="absolute top-0 left-3/4 w-px h-full bg-black/20 dark:bg-white/20"></span>
+                      </div>
+
+                      <div className="flex justify-between text-[9px] tracking-widest text-obsidian-950/30 dark:text-white/30 font-mono mt-1">
+                        <span>PROGRESS</span>
+                        <span className="text-gold-accent text-glow-gold font-semibold">{remaining} KCAL LEFT</span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center w-48 py-1.5">
-                    <Link
-                      href="/profile/form"
-                      className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
-                    >
-                      FILL PROFILE
-                    </Link>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="flex items-center justify-center w-48 py-1.5">
+                      <Link
+                        href="/profile/form"
+                        className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
+                      >
+                        FILL PROFILE
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Profile Avatar & Rank Widget */}
-              <Link href="/profile" className="flex items-center gap-3">
+              <Link href={session?.user?.role === "ADMIN" ? "/admin/profile" : "/profile"} className="flex items-center gap-3">
                 {/* Sharp Profile Container */}
                 <div className="relative group cursor-pointer">
                   {/* Diagonal cut capsule */}
@@ -256,7 +265,7 @@ export default function Navbar() {
             {/* Nav links — login only */}
             {session?.user && (
               <div className="flex flex-col space-y-1">
-                {navItems.map((item) => (
+                {(session.user?.role === "ADMIN" ? navItemsForAdmin : navItemsForUser).map((item) => (
                   <Link
                     key={item.label}
                     href={item.href}
@@ -276,40 +285,42 @@ export default function Navbar() {
             {session?.user && (
               <>
                 {/* Mobile Calorie Stats Widget */}
-                <div className="bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-4 space-y-3">
-                  {target > 0 ? (
-                    <>
-                      <div className="flex justify-between items-baseline text-[10px] tracking-wider text-obsidian-950/50 dark:text-white/50 font-mono">
-                        <span>DAILY BALANCE</span>
-                        <span className="text-obsidian-950 dark:text-white font-semibold">
-                          <span className="text-emerald-accent font-bold">{consumed}</span> / {target} kcal
-                        </span>
-                      </div>
+                {session?.user?.role !== "ADMIN" && (
+                  <div className="bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-4 space-y-3">
+                    {target > 0 ? (
+                      <>
+                        <div className="flex justify-between items-baseline text-[10px] tracking-wider text-obsidian-950/50 dark:text-white/50 font-mono">
+                          <span>DAILY BALANCE</span>
+                          <span className="text-obsidian-950 dark:text-white font-semibold">
+                            <span className="text-emerald-accent font-bold">{consumed}</span> / {target} kcal
+                          </span>
+                        </div>
 
-                      {/* Target Progress Bar */}
-                      <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 relative">
-                        <div
-                          className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
-                          style={{ width: `${percentage}%` }}
-                        />
+                        {/* Target Progress Bar */}
+                        <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 relative">
+                          <div
+                            className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-center pt-2">
+                        <Link
+                          href="/profile/form"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2.5 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
+                        >
+                          FILL PROFILE
+                        </Link>
                       </div>
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center pt-2">
-                      <Link
-                        href="/profile/form"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2.5 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
-                      >
-                        FILL PROFILE
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Mobile Profile Display */}
                 <Link
-                  href="/profile"
+                  href={session?.user?.role === "ADMIN" ? "/admin/profile" : "/profile"}
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 border-t border-black/10 dark:border-white/10 pt-4 px-1"
                 >

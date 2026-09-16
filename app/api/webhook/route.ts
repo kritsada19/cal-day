@@ -51,9 +51,6 @@ export async function POST(req: NextRequest) {
             logger.info({ eventId: event.id, eventType: event.type }, "Duplicate webhook event ignored");
             return NextResponse.json({ received: true }, { status: 200 });
         }
-        // Mark event as processed with a TTL (e.g., 24 hours)
-        await redis.set(`webhook:${event.id}`, "1", "EX", 60 * 60 * 24);
-
     } catch (err: any) {
         logger.error({ err }, "Webhook signature verification failed");
         return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
@@ -172,6 +169,8 @@ export async function POST(req: NextRequest) {
                 logger.info({ eventId: event.id, eventType: event.type }, "Unhandled webhook event type");
         }
 
+        // Mark event as processed with a TTL (e.g., 24 hours)
+        await redis.set(`webhook:${event.id}`, "1", "EX", 60 * 60 * 24);
         return NextResponse.json({ received: true }, { status: 200 });
     } catch (error) {
         logger.error({ err: error, eventId: event.id, eventType: event.type }, "Webhook handler failed");
