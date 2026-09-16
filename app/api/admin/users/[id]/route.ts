@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { MealType } from "@/app/generated/prisma/enums";
 import { deleteUserCache } from "@/lib/cache";
+import { Prisma } from "@/app/generated/prisma/client";
 
 export async function GET(
   request: NextRequest,
@@ -89,14 +90,16 @@ export async function GET(
     const search = searchParams.get("search")?.trim() || "";
     const mealParam = (searchParams.get("mealType") || searchParams.get("meal"))?.toUpperCase();
 
-    const foodWhere: any = {
+    const foodWhere: Prisma.FoodEntryWhereInput = {
       meal: {
         userId: targetUserId,
       },
     };
 
     if (mealParam && Object.values(MealType).includes(mealParam as MealType)) {
-      foodWhere.meal.mealType = mealParam as MealType;
+      foodWhere.meal = {
+        mealType: mealParam as MealType,
+      };
     }
 
     if (search) {

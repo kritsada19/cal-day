@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import axios from "axios";
+import Image from "next/image";
 import {
     Users,
     Search,
@@ -15,10 +16,6 @@ import {
     Crown,
     User as UserIcon,
     X,
-    Calendar,
-    Activity,
-    Award,
-    ArrowUpDown,
     Trash2,
     AlertTriangle,
 } from "lucide-react";
@@ -106,10 +103,14 @@ export default function AdminUsersPage() {
             );
             setUsers(response.data.users);
             setPagination(response.data.pagination);
-        } catch (err: any) {
-            const message =
-                err.response?.data?.message || "Failed to load user management data";
-            setError(message);
+        } catch (err: unknown) {
+            if (axios.isAxiosError<{ message?: string }>(err)) {
+                setError(
+                    err.response?.data?.message || "Failed to load user management data"
+                );
+            } else {
+                setError("Failed to load user management data");
+            }
         } finally {
             setLoading(false);
         }
@@ -117,6 +118,7 @@ export default function AdminUsersPage() {
 
     useEffect(() => {
         if (status === "authenticated" && session?.user?.role === "ADMIN") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchUsers();
         }
     }, [status, session, fetchUsers]);
@@ -130,10 +132,14 @@ export default function AdminUsersPage() {
             await axios.delete(`/api/admin/users/${userToDelete.id}`);
             setUserToDelete(null);
             fetchUsers();
-        } catch (err: any) {
-            const message =
-                err.response?.data?.message || "Failed to delete user account";
-            setDeleteError(message);
+        } catch (err: unknown) {
+            if (axios.isAxiosError<{ message?: string }>(err)) {
+                setDeleteError(
+                    err.response?.data?.message || "Failed to delete user account"
+                );
+            } else {
+                setDeleteError("Failed to delete user account");
+            }
         } finally {
             setIsDeleting(false);
         }
@@ -390,7 +396,7 @@ export default function AdminUsersPage() {
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-9 h-9 flex items-center justify-center bg-gold-accent/10 border border-gold-accent/30 text-gold-accent font-mono font-bold text-xs shrink-0">
                                                             {user.image ? (
-                                                                <img
+                                                                <Image
                                                                     src={user.image}
                                                                     alt={user.name || user.email}
                                                                     className="w-full h-full object-cover"

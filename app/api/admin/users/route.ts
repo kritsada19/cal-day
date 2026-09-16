@@ -4,6 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { Role, Plan } from "@/app/generated/prisma/enums";
+import { Prisma } from "@/app/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, "admin-users", 100, 60);
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     const roleParam = searchParams.get("role")?.toUpperCase();
     const planParam = searchParams.get("plan")?.toUpperCase();
 
-    const where: any = {};
+    const where: Prisma.UserWhereInput = {};
 
     if (search) {
       where.OR = [
@@ -113,4 +114,4 @@ export async function GET(request: NextRequest) {
     logger.error({ err: error, userId: session.user.id }, "Admin users GET error");
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-}
+}

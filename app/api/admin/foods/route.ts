@@ -4,6 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { MealType } from "@/app/generated/prisma/enums";
+import { Prisma } from "@/app/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, "admin-foods", 100, 60);
@@ -36,11 +37,11 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10", 10)));
     const search = searchParams.get("search")?.trim() || "";
-    
+
     // Support filtering by mealType or meal parameter
     const mealParam = (searchParams.get("mealType") || searchParams.get("meal"))?.toUpperCase();
 
-    const where: any = {};
+    const where: Prisma.FoodEntryWhereInput = {};
 
     if (search) {
       where.OR = [
@@ -60,7 +61,6 @@ export async function GET(request: NextRequest) {
 
     if (mealParam && Object.values(MealType).includes(mealParam as MealType)) {
       where.meal = {
-        ...(where.meal || {}),
         mealType: mealParam as MealType,
       };
     }

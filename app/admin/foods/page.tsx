@@ -16,8 +16,6 @@ import {
   Dumbbell,
   User as UserIcon,
   X,
-  Calendar,
-  Layers,
 } from "lucide-react";
 
 interface AdminUserSummary {
@@ -97,10 +95,14 @@ export default function AdminFoodsPage() {
       const data = response.data.foodEntries || response.data.foods || [];
       setFoodEntries(data);
       setPagination(response.data.pagination);
-    } catch (err: any) {
-      const message =
-        err.response?.data?.message || "Failed to load food entry data";
-      setError(message);
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(
+          err.response?.data?.message || "Failed to load food entry data"
+        );
+      } else {
+        setError("Failed to load food entry data");
+      }
     } finally {
       setLoading(false);
     }
@@ -108,6 +110,7 @@ export default function AdminFoodsPage() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role === "ADMIN") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchFoodEntries();
     }
   }, [status, session, fetchFoodEntries]);

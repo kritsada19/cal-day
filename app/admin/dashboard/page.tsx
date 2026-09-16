@@ -23,7 +23,7 @@ interface StatsData {
 
 export default function AdminDashboardPage() {
     const { data: session, status } = useSession();
-    
+
     const [aiUsage, setAiUsage] = useState<StatsData | null>(null);
     const [meals, setMeals] = useState<StatsData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -32,15 +32,24 @@ export default function AdminDashboardPage() {
     const fetchStats = useCallback(async () => {
         setLoading(true);
         setError(null);
+
         try {
             const [aiRes, mealsRes] = await Promise.all([
                 axios.get<StatsData>("/api/admin/dashboard/aiUsage"),
                 axios.get<StatsData>("/api/admin/dashboard/meals")
             ]);
+
             setAiUsage(aiRes.data);
             setMeals(mealsRes.data);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to load dashboard statistics");
+        } catch (err: unknown) {
+            if (axios.isAxiosError<{ message?: string }>(err)) {
+                setError(
+                    err.response?.data?.message ||
+                    "Failed to load dashboard statistics"
+                );
+            } else {
+                setError("Failed to load dashboard statistics");
+            }
         } finally {
             setLoading(false);
         }
@@ -48,6 +57,7 @@ export default function AdminDashboardPage() {
 
     useEffect(() => {
         if (status === "authenticated" && session?.user?.role === "ADMIN") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchStats();
         }
     }, [status, session, fetchStats]);
@@ -135,7 +145,7 @@ export default function AdminDashboardPage() {
                     <div className="p-6 bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 relative group">
                         <span className="absolute -top-px -left-px w-2 h-2 border-t-2 border-l-2 border-gold-accent" />
                         <span className="absolute -bottom-px -right-px w-2 h-2 border-b-2 border-r-2 border-gold-accent" />
-                        
+
                         <div className="flex items-center gap-3 mb-6 border-b border-black/5 dark:border-white/5 pb-4">
                             <div className="w-10 h-10 flex items-center justify-center bg-gold-accent/10 border border-gold-accent/30 text-gold-accent shrink-0">
                                 <Activity className="w-5 h-5" />
@@ -175,7 +185,7 @@ export default function AdminDashboardPage() {
                     <div className="p-6 bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 relative group">
                         <span className="absolute -top-px -left-px w-2 h-2 border-t-2 border-l-2 border-emerald-500" />
                         <span className="absolute -bottom-px -right-px w-2 h-2 border-b-2 border-r-2 border-emerald-500" />
-                        
+
                         <div className="flex items-center gap-3 mb-6 border-b border-black/5 dark:border-white/5 pb-4">
                             <div className="w-10 h-10 flex items-center justify-center bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 shrink-0">
                                 <Utensils className="w-5 h-5" />
@@ -217,7 +227,7 @@ export default function AdminDashboardPage() {
                     <Database className="w-5 h-5 text-gold-accent" />
                     <span>Management Access</span>
                 </h2>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Link href="/admin/users" className="group p-5 bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 hover:border-gold-accent transition-all flex items-center justify-between">
                         <div className="flex items-center gap-4">

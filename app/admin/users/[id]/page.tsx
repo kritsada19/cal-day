@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import Image from "next/image";
 import {
   ArrowLeft,
   Shield,
@@ -19,12 +20,8 @@ import {
   Flame,
   Dumbbell,
   Activity,
-  Calendar,
   X,
-  Sparkles,
   Mail,
-  Clock,
-  Target,
 } from "lucide-react";
 
 interface UserProfile {
@@ -94,7 +91,6 @@ interface UserDetailApiResponse {
 export default function AdminUserDetailPage() {
   const { data: session, status } = useSession();
   const params = useParams();
-  const router = useRouter();
 
   const userId = params?.id ? String(params.id) : "";
 
@@ -139,10 +135,14 @@ export default function AdminUserDetailPage() {
       const foods = response.data.foodEntries || response.data.foods || [];
       setFoodEntries(foods);
       setPagination(response.data.pagination);
-    } catch (err: any) {
-      const message =
-        err.response?.data?.message || "Failed to load user detail data";
-      setError(message);
+    } catch (err: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(err)) {
+        setError(
+          err.response?.data?.message || "Failed to load user detail data"
+        );
+      } else {
+        setError("Failed to load user detail data");
+      }
     } finally {
       setLoading(false);
     }
@@ -150,6 +150,7 @@ export default function AdminUserDetailPage() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role === "ADMIN") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchUserData();
     }
   }, [status, session, fetchUserData]);
@@ -263,7 +264,7 @@ export default function AdminUserDetailPage() {
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 flex items-center justify-center bg-gold-accent/15 border border-gold-accent/40 text-gold-accent font-mono font-bold text-lg shrink-0 overflow-hidden">
                   {user.image ? (
-                    <img src={user.image} alt={user.name || user.email} className="w-full h-full object-cover" />
+                    <Image src={user.image} alt={user.name || user.email} className="w-full h-full object-cover" />
                   ) : (
                     initials
                   )}
@@ -567,10 +568,10 @@ export default function AdminUserDetailPage() {
                       <td className="p-4 font-mono text-[11px] text-obsidian-950/60 dark:text-white/60">
                         {item.meal?.createdAt
                           ? new Date(item.meal.createdAt).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
                           : "-"}
                       </td>
 
