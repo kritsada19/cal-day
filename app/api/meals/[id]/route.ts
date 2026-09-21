@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { errorResponse } from "@/lib/http";
 import { mealService } from "@/lib/services/meal.service";
-
+import { publishMealEvent } from "@/lib/realtime/publisher";
 /**
  * DELETE /api/meals/:id — ลบมื้ออาหาร 1 มื้อ
  * (การหักแคลอรีคืนจากสรุปรายวันอยู่ใน meal.service → meal.repository ที่เดียว
@@ -26,6 +26,12 @@ export async function DELETE(
   try {
     // 2) service ตรวจว่าเป็นมื้อของผู้ใช้คนนี้จริง แล้วลบ + หักยอดออกจากสรุปรายวัน
     await mealService.deleteMeal(mealId, userId);
+
+    // 3) ส่ง Event ไปให้ Browser ผ่าน Redis
+    await publishMealEvent({
+      type: "meal.deleted",
+      userId: String(userId),
+    });
 
     return NextResponse.json({ message: "Meal deleted successfully" });
   } catch (error) {
