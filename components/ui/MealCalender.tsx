@@ -37,6 +37,7 @@ export default function MealCalendar() {
     const [summaries, setSummaries] = useState<DailySummary[]>([]);
     const [deletingMealId, setDeletingMealId] = useState<number | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [confirmModal, setConfirmModal] = useState<{ mealId: number } | null>(null);
 
     const [selectedDate, setSelectedDate] = useState<Date | null>(null); // เก็บว่ากำลังกดดูวันที่เท่าไหร่
     const [dailyMeals, setDailyMeals] = useState<Meal[]>([]); // เก็บรายการอาหารของวันนั้น
@@ -112,10 +113,14 @@ export default function MealCalendar() {
         }
     };
 
-    const handleDeleteMeal = async (mealId: number) => {
-        if (!window.confirm("Delete this meal? This action cannot be undone.")) {
-            return;
-        }
+    const handleDeleteMeal = (mealId: number) => {
+        setConfirmModal({ mealId });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmModal) return;
+        const mealId = confirmModal.mealId;
+        setConfirmModal(null);
 
         setDeletingMealId(mealId);
         setDeleteError(null);
@@ -132,6 +137,59 @@ export default function MealCalendar() {
     };
 
     return (
+        <>
+        {/* ── Confirm Delete Modal ── */}
+        {confirmModal && (
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="confirm-modal-title"
+            >
+                {/* Backdrop */}
+                <div
+                    className="absolute inset-0 bg-obsidian-950/70 backdrop-blur-sm"
+                    onClick={() => setConfirmModal(null)}
+                />
+
+                {/* Modal Card */}
+                <div className="relative z-10 w-full max-w-sm mx-4 bg-[#f8f6f1] dark:bg-obsidian-900 border border-black/10 dark:border-white/10 shadow-glow-gold p-8">
+                    {/* Corner accents */}
+                    <span className="absolute -top-px -left-px h-3 w-3 border-l border-t border-gold-accent" />
+                    <span className="absolute -top-px -right-px h-3 w-3 border-r border-t border-gold-accent" />
+                    <span className="absolute -bottom-px -left-px h-3 w-3 border-b border-l border-gold-accent" />
+                    <span className="absolute -bottom-px -right-px h-3 w-3 border-b border-r border-gold-accent" />
+
+                    {/* Radial glow */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.05),transparent_55%)] pointer-events-none dark:block hidden" />
+
+                    <p className="text-[10px] tracking-[0.35em] text-gold-accent font-mono uppercase mb-3">Confirm Action</p>
+                    <h3 id="confirm-modal-title" className="text-lg font-semibold tracking-wide text-obsidian-950 dark:text-white mb-2">
+                        Delete this meal?
+                    </h3>
+                    <p className="text-sm text-obsidian-950/60 dark:text-white/50 mb-8">
+                        This action cannot be undone. The meal and all its food entries will be permanently removed.
+                    </p>
+
+                    <div className="flex gap-3 justify-end">
+                        <button
+                            type="button"
+                            onClick={() => setConfirmModal(null)}
+                            className="px-4 py-2 text-xs font-mono uppercase tracking-widest border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-obsidian-950/70 dark:text-white/60 hover:bg-black/10 dark:hover:bg-white/10 transition-colors rounded"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleConfirmDelete}
+                            className="px-4 py-2 text-xs font-mono uppercase tracking-widest border border-red-400/40 bg-red-500/10 text-red-500 dark:text-red-300 hover:bg-red-500/20 hover:border-red-400/60 transition-colors rounded"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         <div className="mt-10 relative overflow-hidden border border-black/10 dark:border-white/10 bg-[#f8f6f1] dark:bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.05),transparent_45%)] pointer-events-none dark:block hidden" />
 
@@ -326,5 +384,6 @@ export default function MealCalendar() {
             )}
 
         </div>
+        </>
     );
 }
