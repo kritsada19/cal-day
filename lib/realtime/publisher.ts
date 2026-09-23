@@ -11,3 +11,15 @@ export async function publishMealEvent(event: {
         JSON.stringify(event)
     );
 }
+
+export async function publishProfileUpdate(
+    userId: string
+) {
+    await redis.publish(
+        "profile-events",
+        JSON.stringify({
+            type: "profile.updated",
+            userId: userId,
+        })
+    );
+}

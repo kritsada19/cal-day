@@ -72,8 +72,12 @@ export default function Navbar() {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
+      if (Number(data.userId) !== (session?.user?.id)) {
+        return;
+      }
+
       // ถ้าเป็นเหตุการณ์ที่เกี่ยวกับมื้ออาหาร → ให้โหลดข้อมูลโปรไฟล์ใหม่
-      if (data.type === "meal.created" || data.type === "meal.deleted") {
+      if (data.type === "meal.created" || data.type === "meal.deleted" || data.type === "profile.updated") {
         fetchProfile();
       }
     };
@@ -83,6 +87,7 @@ export default function Navbar() {
     };
 
     // Clean up เมื่อ Component Unmount
+    // ไปเรียก cancel() ที่ app/api/events/route.ts
     return () => {
       eventSource.close();
     };

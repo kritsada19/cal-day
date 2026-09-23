@@ -76,7 +76,11 @@ export default function DashboardPage() {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      if (data.type === "meal.created" || data.type === "meal.deleted") {
+      if (Number(data.userId) !== (session?.user?.id)) {
+        return;
+      }
+
+      if (data.type === "meal.created" || data.type === "meal.deleted" || data.type === "profile.updated") {
         fetchProfile();
       }
     };
@@ -86,6 +90,7 @@ export default function DashboardPage() {
     };
 
     return () => {
+      // ไปเรียก cancel() ที่ app/api/events/route.ts
       eventSource.close();
     };
   }, [status]);

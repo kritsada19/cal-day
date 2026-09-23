@@ -4,18 +4,21 @@ import { redis } from "@/lib/db/redis";
 
 const subscriber = redis.duplicate();
 
-// subscribeMealEvents รับ ฟังก์ชันหนึ่งตัว เข้ามา และฟังก์ชันนั้นต้องรับ event เป็น parameter
-export async function subscribeMealEvents(
+// subscribeEvents รับ ฟังก์ชันหนึ่งตัว เข้ามา และฟังก์ชันนั้นต้องรับ event เป็น parameter
+export async function subscribeEvents(
     // ฟังก์ชันที่ถูกส่งเข้ามา จะถูกเรียกว่า callback
     callback: (event: {
         type: string;
         userId: string;
     }) => void
 ) {
-    await subscriber.subscribe("meal-events");
+    await subscriber.subscribe(
+        "meal-events",
+        "profile-events"
+    );
 
     const listener = (channel: string, message: string) => {
-        if (channel !== "meal-events") return;
+        if (channel !== "meal-events" && channel !== "profile-events") return;
 
         const event = JSON.parse(message);
 
