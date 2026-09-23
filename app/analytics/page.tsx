@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { logger } from "@/lib/logger";
@@ -40,36 +40,67 @@ export default function AnalyticsPage() {
     activeDays: [],
     targetCal: 2000,
   });
-  const { status } = useSession();
+  const { data: session, status } = useSession();
 
+  // ห่อ fetchAnalytics ด้วย useCallback เพื่อให้ SSE effect
+  // เรียก refetch ได้โดยไม่ต้องสร้างฟังก์ชันใหม่ทุก render
+  const fetchAnalytics = useCallback(async () => {
+    setFetching(true);
+    try {
+      const days = timeRange === "7D" ? 7 : 30;
+      const response = await axios.get<AnalyticsResponse>(`/api/analytics?days=${days}`);
+      setData(response.data.weeklyData);
+      setStats(response.data.stats);
+    } catch (error) {
+      logger.error({ err: error, timeRange }, "Error fetching analytics data");
+    } finally {
+      setFetching(false);
+    }
+  }, [timeRange]);
+
+  // โหลดข้อมูล analytics ครั้งแรก และโหลดใหม่เมื่อ timeRange เปลี่ยน
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetchAnalytics();
+  }, [status, fetchAnalytics]);
+
+  // SSE — รับ Real-time event จาก Server
+  // แยก useEffect ออกจาก fetch เพื่อให้ lifecycle ชัดเจน:
+  // effect นี้จะ connect ครั้งเดียวตอน authenticated และ cleanup ตอน unmount
   useEffect(() => {
     if (status !== "authenticated") return;
 
-    let cancelled = false;
+    // สร้างการเชื่อมต่อ SSE จาก Browser → Server
+    // เมื่อสร้างแล้ว Browser จะเชื่อมต่อไปยัง URL ที่กำหนด และรอ Server ส่ง Event มา
+    const eventSource = new EventSource("/api/events");
 
-    const fetchAnalytics = async () => {
-      setFetching(true);
-      try {
-        const days = timeRange === "7D" ? 7 : 30;
-        const response = await axios.get<AnalyticsResponse>(`/api/analytics?days=${days}`);
-        if (cancelled) return;
-        setData(response.data.weeklyData);
-        setStats(response.data.stats);
-      } catch (error) {
-        if (!cancelled) {
-          logger.error({ err: error, timeRange }, "Error fetching analytics data");
-        }
-      } finally {
-        if (!cancelled) setFetching(false);
+    // เมื่อ EventSource ได้รับ message จาก Server → ให้เรียกฟังก์ชันนี้
+    // event คือ ข้อมูลที่ Browser ได้รับจาก SSE
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      // กรองเฉพาะ event ของ user คนนี้เท่านั้น
+      if (Number(data.userId) !== session?.user?.id) return;
+
+      // ถ้ามีการเพิ่ม/ลบ Meal หรืออัปเดต Profile → โหลด analytics ใหม่
+      if (
+        data.type === "meal.created" ||
+        data.type === "meal.deleted" ||
+        data.type === "profile.updated"
+      ) {
+        fetchAnalytics();
       }
     };
 
-    fetchAnalytics();
+    eventSource.onerror = () => {
+      console.error("SSE connection error");
+    };
 
     return () => {
-      cancelled = true;
+      // ปิด SSE connection → ไปเรียก cancel() ที่ app/api/events/route.ts
+      eventSource.close();
     };
-  }, [status, timeRange]);
+  }, [status]);
 
   const loading = status === "loading" || (status === "authenticated" && fetching);
 

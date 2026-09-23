@@ -28,7 +28,9 @@ export async function GET(request: Request) {
             // (Browser crash, Network หลุด, Tab ปิด ฯลฯ)
             request.signal.addEventListener("abort", async () => {
                 await unsubscribe?.();
-                controller.close();
+                // ✅ ป้องกัน ERR_INVALID_STATE กรณี cancel() ปิด controller ไปแล้ว
+                // ก่อนที่ abort event จะ fire ตามมา
+                try { controller.close(); } catch { /* already closed */ }
             });
 
             // subscribeEvents คือฟังก์ชันที่รับ callback function
