@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     // SSE ต้องส่งข้อมูลเป็น bytes ให้ ReadableStream 
     const encoder = new TextEncoder();
 
-    let unsubscribe: (() => void) | undefined;
+    let unsubscribe: (() => Promise<void>) | undefined;
 
     // สร้าง Stream
     // สร้างช่องทางที่สามารถ ส่งข้อมูลไป Browser ทีละชุดในภายหลัง ได้
@@ -26,8 +26,8 @@ export async function GET(request: Request) {
             // ✅ ผูก cleanup กับ AbortSignal ของ request
             // จะ fire ทันทีที่ connection ตัด ไม่ว่าจะด้วยสาเหตุอะไร
             // (Browser crash, Network หลุด, Tab ปิด ฯลฯ)
-            request.signal.addEventListener("abort", () => {
-                unsubscribe?.();
+            request.signal.addEventListener("abort", async () => {
+                await unsubscribe?.();
                 controller.close();
             });
 
@@ -51,8 +51,8 @@ export async function GET(request: Request) {
         },
 
         // cancel() จะถูกเรียกตอน Browser ปิด connection อย่างถูกต้อง (graceful close)
-        cancel() {
-            unsubscribe?.();
+        async cancel() {
+            await unsubscribe?.();
         },
     });
 
