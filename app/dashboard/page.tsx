@@ -85,6 +85,10 @@ export default function DashboardPage() {
       }
     };
 
+    eventSource.addEventListener("heartbeat", (event) => {
+      console.log("Heartbeat received from server:", JSON.parse(event.data));
+    });
+
     eventSource.onerror = () => {
       console.error("SSE connection error");
     };

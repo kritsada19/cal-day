@@ -50,6 +50,24 @@ export async function GET(request: Request) {
                 // ส่ง Event เข้า Stream
                 controller.enqueue(encoder.encode(data));
             });
+
+            // heartbeat
+            const heartbeatInterval = setInterval(() => {
+                // ส่งเป็น event ชนิด heartbeat
+                const data = `event: heartbeat\ndata: {"time": "${new Date().toISOString()}"}\n\n`;
+
+                // หรือส่งเป็นแค่ comment เปล่าๆ ของ SSE ก็ได้ (ช่วยลดภาระ client ไม่ต้องมารับ event)
+                // const data = `: heartbeat\n\n`; 
+
+                controller.enqueue(encoder.encode(data));
+            }, 30000); // 30 วินาที
+
+            // จัดการตอน Client กดปิดหน้าเว็บ (Disconnect)
+            // cleanup interval เมื่อ stream ถูกยกเลิก
+            // ป้องกัน memory leak
+            request.signal.addEventListener("abort", () => {
+                clearInterval(heartbeatInterval);
+            });
         },
 
         // cancel() จะถูกเรียกตอน Browser ปิด connection อย่างถูกต้อง (graceful close)
