@@ -50,15 +50,18 @@ export default function Navbar() {
     } catch (error) {
       logger.error({ err: error }, "Error fetching profile data");
     }
-  }, [session?.user]);
+  }, []);
 
   useEffect(() => {
     if (!session?.user || session.user.role === "ADMIN") {
       return;
     }
 
-    fetchProfile();
-  }, [session]);
+    const fetchData = async () => {
+      await fetchProfile();
+    };
+    fetchData();
+  }, [fetchProfile, session]);
 
   useEffect(() => {
     if (!session?.user || session.user.role === "ADMIN") {

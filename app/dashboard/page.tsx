@@ -59,8 +59,11 @@ export default function DashboardPage() {
       return;
     }
 
-    fetchProfile();
-  }, [status]);
+    const fetchData = async () => {
+      await fetchProfile();
+    };
+    fetchData();
+  }, [status, fetchProfile]);
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -97,7 +100,7 @@ export default function DashboardPage() {
       // ไปเรียก cancel() ที่ app/api/events/route.ts
       eventSource.close();
     };
-  }, [status]);
+  }, [status, session?.user?.id, fetchProfile]);
 
   const profile = summary?.profile ?? null;
   const nutritionTargets = summary?.nutritionTargets ?? null;

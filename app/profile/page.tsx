@@ -5,7 +5,6 @@ import Link from "next/link";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
 import type { NutritionTargets } from "@/lib/nutrition";
-import { logger } from "@/lib/logger";
 
 type ProfileData = {
   gender?: string | null;
@@ -63,8 +62,11 @@ export default function ProfilePage() {
       return;
     }
 
-    fetchProfile();
-  }, [status]);
+    const fetchData = async () => {
+      await fetchProfile();
+    };
+    fetchData();
+  }, [status, fetchProfile]);
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -92,7 +94,7 @@ export default function ProfilePage() {
     return () => {
       eventSource.close();
     };
-  }, [status]);
+  }, [status, session?.user?.id, fetchProfile]);
 
   const profile = profileData?.profile ?? null;
   const bmi = profileData?.bmi ?? null;

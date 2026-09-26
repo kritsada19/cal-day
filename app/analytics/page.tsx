@@ -61,8 +61,11 @@ export default function AnalyticsPage() {
   // โหลดข้อมูล analytics ครั้งแรก และโหลดใหม่เมื่อ timeRange เปลี่ยน
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetchAnalytics();
-  }, [status, fetchAnalytics]);
+    const fetchData = async () => {
+      await fetchAnalytics();
+    };
+    fetchData();
+  }, [fetchAnalytics, status, session?.user?.id]);
 
   // SSE — รับ Real-time event จาก Server
   // แยก useEffect ออกจาก fetch เพื่อให้ lifecycle ชัดเจน:
@@ -100,7 +103,7 @@ export default function AnalyticsPage() {
       // ปิด SSE connection → ไปเรียก cancel() ที่ app/api/events/route.ts
       eventSource.close();
     };
-  }, [status]);
+  }, [status, session?.user?.id, fetchAnalytics]);
 
   const loading = status === "loading" || (status === "authenticated" && fetching);
 
