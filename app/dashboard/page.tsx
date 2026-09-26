@@ -5,7 +5,7 @@
 // throw new Error("ทดสอบ Error Boundary — ลบออกหลัง UI แล้ว");
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import type { NutritionTargets } from "@/lib/nutrition";
@@ -42,32 +42,65 @@ export default function DashboardPage() {
     .slice(0, 2)
     .toUpperCase();
 
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await axios.get<ProfileApiResponse>("/api/profile");
+
+      setSummary(res.data);
+      setHasLoadedProfile(true);
+    } catch {
+      setSummary(null);
+      setHasLoadedProfile(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (status !== "authenticated") {
       return;
     }
 
-    let isMounted = true;
+    const fetchData = async () => {
+      await fetchProfile();
+    };
+    fetchData();
+  }, [status, fetchProfile]);
 
-    axios
-      .get<ProfileApiResponse>("/api/profile")
-      .then((res) => {
-        if (isMounted) {
-          setSummary(res.data);
-          setHasLoadedProfile(true);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setSummary(null);
-          setHasLoadedProfile(true);
-        }
-      });
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    // สร้างการเชื่อมต่อ SSE จาก Browser → Server
+    // เมื่อสร้างแล้ว Browser จะเชื่อมต่อไปยัง URL ที่กำหนด และรอ Server ส่ง Event มา
+    const eventSource = new EventSource("/api/events");
+
+    // เมื่อ EventSource ได้รับ message จาก Server → ให้เรียกฟังก์ชันนี้
+    // event คือ ข้อมูลที่ Browser ได้รับจาก SSE
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (Number(data.userId) !== (session?.user?.id)) {
+        return;
+      }
+
+      if (data.type === "meal.created" || data.type === "meal.deleted" || data.type === "profile.updated") {
+        fetchProfile();
+      }
+    };
+
+    eventSource.addEventListener("heartbeat", (event) => {
+      console.log("Heartbeat received from server:", JSON.parse(event.data));
+    });
+
+    eventSource.onerror = () => {
+      console.error("SSE connection error");
+    };
 
     return () => {
-      isMounted = false;
+      // ไปเรียก cancel() ที่ app/api/events/route.ts
+      eventSource.close();
     };
-  }, [status]);
+  }, [status, session?.user?.id, fetchProfile]);
 
   const profile = summary?.profile ?? null;
   const nutritionTargets = summary?.nutritionTargets ?? null;

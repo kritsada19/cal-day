@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
@@ -45,32 +45,56 @@ export default function ProfilePage() {
     .slice(0, 2)
     .toUpperCase();
 
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await axios.get<ProfileApiResponse>("/api/profile");
+
+      setProfileData(res.data);
+      setHasLoadedProfile(true);
+    } catch {
+      setProfileData(null);
+      setHasLoadedProfile(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (status !== "authenticated") {
       return;
     }
 
-    let isMounted = true;
+    const fetchData = async () => {
+      await fetchProfile();
+    };
+    fetchData();
+  }, [status, fetchProfile]);
 
-    axios
-      .get<ProfileApiResponse>("/api/profile")
-      .then((res) => {
-        if (isMounted) {
-          setProfileData(res.data);
-          setHasLoadedProfile(true);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setProfileData(null);
-          setHasLoadedProfile(true);
-        }
-      });
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    const eventSource = new EventSource("/api/events");
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (Number(data.userId) !== Number(session?.user?.id)) {
+        return;
+      }
+
+      if (data.type === "profile.updated") {
+        fetchProfile();
+      }
+    };
+
+    eventSource.onerror = () => {
+      console.error("SSE connection error");
+    };
 
     return () => {
-      isMounted = false;
+      eventSource.close();
     };
-  }, [status]);
+  }, [status, session?.user?.id, fetchProfile]);
 
   const profile = profileData?.profile ?? null;
   const bmi = profileData?.bmi ?? null;

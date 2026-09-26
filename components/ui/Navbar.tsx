@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -43,22 +43,58 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
+  const fetchProfile = useCallback(async () => {
+    try {
+      const response = await axios.get<ProfileApiResponse>("/api/profile");
+      setUserData(response.data);
+    } catch (error) {
+      logger.error({ err: error }, "Error fetching profile data");
+    }
+  }, []);
+
   useEffect(() => {
     if (!session?.user || session.user.role === "ADMIN") {
       return;
     }
 
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get<ProfileApiResponse>("/api/profile");
-        setUserData(response.data);
-      } catch (error) {
-        logger.error({ err: error }, "Error fetching profile data");
+    const fetchData = async () => {
+      await fetchProfile();
+    };
+    fetchData();
+  }, [fetchProfile, session]);
+
+  useEffect(() => {
+    if (!session?.user || session.user.role === "ADMIN") {
+      return;
+    }
+
+    // สร้างการเชื่อมต่อ SSE จาก Browser → Server
+    const eventSource = new EventSource("/api/events");
+
+    // เมื่อ EventSource ได้รับ message จาก Server → ให้เรียกฟังก์ชันนี้
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (Number(data.userId) !== (session?.user?.id)) {
+        return;
+      }
+
+      // ถ้าเป็นเหตุการณ์ที่เกี่ยวกับมื้ออาหาร → ให้โหลดข้อมูลโปรไฟล์ใหม่
+      if (data.type === "meal.created" || data.type === "meal.deleted" || data.type === "profile.updated") {
+        fetchProfile();
       }
     };
 
-    fetchProfile();
-  }, [session]);
+    eventSource.onerror = () => {
+      console.error("SSE connection error");
+    };
+
+    // Clean up เมื่อ Component Unmount
+    // ไปเรียก cancel() ที่ app/api/events/route.ts
+    return () => {
+      eventSource.close();
+    };
+  }, [session?.user, fetchProfile]); // ต้องใส่ fetchProfile เป็น Dependency
 
   if (!mounted) return null;
 

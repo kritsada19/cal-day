@@ -6,6 +6,7 @@ import { getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, deleteUserCache } from "@/lib/cache";
+import { publishProfileUpdate } from "@/lib/realtime/publisher";
 
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
@@ -161,6 +162,30 @@ export async function POST(request: Request) {
           ...profilePayload,
         },
       });
+
+    // sync target ใหม่เข้า DailySummary ของวันนี้ทันที (ถ้ามี)
+    // เพื่อให้ dashboard แสดง target ที่ถูกต้องโดยไม่ต้องรอมื้อถัดไป
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    await prisma.dailySummary.updateMany({
+      where: {
+        userId,
+        date: {
+          gte: todayStart,
+          lt: todayEnd,
+        },
+      },
+      data: {
+        targetCalories: nutritionTargets.calories,
+        targetProtein: nutritionTargets.protein,
+      },
+    });
+
+    // publish event ไปยังผู้ใช้คนนั้น
+    await publishProfileUpdate(session.user.id.toString());
 
     const summary = buildProfileNutritionSummary(profile, 0, 0);
 
