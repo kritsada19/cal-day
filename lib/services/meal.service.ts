@@ -1,4 +1,4 @@
-import { analyzeFood } from "./ai";
+import { analyzeFood, analyzeFoodImage } from "./ai";
 import { checkAndComsumeAiQuota } from "./ai-quota";
 import { AppError } from "./errors";
 import { deleteUserCache, getCache, setCache } from "@/lib/cache";
@@ -11,7 +11,7 @@ import {
   type MealWithFoodEntries,
   type NewFoodEntry,
 } from "@/lib/repositories/meal.repository";
-import type { MealInput } from "@/lib/validation/meal";
+import type { MealInput, ImageMealInput } from "@/lib/validation/meal";
 
 /**
  * ชั้น Service = "เชฟ" ของร้านอาหาร
@@ -170,12 +170,12 @@ export class MealService {
     // 8) คิดยอดรวมของมื้อนี้ (ถ้าแยกเป็นรายการไม่ได้เลย ใช้ค่าที่ AI ประเมินทั้งมื้อ)
     const totalCalories =
       foodEntries.length > 0
-        ? foodEntries.reduce((sum, food) => sum + food.calories * food.amount, 0)
+        ? foodEntries.reduce((sum, food) => sum + food.calories, 0)
         : aiAnalysis?.estimatedCalories ?? 0;
 
     const totalProtein =
       foodEntries.length > 0
-        ? foodEntries.reduce((sum, food) => sum + food.protein * food.amount, 0)
+        ? foodEntries.reduce((sum, food) => sum + food.protein, 0)
         : aiAnalysis?.estimatedProtein ?? 0;
 
     // 9) บันทึกลงฐานข้อมูล (repository จัดการ transaction ให้)
@@ -197,6 +197,60 @@ export class MealService {
 
     return { mealId, aiAnalysis, totalCalories, totalProtein };
   }
+
+  async createMealFromImage(
+    userId: number,
+    input: ImageMealInput,
+  ): Promise<CreateMealResult> {
+    const { startOfDay, endOfDay } = getUtcDayRange(input.date ? new Date(input.date) : new Date());
+    
+    const user = await this.repository.findUserWithSubscription(userId);
+    if (!user) {
+      throw new AppError(404, "User not found");
+    }
+
+    const quotaExceeded = await checkAndComsumeAiQuota(userId, user.subscription?.plan);
+    if (quotaExceeded) {
+      const body = (await quotaExceeded.json()) as { message?: string };
+      throw new AppError(quotaExceeded.status, body.message ?? "AI limit reached");
+    }
+
+    const aiAnalysis = await analyzeFoodImage(input.base64Data, input.mimeType);
+
+    const foodEntries: NewFoodEntry[] = (aiAnalysis.foods ?? []).map((food) => ({
+      foodName: food.name,
+      amount: food.amount || 1,
+      unit: food.unit || "serving",
+      calories: food.calories || 0,
+      protein: food.protein || 0,
+    }));
+
+    const totalCalories = foodEntries.length > 0 
+      ? foodEntries.reduce((sum, food) => sum + food.calories, 0)
+      : aiAnalysis.estimatedCalories ?? 0;
+      
+    const totalProtein = foodEntries.length > 0
+      ? foodEntries.reduce((sum, food) => sum + food.protein, 0)
+      : aiAnalysis.estimatedProtein ?? 0;
+
+    const mealId = await this.repository.createMealWithEntries({
+      userId,
+      mealType: input.mealType,
+      startOfDay,
+      endOfDay,
+      foodEntries,
+      fallbackFoodName: "Image Analysis",
+      fallbackCalories: aiAnalysis.estimatedCalories ?? 0,
+      fallbackProtein: aiAnalysis.estimatedProtein ?? 0,
+      totalCalories,
+      totalProtein,
+    });
+
+    await deleteUserCache(userId);
+
+    return { mealId, aiAnalysis, totalCalories, totalProtein };
+  }
+
 
   /**
    * ดึงสรุปรายวันทั้งเดือน (ใช้ cache 60 วินาที เพื่อลดการยิง DB ถี่ ๆ)

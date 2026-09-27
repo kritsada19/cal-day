@@ -12,7 +12,28 @@ export default function NewMealPage() {
   const { status } = useSession();
   const [mealType, setMealType] = useState("BREAKFAST");
   const [mealText, setMealText] = useState("");
+  const [mode, setMode] = useState<"text" | "image">("text");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSaving(true);
@@ -22,13 +43,30 @@ export default function NewMealPage() {
 
       const localDateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-      const response = await axios.post("/api/meals", {
-        mealType,
-        mealText,
-
-        // ใช้เวลาจาก client เพื่อให้ Timezone ตรงกับที่ user อยู่
-        date: localDateString
-      });
+      let response;
+      
+      if (mode === "text") {
+        response = await axios.post("/api/meals", {
+          mealType,
+          mealText,
+          date: localDateString
+        });
+      } else {
+        if (!imagePreview || !imageFile) {
+          toast.error("Please provide an image");
+          setIsSaving(false);
+          return;
+        }
+        const base64Data = imagePreview.split(",")[1];
+        const mimeType = imageFile.type;
+        
+        response = await axios.post("/api/meals/image", {
+          mealType,
+          base64Data,
+          mimeType,
+          date: localDateString
+        });
+      }
 
       // ไม่ต้องเช็ค response.data.ok เพราะ axios จะ throw error อัตโนมัติถ้า status ไม่ใช่ 2xx
       // Toast remains visible while the page redirects, unlike an inline success message.
@@ -99,20 +137,67 @@ export default function NewMealPage() {
             </select>
           </label>
 
-          <label className="block space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
-            <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Food description</span>
-            <textarea
-              value={mealText}
-              onChange={(event) => setMealText(event.target.value)}
-              rows={6}
-              placeholder="e.g. Rice 250g, grilled chicken 200g, fruit 1 serving"
-              className="w-full border border-black/10 dark:border-white/10 bg-white dark:bg-obsidian-950 text-obsidian-950 dark:text-white px-3 py-3 outline-none transition focus:border-gold-accent placeholder:text-obsidian-950/30 dark:placeholder:text-white/30"
-              required
-            />
-            <span className="block text-xs text-obsidian-950/55 dark:text-white/60">
-              Add multiple items by separating them with a comma, for example: rice, grilled chicken, orange
-            </span>
-          </label>
+          <div className="flex gap-4 border-b border-black/10 dark:border-white/10 pb-2">
+            <button
+              type="button"
+              onClick={() => setMode("text")}
+              className={`text-xs font-semibold tracking-wider px-2 py-1 transition-colors ${mode === "text" ? "text-gold-accent border-b-2 border-gold-accent" : "text-obsidian-950/50 dark:text-white/50"}`}
+            >
+              TEXT
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("image")}
+              className={`text-xs font-semibold tracking-wider px-2 py-1 transition-colors ${mode === "image" ? "text-gold-accent border-b-2 border-gold-accent" : "text-obsidian-950/50 dark:text-white/50"}`}
+            >
+              IMAGE (AI)
+            </button>
+          </div>
+
+          {mode === "text" ? (
+            <label className="block space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Food description</span>
+              <textarea
+                value={mealText}
+                onChange={(event) => setMealText(event.target.value)}
+                rows={6}
+                placeholder="e.g. Rice 250g, grilled chicken 200g, fruit 1 serving"
+                className="w-full border border-black/10 dark:border-white/10 bg-white dark:bg-obsidian-950 text-obsidian-950 dark:text-white px-3 py-3 outline-none transition focus:border-gold-accent placeholder:text-obsidian-950/30 dark:placeholder:text-white/30"
+                required={mode === "text"}
+              />
+              <span className="block text-xs text-obsidian-950/55 dark:text-white/60">
+                Add multiple items by separating them with a comma, for example: rice, grilled chicken, orange
+              </span>
+            </label>
+          ) : (
+            <div className="space-y-4">
+              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Food Image</span>
+              {!imagePreview ? (
+                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-black/20 dark:border-white/20 rounded cursor-pointer hover:border-gold-accent/50 bg-white/50 dark:bg-obsidian-900/50 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <p className="mb-2 text-sm text-obsidian-950/60 dark:text-white/60"><span className="font-semibold">Click to upload</span> or take a photo</p>
+                    <p className="text-xs text-obsidian-950/40 dark:text-white/40">JPEG, PNG, WEBP</p>
+                  </div>
+                  <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleImageChange} required={mode === "image"} />
+                </label>
+              ) : (
+                <div className="relative w-full h-auto rounded border border-black/10 dark:border-white/10 overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePreview} alt="Food preview" className="w-full object-cover max-h-64" />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-full text-xs font-semibold hover:bg-black transition-colors"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              )}
+              <span className="block text-xs text-obsidian-950/55 dark:text-white/60">
+                AI will estimate portions and calories based on the image. (Take a clear photo for better accuracy)
+              </span>
+            </div>
+          )}
 
           <button
             type="submit"
