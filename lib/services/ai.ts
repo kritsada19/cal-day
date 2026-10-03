@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/lib/env";
 
-type FoodItem = {
+export type FoodItem = {
     name: string;
     amount: number;
     unit: string;
@@ -123,7 +123,7 @@ export async function analyzeFoodImage(base64Data: string, mimeType: string) {
           TASK:
           Analyze the food in the provided image.
     
-          Identify and separate each visible food item into an individual object.
+          If the image shows a composite dish (e.g., rice, meat, sauce, and side vegetables that together make up a single dish like Khao Man Gai), combine these components into a SINGLE food item representing the entire meal rather than separating them into individual ingredients. Only separate items if they are clearly distinct, unrelated dishes.
     
           Estimate calories and protein for each item based on:
           1. The visual portion size in the image.

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest"
+    "test": "vitest",
+    "worker": "tsx workers/ai-analysis.worker.ts",
+    "worker:local": "tsx --env-file=.env.local workers/ai-analysis.worker.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -17,6 +19,7 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^6.3.10",
     "ioredis": "^5.11.1",
     "lucide-react": "^1.38.0",
     "next": "16.2.10",
@@ -43,6 +46,7 @@
     "eslint-config-next": "16.2.10",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.11"
