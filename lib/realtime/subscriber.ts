@@ -8,6 +8,7 @@ export async function subscribeEvents(
     callback: (event: {
         type: string;
         userId: string;
+        jobId?: string;
     }) => void
 ) {
     // ✅ แยก Redis connection ต่อ 1 SSE client

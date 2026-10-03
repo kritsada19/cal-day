@@ -45,21 +45,14 @@ export async function POST(request: NextRequest) {
     // 4) งานทั้งหมดเป็นของ service — บรรทัดเดียวจบ
     const result = await mealService.createMeal(userId, validation.data);
 
-    // 5) ส่ง Event ไปให้ Browser ผ่าน Redis
-    await publishMealEvent({
-      type: "meal.created",
-      userId: String(userId),
-    });
-
-    // 6) ตอบกลับผลลัพธ์
-    return NextResponse.json({
-      message: "Meal created successfully",
-      aiAnalysis: result.aiAnalysis,
-      mealId: result.mealId,
-      totalCalories: result.totalCalories,
-      totalProtein: result.totalProtein,
-      status: 201,
-    });
+    // 5) ตอบกลับผลลัพธ์
+    return NextResponse.json(
+      {
+        message: "Meal analysis queued",
+        jobId: result.jobId,
+      },
+      { status: 202 },
+    );
   } catch (error) {
     return errorResponse(error, {
       status: 503,

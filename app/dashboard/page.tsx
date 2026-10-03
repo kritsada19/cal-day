@@ -10,6 +10,7 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import type { NutritionTargets } from "@/lib/nutrition";
 import MealCalendar from "@/components/ui/MealCalender";
+import { toast } from "sonner";
 
 type ProfileApiResponse = {
   profile: {
@@ -85,6 +86,12 @@ export default function DashboardPage() {
 
       if (data.type === "meal.created" || data.type === "meal.deleted" || data.type === "profile.updated") {
         fetchProfile();
+      }
+
+      if (data.type === "meal.failed") {
+        toast.error("วิเคราะห์อาหารไม่สำเร็จ", {
+          description: "กรุณาลองเพิ่มอาหารอีกครั้ง",
+        });
       }
     };
 

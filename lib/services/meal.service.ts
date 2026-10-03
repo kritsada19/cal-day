@@ -12,6 +12,7 @@ import {
   type NewFoodEntry,
 } from "@/lib/repositories/meal.repository";
 import type { MealInput, ImageMealInput } from "@/lib/validation/meal";
+import { aiAnalysisQueue } from "@/lib/queue/ai-analysis.queue";
 
 /**
  * ชั้น Service = "เชฟ" ของร้านอาหาร
@@ -27,10 +28,11 @@ type AiAnalysis = Awaited<ReturnType<typeof analyzeFood>>;
 
 /** ผลลัพธ์ที่ได้หลังบันทึกมื้ออาหารสำเร็จ */
 export type CreateMealResult = {
-  mealId: number;
-  aiAnalysis: AiAnalysis | null;
-  totalCalories: number;
-  totalProtein: number;
+  mealId?: number;
+  jobId?: string;
+  aiAnalysis?: AiAnalysis | null;
+  totalCalories?: number;
+  totalProtein?: number;
 };
 
 /**
@@ -143,59 +145,29 @@ export class MealService {
       existingFoods,
     );
 
-    // 6) เมนูที่ไม่รู้จัก → ส่งให้ AI วิเคราะห์ (ส่งเฉพาะเมนูนั้น ไม่ส่งทั้งหมด)
-    const aiAnalysis =
-      unknownMenuItems.length > 0
-        ? await analyzeFood(unknownMenuItems.join(", "))
-        : null;
-
-    // 7) เตรียมรายการอาหารที่จะบันทึก (ของเดิมใน DB + ของใหม่จาก AI)
-    const foodEntries: NewFoodEntry[] = [
-      ...matchedFoods.map((food) => ({
-        foodName: food.foodName,
-        amount: food.amount || 1,
-        unit: food.unit || "serving",
-        calories: food.calories || 0,
-        protein: food.protein || 0,
-      })),
-      ...(aiAnalysis?.foods ?? []).map((food) => ({
-        foodName: food.name,
-        amount: food.amount || 1,
-        unit: food.unit || "serving",
-        calories: food.calories || 0,
-        protein: food.protein || 0,
-      })),
-    ];
-
-    // 8) คิดยอดรวมของมื้อนี้ (ถ้าแยกเป็นรายการไม่ได้เลย ใช้ค่าที่ AI ประเมินทั้งมื้อ)
-    const totalCalories =
-      foodEntries.length > 0
-        ? foodEntries.reduce((sum, food) => sum + food.calories, 0)
-        : aiAnalysis?.estimatedCalories ?? 0;
-
-    const totalProtein =
-      foodEntries.length > 0
-        ? foodEntries.reduce((sum, food) => sum + food.protein, 0)
-        : aiAnalysis?.estimatedProtein ?? 0;
-
-    // 9) บันทึกลงฐานข้อมูล (repository จัดการ transaction ให้)
-    const mealId = await this.repository.createMealWithEntries({
-      userId,
+    // 6) ส่ง Job ไปประมวลผล AI ที่ worker
+    // ถ้าไม่มีเมนูใหม่ ก็ไม่ต้องส่ง Job แล้ว ใช้ข้อมูลที่มีไปก่อนได้เลย
+    const job = await aiAnalysisQueue.add("ai-analysis", {
+      userId: String(userId),
+      unknownMenuItems,
+      matchedFoods,
       mealType: input.mealType,
-      startOfDay,
-      endOfDay,
-      foodEntries,
-      fallbackFoodName: input.mealText,
-      fallbackCalories: aiAnalysis?.estimatedCalories ?? 0,
-      fallbackProtein: aiAnalysis?.estimatedProtein ?? 0,
-      totalCalories,
-      totalProtein,
-    });
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString(),
+      mealText: input.mealText,
+    },
+      {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 2000,
+        }
+      }
+    );
 
-    // 10) ข้อมูลสรุปเปลี่ยนแล้ว → ล้าง cache ของผู้ใช้คนนี้
-    await deleteUserCache(userId);
-
-    return { mealId, aiAnalysis, totalCalories, totalProtein };
+    return {
+      jobId: job.id,
+    };
   }
 
   async createMealFromImage(
@@ -203,7 +175,7 @@ export class MealService {
     input: ImageMealInput,
   ): Promise<CreateMealResult> {
     const { startOfDay, endOfDay } = getUtcDayRange(input.date ? new Date(input.date) : new Date());
-    
+
     const user = await this.repository.findUserWithSubscription(userId);
     if (!user) {
       throw new AppError(404, "User not found");
@@ -215,40 +187,28 @@ export class MealService {
       throw new AppError(quotaExceeded.status, body.message ?? "AI limit reached");
     }
 
-    const aiAnalysis = await analyzeFoodImage(input.base64Data, input.mimeType);
+    const job = await aiAnalysisQueue.add(
+      "ai-analysis-image",
+      {
+        userId: String(userId),
+        base64Data: input.base64Data,
+        mimeType: input.mimeType,
+        mealType: input.mealType,
+        startOfDay: startOfDay.toISOString(),
+        endOfDay: endOfDay.toISOString(),
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 2000,
+        },
+      }
+    );
 
-    const foodEntries: NewFoodEntry[] = (aiAnalysis.foods ?? []).map((food) => ({
-      foodName: food.name,
-      amount: food.amount || 1,
-      unit: food.unit || "serving",
-      calories: food.calories || 0,
-      protein: food.protein || 0,
-    }));
-
-    const totalCalories = foodEntries.length > 0 
-      ? foodEntries.reduce((sum, food) => sum + food.calories, 0)
-      : aiAnalysis.estimatedCalories ?? 0;
-      
-    const totalProtein = foodEntries.length > 0
-      ? foodEntries.reduce((sum, food) => sum + food.protein, 0)
-      : aiAnalysis.estimatedProtein ?? 0;
-
-    const mealId = await this.repository.createMealWithEntries({
-      userId,
-      mealType: input.mealType,
-      startOfDay,
-      endOfDay,
-      foodEntries,
-      fallbackFoodName: "Image Analysis",
-      fallbackCalories: aiAnalysis.estimatedCalories ?? 0,
-      fallbackProtein: aiAnalysis.estimatedProtein ?? 0,
-      totalCalories,
-      totalProtein,
-    });
-
-    await deleteUserCache(userId);
-
-    return { mealId, aiAnalysis, totalCalories, totalProtein };
+    return {
+      jobId: job.id,
+    };
   }
 
 
