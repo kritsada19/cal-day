@@ -1,13 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { logger } from "@/lib/logger";
 
 export default function SubscriptionPage() {
   const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState<string>("FREE");
+  const [isFetchingPlan, setIsFetchingPlan] = useState(true);
   const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      axios.get("/api/profile").then((res) => {
+        if (res.data.subscription?.plan) {
+          setPlan(res.data.subscription.plan);
+        }
+      }).catch((error) => {
+        logger.error({ err: error }, "Failed to fetch profile");
+      }).finally(() => {
+        setIsFetchingPlan(false);
+      });
+    } else if (session === null) {
+      setIsFetchingPlan(false);
+    }
+  }, [session]);
+
+  const isPro = plan === "PRO";
 
   const handleSubscribe = async () => {
     try {
@@ -18,6 +38,20 @@ export default function SubscriptionPage() {
       }
     } catch (error) {
       logger.error({ err: error }, "Subscription error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.post("/api/checkout/portal");
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      }
+    } catch (error) {
+      logger.error({ err: error }, "Portal error");
     } finally {
       setLoading(false);
     }
@@ -44,7 +78,7 @@ export default function SubscriptionPage() {
 
         <div className="text-center mb-8 relative z-10">
           <h2 className="text-2xl font-bold tracking-[0.2em] text-gold-accent font-sans mb-2">
-            PRO PLAN
+            PRO PLAN {isPro && "(ACTIVE)"}
           </h2>
           <p className="text-xs text-obsidian-950/50 dark:text-white/50 font-mono tracking-widest mb-4">
             MASTER YOUR NUTRITION
@@ -78,15 +112,15 @@ export default function SubscriptionPage() {
         {/* Action Button */}
         <div className="relative z-10">
           <button
-            onClick={handleSubscribe}
-            disabled={loading || !session}
+            onClick={isPro ? handleManageSubscription : handleSubscribe}
+            disabled={loading || !session || isFetchingPlan}
             className="w-full relative bg-black/5 dark:bg-obsidian-800 border border-gold-accent text-gold-accent py-4 font-bold tracking-[0.2em] text-xs hover:bg-gold-accent hover:text-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group/btn overflow-hidden"
           >
             {/* Button hover effect line */}
             <span className="absolute bottom-0 left-0 w-0 h-px bg-white group-hover/btn:w-full transition-all duration-500"></span>
 
             <span className="relative z-10">
-              {loading ? "INITIALIZING SEQUENCE..." : (!session ? "LOGIN REQUIRED" : "UPGRADE PROTOCOL")}
+              {loading || isFetchingPlan ? "INITIALIZING SEQUENCE..." : (!session ? "LOGIN REQUIRED" : (isPro ? "MANAGE SUBSCRIPTION" : "UPGRADE PROTOCOL"))}
             </span>
           </button>
 

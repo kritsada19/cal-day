@@ -133,23 +133,28 @@ export async function POST(req: NextRequest) {
             }
 
             case "customer.subscription.deleted": {
-                await prisma.subscription.update({
+                const userId = session.metadata?.userId;
+
+                await prisma.subscription.updateMany({
                     where: { stripeCustomerId: session.customer as string },
                     data: {
                         plan: "FREE",
                     },
                 });
 
-                // Delete user's cached data to force a refresh on next request
-                await deleteUserCache(Number(session.metadata.userId));
-                logger.info({ userId: session.metadata.userId }, "Cleared cache after subscription update");
+                if (userId) {
+                    await deleteUserCache(Number(userId));
+                    logger.info({ userId }, "Cleared cache after subscription update");
+                }
 
                 break;
             }
 
             case "customer.subscription.updated": {
                 const subscription = event.data.object as any;
-                await prisma.subscription.update({
+                const userId = subscription.metadata?.userId;
+
+                await prisma.subscription.updateMany({
                     where: { stripeCustomerId: session.customer as string },
                     data: {
                         plan: (subscription.status === "active") ? "PRO" : "FREE",
@@ -158,9 +163,10 @@ export async function POST(req: NextRequest) {
                     },
                 });
 
-                // Delete user's cached data to force a refresh on next request
-                await deleteUserCache(Number(session.metadata.userId));
-                logger.info({ userId: session.metadata.userId }, "Cleared cache after subscription update");
+                if (userId) {
+                    await deleteUserCache(Number(userId));
+                    logger.info({ userId }, "Cleared cache after subscription update");
+                }
 
                 break;
             }
