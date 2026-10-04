@@ -202,6 +202,36 @@ export class MealRepository {
   }
 
   /**
+   * ดึงชื่ออาหารล่าสุดของผู้ใช้ (ไม่ซ้ำกัน) สำหรับแสดงเป็น shortcut ให้กดเลือก
+   *
+   * - ใช้ distinct บน foodName เพื่อตัดชื่อซ้ำออก
+   * - เรียงจากรายการที่บันทึกล่าสุดไปเก่าสุด
+   * - รับ limit เพื่อความยืดหยุ่น (หน้า UI ส่ง 3 มา)
+   *
+   * @param userId  รหัสผู้ใช้
+   * @param limit   จำนวนรายการที่ต้องการ (default 3)
+   */
+  async getRecentMealTexts(userId: number, limit = 3): Promise<string[]> {
+    // ดึง foodEntry ของ user คนนี้ โดยจัดกลุ่มชื่ออาหารไม่ซ้ำ แล้วเอาล่าสุดก่อน
+    const entries = await prisma.foodEntry.findMany({
+      where: {
+        meal: { userId }, // กรองเฉพาะ meal ที่เป็นของ userId นี้
+      },
+      distinct: ["foodName"], // ชื่ออาหารซ้ำกันให้เก็บไว้แค่ตัวเดียว
+      orderBy: {
+        id: "desc", // id มากกว่า = บันทึกทีหลัง = ล่าสุด
+      },
+      take: limit, // เอาแค่ N รายการแรก
+      select: {
+        foodName: true, // ต้องการแค่ชื่ออาหาร ไม่ต้องโหลด field อื่น
+      },
+    });
+
+    // แปลงจาก { foodName: string }[] → string[] ให้ component ใช้ได้สะดวก
+    return entries.map((e) => e.foodName);
+  }
+
+  /**
    * ดึงมื้ออาหารของผู้ใช้ในหนึ่งวัน พร้อมรายการอาหารในมื้อนั้น
    */
   async getMealsByDate(

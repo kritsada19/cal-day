@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -16,6 +16,28 @@ export default function NewMealPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  /**
+   * State เก็บชื่ออาหาร 3 รายการล่าสุดของ user
+   * เริ่มต้นเป็น array ว่าง จะถูกเติมเมื่อ useEffect ทำงานสำเร็จ
+   */
+  const [recentMeals, setRecentMeals] = useState<string[]>([]);
+
+  /**
+   * ดึง 3 เมนูล่าสุดจาก API เมื่อ component mount
+   * ทำครั้งเดียว (dependency array = []) เพราะข้อมูลนี้ไม่เปลี่ยนระหว่างที่หน้าเปิดอยู่
+   * ถ้า API error ก็แค่ไม่แสดง chip (ไม่ต้อง toast ให้รบกวน user)
+   */
+  useEffect(() => {
+    if (status !== "authenticated") return; // รอให้ล็อกอินก่อนค่อยดึง
+
+    axios
+      .get<{ recentMeals: string[] }>("/api/meals/recent")
+      .then((res) => setRecentMeals(res.data.recentMeals))
+      .catch(() => {
+        // ไม่แสดง error — shortcut เป็นแค่ฟีเจอร์เสริม ถ้าดึงไม่ได้ก็ซ่อนไปเฉย ๆ
+      });
+  }, [status]); // re-run ถ้า auth status เปลี่ยน (เช่น ล็อกอินสำเร็จหลัง mount)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -168,7 +190,53 @@ export default function NewMealPage() {
               <span className="block text-xs text-obsidian-950/55 dark:text-white/60">
                 Add multiple items by separating them with a comma, for example: rice, grilled chicken, orange
               </span>
+
+              {/*
+               * แสดง shortcut chip เฉพาะเมื่อมีข้อมูล (recentMeals.length > 0)
+               * ถ้า user ยังไม่เคยบันทึกมื้ออาหารเลย section นี้จะไม่ปรากฏ
+               */}
+              {recentMeals.length > 0 && (
+                <div className="pt-1 space-y-2">
+                  {/* Label บอกให้รู้ว่าปุ่มพวกนี้คืออะไร */}
+                  <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/40 dark:text-white/40">
+                    Recent meals
+                  </span>
+
+                  {/* Chip แต่ละอัน = เมนูล่าสุด 1 รายการ */}
+                  <div className="flex flex-wrap gap-2">
+                    {recentMeals.map((meal) => (
+                      <button
+                        key={meal}
+                        type="button"
+                        /*
+                         * กดแล้วเติมชื่ออาหารเข้า textarea
+                         * - ถ้า textarea ว่างอยู่ → ใส่ชื่อตรง ๆ
+                         * - ถ้ามีข้อความอยู่แล้ว → ต่อท้ายด้วยคอมม่าแล้วเว้นวรรค
+                         *   เพื่อให้เป็นรูปแบบที่ AI แยกรายการได้ถูกต้อง
+                         */
+                        onClick={() =>
+                          setMealText((prev) =>
+                            prev.trim() === "" ? meal : `${prev.trimEnd()}, ${meal}`
+                          )
+                        }
+                        className="
+                          px-3 py-1 text-[11px] tracking-wider font-medium
+                          border border-gold-accent/30
+                          text-gold-accent/80 dark:text-gold-accent/80
+                          bg-gold-accent/5 dark:bg-gold-accent/5
+                          hover:bg-gold-accent/15 hover:text-gold-accent hover:border-gold-accent/60
+                          transition-all duration-200
+                          cursor-pointer
+                        "
+                      >
+                        {meal}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </label>
+
           ) : (
             <div className="space-y-4">
               <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Food Image</span>
