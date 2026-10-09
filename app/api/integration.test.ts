@@ -85,6 +85,11 @@ vi.mock("@/lib/services/ai-quota", () => ({
   checkAndComsumeAiQuota: vi.fn(),
 }));
 
+vi.mock("@/lib/realtime/publisher", () => ({
+  publishMealEvent: vi.fn().mockResolvedValue(undefined),
+  publishProfileUpdate: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe("API Integration Tests", () => {
   const mockSession = vi.mocked(getSession);
   const mockRateLimit = vi.mocked(checkRateLimit);
@@ -279,6 +284,7 @@ describe("API Integration Tests", () => {
     } as Session);
 
     mockPrisma.profile.findUnique.mockResolvedValue(null);
+    mockPrisma.dailySummary.updateMany.mockResolvedValue({ count: 1 });
     mockPrisma.profile.create.mockResolvedValue({
       id: 3,
       userId: 7,

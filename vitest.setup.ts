@@ -30,7 +30,7 @@ vi.mock("@/lib/db/prisma", () => ({
     profile: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     meal: { create: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), delete: vi.fn() },
     foodEntry: { create: vi.fn(), createMany: vi.fn(), findMany: vi.fn() },
-    dailySummary: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
+    dailySummary: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));

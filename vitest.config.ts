@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -6,6 +6,7 @@ export default defineConfig({
     // plugins: ติดตั้ง plugin เพื่อรองรับ React (JSX/TSX) และการใช้งาน path alias (@/...) 
     plugins: [react(), tsconfigPaths()],
     test: {
+        exclude: [...configDefaults.exclude, 'tests/**'],
         // environment: ใช้ 'jsdom' เพื่อจำลอง DOM API (เช่น window, document, FormData)
         // ซึ่งจำเป็นสำหรับการทดสอบ Next.js Server Actions และ Component
         environment: 'jsdom',
