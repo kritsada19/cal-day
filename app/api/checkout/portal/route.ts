@@ -1,11 +1,11 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import prisma from "@/lib/db/prisma";
 import { stripe } from "../route";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     try {
         const sessionUser = await getSession();
 

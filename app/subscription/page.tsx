@@ -23,7 +23,10 @@ export default function SubscriptionPage() {
         setIsFetchingPlan(false);
       });
     } else if (session === null) {
-      setIsFetchingPlan(false);
+      const timer = setTimeout(() => {
+        setIsFetchingPlan(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [session]);
 
