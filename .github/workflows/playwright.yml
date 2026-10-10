@@ -16,7 +16,7 @@ jobs:
     env:
       CI: true
       NODE_ENV: test
-      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/calday?schema=public' }}
+      DATABASE_URL: ${{ 'postgresql://postgres:postgres@localhost:5432/calday?schema=public' }}
       REDIS_URL: ${{ secrets.REDIS_URL || 'redis://localhost:6379' }}
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || '12345678901234567890123456789012' }}
       NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
