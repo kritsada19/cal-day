@@ -34,6 +34,15 @@ test.describe('Login', () => {
 
     // หลัง login สำเร็จ ต้อง redirect ไปหน้า root
     await expect(page).toHaveURL('/');
+
+    // ตรวจว่า NextAuth มี session ของผู้ใช้แล้วหรือไม่
+    const sessionResponse = await page.request.get('/api/auth/session');
+    const sessionData = await sessionResponse.json();
+
+    console.log('Session API:', sessionData);
+
+    // ต้องมีข้อมูล user ใน session
+    expect(sessionData.user).toBeTruthy();
   });
 
   test('login ล้มเหลว (password ผิด) → คงอยู่หน้า /signin', async ({ page }) => {
