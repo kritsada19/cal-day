@@ -27,7 +27,7 @@ type ProfileApiResponse = {
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [userData, setUserData] = useState<ProfileApiResponse | null>(null);
 
   const consumed = userData?.dailyProgress.calories.consumed ?? 0;
@@ -48,11 +48,16 @@ export default function Navbar() {
       const response = await axios.get<ProfileApiResponse>("/api/profile");
       setUserData(response.data);
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        return;
+      }
+
       logger.error({ err: error }, "Error fetching profile data");
     }
   }, []);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
     if (!session?.user || session.user.role === "ADMIN") {
       return;
     }
@@ -61,9 +66,10 @@ export default function Navbar() {
       await fetchProfile();
     };
     fetchData();
-  }, [fetchProfile, session]);
+  }, [fetchProfile, session, status]);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
     if (!session?.user || session.user.role === "ADMIN") {
       return;
     }
@@ -94,7 +100,7 @@ export default function Navbar() {
     return () => {
       eventSource.close();
     };
-  }, [session?.user, fetchProfile]); // ต้องใส่ fetchProfile เป็น Dependency
+  }, [session?.user, fetchProfile, status]); // ต้องใส่ fetchProfile เป็น Dependency
 
   if (!mounted) return null;
 
