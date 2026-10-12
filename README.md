@@ -39,7 +39,8 @@ CalDay คือเว็บแอปพลิเคชันสำหรับ�
 
 **DevTools & Testing:**
 - [Docker & Docker Compose](https://www.docker.com/)
-- [Vitest](https://vitest.dev/) (Unit Testing)
+- [Vitest](https://vitest.dev/) (Unit / Integration Testing)
+- [Playwright](https://playwright.dev/) (E2E Testing)
 - [ESLint](https://eslint.org/)
 
 ## 🚀 เริ่มต้นการใช้งาน (Getting Started)
@@ -95,7 +96,28 @@ CalDay คือเว็บแอปพลิเคชันสำหรับ�
 - **`Subscription`:** ดูแลสถานะบัญชี Pro / Free ของผู้ใช้งาน
 
 ## 🧪 การรันเทสต์ (Testing)
-โปรเจคนี้ใช้ `Vitest` ในการทำ Automated Testing
+
+โปรเจคนี้มีระบบทดสอบ 2 ระดับ:
+
+### Unit / Integration Tests — [Vitest](https://vitest.dev/)
+ใช้สำหรับทดสอบ API Routes, Business Logic, และ Utilities
 ```bash
 npm run test
+```
+
+### End-to-End Tests — [Playwright](https://playwright.dev/)
+ใช้สำหรับทดสอบ User Flow บนเบราว์เซอร์จริง (Chromium, Firefox)
+ไฟล์เทสต์อยู่ในโฟลเดอร์ `tests/`
+
+> **หมายเหตุ:** ต้องรัน Development Server ก่อน หรือ Playwright จะเปิดให้อัตโนมัติผ่าน `webServer` ใน `playwright.config.ts`
+
+```bash
+# รันเทสต์ทั้งหมด
+npx playwright test
+
+# รันพร้อม UI Mode (แนะนำสำหรับ Debug)
+npx playwright test --ui
+
+# ดูรายงานผลเทสต์ล่าสุด
+npx playwright show-report
 ```
