@@ -22,6 +22,8 @@ jobs:
       GOOGLE_CLIENT_ID: dummy-client-id
       GOOGLE_CLIENT_SECRET: dummy-client-secret
       GOOGLE_GENERATIVE_AI_API_KEY: dummy-gen-ai-key
+      EMAIL_USER: test@example.com
+      EMAIL_PASS: test-password
 
       SKIP_ENV_VERIFICATION: 1
 
