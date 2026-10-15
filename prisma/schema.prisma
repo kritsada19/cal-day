@@ -74,6 +74,20 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+// เก็บข้อมูลชั่วคราวสำหรับตรวจสอบ email
+model VerificationToken {
+  id        Int       @id @default(autoincrement())
+  email     String
+  token     String    @unique
+  type      TokenType @default(EMAIL_VERIFY)
+  expiresAt DateTime
+}
+
+enum TokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
 // เก็บข้อมูลส่วนตัวและค่าที่ใช้คำนวณแคลอรีให้กับผู้ใช้
 model Profile {
   id            Int           @id @default(autoincrement())

@@ -110,6 +110,12 @@ export default function SignInPage() {
               <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
                 PASSWORD
               </label>
+              <Link
+                href="/forgot-password"
+                className="text-[9px] tracking-[0.2em] text-gold-accent hover:text-obsidian-950 dark:hover:text-white font-mono font-bold uppercase transition-colors duration-300 underline underline-offset-4 decoration-gold-accent/20 hover:decoration-white/40"
+              >
+                Forgot password?
+              </Link>
             </div>
             <div className="relative group">
               {/* Highlight corners on focus */}

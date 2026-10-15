@@ -93,6 +93,11 @@ export const authOptions: NextAuthOptions = {
                 // Reset counter after successful login
                 await redis.del(failedLoginKey);
 
+                // เช็คว่า user ยืนยันอีเมลแล้วหรือยัง
+                if (!user.emailVerified) {
+                    throw new Error("Please verify your email before signing in. Check your inbox for the verification link.");
+                }
+
                 return {
                     id: user.id,
                     name: user.name,

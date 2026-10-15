@@ -17,6 +17,14 @@ export const Role = {
 export type Role = (typeof Role)[keyof typeof Role]
 
 
+export const TokenType = {
+  EMAIL_VERIFY: 'EMAIL_VERIFY',
+  PASSWORD_RESET: 'PASSWORD_RESET'
+} as const
+
+export type TokenType = (typeof TokenType)[keyof typeof TokenType]
+
+
 export const Gender = {
   MALE: 'MALE',
   FEMALE: 'FEMALE'

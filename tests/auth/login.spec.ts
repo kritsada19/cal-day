@@ -77,4 +77,11 @@ test.describe('Login', () => {
     await expect(page).toHaveURL('/signup');
   });
 
+  test('มีลิงก์ไปหน้า forgot password', async ({ page }) => {
+    const link = page.getByRole('link', { name: 'Forgot password?' });
+    await expect(link).toBeVisible();
+    await link.click();
+    await expect(page).toHaveURL('/forgot-password');
+  });
+
 });

@@ -9,6 +9,8 @@ import { GET as getDailyMeals } from "@/app/api/meals/daily/route";
 import { GET as getProfile, POST as saveProfile } from "@/app/api/profile/route";
 import { GET as getAnalytics } from "@/app/api/analytics/route";
 import { POST as handleWebhook } from "@/app/api/webhook/route";
+import { POST as forgotPassword } from "@/app/api/auth/forgot-password/route";
+import { passwordSchema } from "@/lib/validation/auth";
 import prisma from "@/lib/db/prisma";
 import { analyzeFood } from "@/lib/services/ai";
 import { checkAndComsumeAiQuota, getUserAiQuota } from "@/lib/services/ai-quota";
@@ -88,6 +90,10 @@ vi.mock("@/lib/services/ai-quota", () => ({
 vi.mock("@/lib/realtime/publisher", () => ({
   publishMealEvent: vi.fn().mockResolvedValue(undefined),
   publishProfileUpdate: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/email/sendEmail", () => ({
+  sendForgotPasswordEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe("API Integration Tests", () => {
@@ -217,6 +223,81 @@ describe("API Integration Tests", () => {
       totalCalories: 1450,
       totalProtein: 88,
     });
+  });
+
+  it("POST /api/auth/forgot-password should not reveal whether the email exists", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockPrisma.verificationToken.deleteMany.mockResolvedValue({ count: 0 });
+
+    const request = new NextRequest("http://localhost/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email: "missing@example.com" }),
+    });
+
+    const response = await forgotPassword(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.message).toBe("If an account exists, we have sent a reset link");
+  });
+
+  it("POST /api/auth/forgot-password should also return the same generic message for registered users", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 7,
+      email: "alice@example.com",
+    } as never);
+    mockPrisma.verificationToken.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrisma.verificationToken.create.mockResolvedValue({
+      id: 1,
+      email: "alice@example.com",
+      token: "token-123",
+      type: "PASSWORD_RESET",
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    } as never);
+
+    const request = new NextRequest("http://localhost/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email: "alice@example.com" }),
+    });
+
+    const response = await forgotPassword(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.message).toBe("If an account exists, we have sent a reset link");
+  });
+
+  it("POST /api/auth/reset-password should reject stale tokens when the user no longer exists", async () => {
+    const { POST: resetPassword } = await import("@/app/api/auth/reset-password/route");
+
+    mockPrisma.verificationToken.findFirst.mockResolvedValue({
+      token: "stale-token",
+      email: "missing@example.com",
+      type: "PASSWORD_RESET",
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    } as never);
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+
+    const request = new NextRequest("http://localhost/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({
+        token: "stale-token",
+        password: "Password123",
+        confirmPassword: "Password123",
+      }),
+    });
+
+    const response = await resetPassword(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.message).toBe("Invalid reset token");
+  });
+
+  it("password schema should enforce the same complexity rules as the server", () => {
+    expect(passwordSchema.safeParse("short").success).toBe(false);
+    expect(passwordSchema.safeParse("password").success).toBe(false);
+    expect(passwordSchema.safeParse("Password123").success).toBe(true);
   });
 
   it("GET /api/profile should return user profile information and AI usage data", async () => {
