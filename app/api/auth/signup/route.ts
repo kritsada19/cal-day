@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { signupSchema } from "@/lib/validation/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { sendVerificationEmail } from "@/lib/email/sendEmail";
+import crypto from "crypto";
 
 // นี่คือ Dummy Hash ระดับ 12 Rounds (สังเกตตรง $2a$12$) เพื่อให้หน่วงเวลาเท่ากับตอนสร้าง User 
 const DUMMY_HASH_12 = "$2a$12$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -53,6 +55,13 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    await prisma.verificationToken.deleteMany({
+      where: {
+        email: email.toLowerCase(),
+        type: "EMAIL_VERIFY"
+      }
+    })
+
     await prisma.user.create({
       data: {
         name: name.trim(),
@@ -67,6 +76,22 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
+    await prisma.verificationToken.create({
+      data: {
+        email: email.toLowerCase(),
+        token: verificationToken,
+        type: "EMAIL_VERIFY",
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // Expire in 1 Hour
+      },
+    });
+
+    const verificationLink = `${process.env.NEXTAUTH_URL}/api/auth/email-verify?token=${verificationToken}`;
+
+    await sendVerificationEmail(email, verificationLink);
+
 
     return NextResponse.json(
       { message: "Account created successfully" },
