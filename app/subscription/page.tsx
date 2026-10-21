@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { Check } from "lucide-react";
 import { logger } from "@/lib/logger";
+
+const features = [
+  "Unlimited daily meal logging",
+  "Track calories & macros",
+  "Personalized nutrition goals",
+  "Full progress calendar access",
+];
 
 export default function SubscriptionPage() {
   const [loading, setLoading] = useState(false);
@@ -61,75 +69,61 @@ export default function SubscriptionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f6f1] dark:bg-obsidian-950 flex flex-col items-center py-20 px-4">
-      {/* Decorative Title Area */}
-      <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold tracking-[0.3em] text-obsidian-950 dark:text-white font-sans mb-4">
-          SUBSCRIPTION
-        </h1>
-        <div className="h-px w-32 bg-linear-to-r from-transparent via-gold-accent to-transparent mx-auto"></div>
+    <div className="relative flex min-h-[85vh] flex-1 flex-col items-center overflow-hidden bg-canvas px-4 py-12 text-ink selection:bg-highlight selection:text-ink md:py-16">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-xl max-w-full -translate-x-1/2 rounded-full bg-highlight/40 blur-3xl"
+      />
+
+      {/* Title Area */}
+      <div className="relative mb-10 text-center">
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">Subscription</h1>
       </div>
 
       {/* Subscription Card Container */}
-      <div className="max-w-md w-full bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-8 relative group transition-all duration-500 hover:border-gold-accent/40 shadow-xl">
-        {/* Corner Decors for sharp geometric look */}
-        <span className="absolute -top-px -left-px w-3 h-3 border-t border-l border-gold-accent transition-all duration-300"></span>
-        <span className="absolute -bottom-px -right-px w-3 h-3 border-b border-r border-gold-accent transition-all duration-300"></span>
-
-        {/* Subtle background glow effect */}
-        <div className="absolute inset-0 bg-gold-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-
-        <div className="text-center mb-8 relative z-10">
-          <h2 className="text-2xl font-bold tracking-[0.2em] text-gold-accent font-sans mb-2">
-            PRO PLAN {isPro && "(ACTIVE)"}
-          </h2>
-          <p className="text-xs text-obsidian-950/50 dark:text-white/50 font-mono tracking-widest mb-4">
-            MASTER YOUR NUTRITION
-          </p>
-          <div className="flex justify-center items-end gap-1">
-            <span className="text-3xl font-bold text-obsidian-950 dark:text-white font-sans">฿199</span>
-            <span className="text-xs text-obsidian-950/50 dark:text-white/50 font-mono mb-1">/ month</span>
+      <div className="relative w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-soft sm:p-8">
+        <div className="mb-8 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <h2 className="text-2xl font-bold tracking-tight text-ink">Pro plan</h2>
+            {isPro && (
+              <span className="rounded-full bg-highlight px-3 py-1 text-sm font-semibold text-ink">
+                Active
+              </span>
+            )}
           </div>
+          <p className="mt-2 text-base text-muted">Master your nutrition</p>
+          <p className="mt-5 flex items-baseline justify-center gap-1">
+            <span className="text-4xl font-bold tracking-tight text-ink">฿199</span>
+            <span className="text-sm text-muted">/ month</span>
+          </p>
         </div>
 
         {/* Feature List */}
-        <div className="space-y-5 mb-10 relative z-10">
-          {[
-            "UNLIMITED DAILY MEAL LOGGING",
-            "TRACK CALORIES & MACROS",
-            "PERSONALIZED NUTRITION GOALS",
-            "FULL PROGRESS CALENDAR ACCESS"
-          ].map((feature, i) => (
-            <div key={i} className="flex items-center gap-4 group/feature">
-              {/* Custom checkbox/bullet */}
-              <div className="w-5 h-5 flex items-center justify-center bg-black/5 dark:bg-obsidian-800 border border-black/20 dark:border-white/20 group-hover/feature:border-gold-accent transition-colors duration-300">
-                <div className="w-2 h-2 bg-gold-accent shadow-glow-gold opacity-80 group-hover/feature:opacity-100 transition-opacity duration-300"></div>
-              </div>
-              <span className="text-xs tracking-widest text-obsidian-950/80 dark:text-white/80 font-mono group-hover/feature:text-obsidian-950 dark:group-hover/feature:text-white transition-colors duration-300">
-                {feature}
+        <ul className="mb-8 space-y-4">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-center gap-3 text-base text-ink">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary">
+                <Check className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
               </span>
-            </div>
+              {feature}
+            </li>
           ))}
-        </div>
+        </ul>
 
         {/* Action Button */}
-        <div className="relative z-10">
+        <div>
           <button
             onClick={isPro ? handleManageSubscription : handleSubscribe}
             disabled={loading || !session || isFetchingPlan}
-            className="w-full relative bg-black/5 dark:bg-obsidian-800 border border-gold-accent text-gold-accent py-4 font-bold tracking-[0.2em] text-xs hover:bg-gold-accent hover:text-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group/btn overflow-hidden"
+            aria-busy={loading || isFetchingPlan}
+            className="min-h-12 w-full cursor-pointer rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {/* Button hover effect line */}
-            <span className="absolute bottom-0 left-0 w-0 h-px bg-white group-hover/btn:w-full transition-all duration-500"></span>
-
-            <span className="relative z-10">
-              {loading || isFetchingPlan ? "INITIALIZING SEQUENCE..." : (!session ? "LOGIN REQUIRED" : (isPro ? "MANAGE SUBSCRIPTION" : "UPGRADE PROTOCOL"))}
-            </span>
+            {loading || isFetchingPlan ? "Loading..." : (!session ? "Login required" : (isPro ? "Manage subscription" : "Upgrade to Pro"))}
           </button>
 
           {!session && (
-            <p className="text-center text-[10px] text-obsidian-950/40 dark:text-white/40 font-mono tracking-wider mt-4">
-              PLEASE LOG IN TO ACCESS PREMIUM FEATURES
+            <p className="mt-4 text-center text-sm text-muted">
+              Please log in to access premium features
             </p>
           )}
         </div>

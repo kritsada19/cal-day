@@ -22,38 +22,24 @@ export default function ThemeToggle() {
     return (
         <button
             aria-label="Toggle theme"
+            aria-pressed={isDark}
             onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="
-        relative flex items-center justify-center group
-        w-9 h-9 
-        bg-white/70 dark:bg-obsidian-900 
-        border border-black/10 dark:border-white/10 
-        hover:border-gold-accent
-        transition-colors duration-300
-        focus:outline-none focus:border-gold-accent
-        active:scale-95
-      "
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted transition-colors duration-200 hover:bg-primary-tint hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-95 motion-reduce:transition-none"
         >
-            {/* Accent corner brackets to enhance sharp mechanical design */}
-            <span className="absolute -top-px -left-px w-1.5 h-1.5 border-t border-l border-transparent group-hover:border-gold-accent transition-colors duration-300"></span>
-            <span className="absolute -bottom-px -right-px w-1.5 h-1.5 border-b border-r border-transparent group-hover:border-gold-accent transition-colors duration-300"></span>
-
-            <div className="relative w-4 h-4 overflow-hidden">
+            <span className="relative h-5 w-5">
                 <Sun
-                    className={`
-                        absolute inset-0 w-full h-full text-obsidian-950 dark:text-white group-hover:text-gold-accent
-                        transition-all duration-500 ease-spring
-                        ${isDark ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"}
-                    `}
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                    className={`absolute inset-0 h-full w-full transition-all duration-200 motion-reduce:transition-none ${isDark ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"
+                        }`}
                 />
                 <Moon
-                    className={`
-                        absolute inset-0 w-full h-full text-obsidian-950 dark:text-white group-hover:text-gold-accent
-                        transition-all duration-500 ease-spring
-                        ${isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0"}
-                    `}
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                    className={`absolute inset-0 h-full w-full transition-all duration-200 motion-reduce:transition-none ${isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0"
+                        }`}
                 />
-            </div>
+            </span>
         </button>
     );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/ui/Navbar";
 import SessionProvider from "@/components/providers/SessionProvider";
@@ -17,6 +17,19 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// CalDay Design System fonts
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const notoSansThai = Noto_Sans_Thai({
+  variable: "--font-noto-thai",
+  subsets: ["thai"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -38,14 +51,16 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${plusJakarta.variable} ${notoSansThai.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#f8f6f1] dark:bg-obsidian-950 text-obsidian-950 dark:text-white selection:bg-gold-accent selection:text-black antialiased transition-colors duration-300">
+      <body className="flex min-h-dvh flex-col bg-canvas text-ink selection:bg-highlight selection:text-ink antialiased transition-colors duration-300">
         <SessionProvider session={session}>
           <ThemeProvider>
             <Navbar />
-            <main className="flex-1 flex flex-col">
+            <main
+              className={`flex-1 flex flex-col ${session?.user ? "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-64" : ""}`}
+            >
               {children}
             </main>
             {/* ThemedToaster reads the resolved theme from next-themes and passes it to Sonner */}

@@ -5,6 +5,12 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const inputBase = `w-full min-h-11 rounded-xl border bg-surface px-4 py-3 text-base text-ink placeholder:text-muted transition-colors duration-200 ${focusRing}`;
+const inputClass = `${inputBase} border-secondary hover:border-primary focus:border-primary`;
+
 export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,148 +58,126 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-[85vh] flex-1 flex items-center justify-center px-4 relative overflow-hidden bg-[#f8f6f1] dark:bg-obsidian-950">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.06),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+    <div className="relative flex min-h-[85vh] flex-1 items-center justify-center overflow-hidden bg-canvas px-4 py-10 text-ink">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-xl max-w-full -translate-x-1/2 rounded-full bg-highlight/50 blur-3xl"
+      />
 
-      <div className="max-w-md w-full bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-8 md:p-10 shadow-glow-gold relative overflow-hidden">
-        <div className="absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent via-gold-accent to-transparent"></div>
-
-        <span className="absolute -top-px -left-px w-2.5 h-2.5 border-t border-l border-gold-accent"></span>
-        <span className="absolute -top-px -right-px w-2.5 h-2.5 border-t border-r border-gold-accent"></span>
-        <span className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b border-l border-gold-accent"></span>
-        <span className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b border-r border-gold-accent"></span>
-
-        <div className="flex flex-col items-center mb-8 select-none">
-          <div className="relative w-12 h-12 flex items-center justify-center bg-black/5 dark:bg-obsidian-950 border border-gold-accent/40 group hover:border-gold-accent transition-colors duration-300">
-            <span className="absolute -top-px -left-px w-1.25 h-1.25 border-t border-l border-gold-accent"></span>
-            <span className="absolute -bottom-px -right-px w-1.25 h-1.25 border-b border-r border-gold-accent"></span>
-
+      <div className="relative w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-soft sm:p-8 md:p-10">
+        <div className="mb-8 flex select-none flex-col items-center text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-on-primary">
             <svg
               viewBox="0 0 24 24"
-              className="w-6 h-6 text-gold-accent group-hover:scale-110 group-hover:text-white transition-all duration-300"
+              className="h-6 w-6"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="1.75"
+              aria-hidden="true"
             >
               <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5" />
-              <polygon points="12 7 17 10 17 14 12 17 7 14 7 10" fill="currentColor" fillOpacity="0.2" />
+              <polygon points="12 7 17 10 17 14 12 17 7 14 7 10" fill="currentColor" fillOpacity="0.25" />
             </svg>
           </div>
 
-          <div className="flex flex-col items-center mt-4 text-center">
-            <span className="text-xl font-bold tracking-[0.3em] text-obsidian-950 dark:text-white font-sans">CALDAY</span>
-            <span className="text-[9px] tracking-[0.45em] text-obsidian-950/40 dark:text-white/40 font-mono mt-1 uppercase">
-              CREATE YOUR ACCOUNT
-            </span>
-          </div>
+          <span className="mt-4 text-xl font-bold tracking-tight text-ink">CALDAY</span>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Create your account</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
-              FULL NAME
+            <label htmlFor="signup-name" className="block text-sm font-medium text-ink">
+              Full name
             </label>
-            <div className="relative group">
-              <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
-                placeholder="Enter your full name"
-              />
-            </div>
+            <input
+              id="signup-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+              className={inputClass}
+              placeholder="Enter your full name"
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
-              EMAIL ADDRESS
+            <label htmlFor="signup-email" className="block text-sm font-medium text-ink">
+              Email address
             </label>
-            <div className="relative group">
-              <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
-                placeholder="Enter your email address"
-              />
-            </div>
+            <input
+              id="signup-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className={inputClass}
+              placeholder="Enter your email address"
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
-              PASSWORD
+            <label htmlFor="signup-password" className="block text-sm font-medium text-ink">
+              Password
             </label>
-            <div className="relative group">
-              <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
-                placeholder="Enter a password"
-              />
-            </div>
+            <input
+              id="signup-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              className={inputClass}
+              placeholder="Enter a password"
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[9px] tracking-[0.25em] text-obsidian-950/50 dark:text-white/50 font-mono font-bold uppercase">
-              CONFIRM PASSWORD
+            <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-ink">
+              Confirm password
             </label>
-            <div className="relative group">
-              <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-              <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold-accent/0 group-focus-within:border-gold-accent/60 transition-all duration-300"></span>
-
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                className="w-full bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 focus:border-gold-accent/60 focus:outline-none px-4 py-3 text-sm text-obsidian-950 dark:text-white placeholder-obsidian-950/20 dark:placeholder-white/20 transition-all duration-300 font-mono rounded-none"
-                placeholder="Repeat your password"
-              />
-            </div>
+            <input
+              id="signup-confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              aria-invalid={passwordMismatch}
+              aria-describedby={passwordMismatch ? "signup-confirm-password-error" : undefined}
+              className={
+                passwordMismatch
+                  ? `${inputBase} border-danger focus:border-danger`
+                  : inputClass
+              }
+              placeholder="Repeat your password"
+            />
             {passwordMismatch && (
-              <p className="text-[10px] tracking-wider font-mono text-red-400">Passwords do not match</p>
+              <p id="signup-confirm-password-error" role="alert" className="text-sm font-medium text-danger">
+                Passwords do not match
+              </p>
             )}
           </div>
 
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               type="submit"
               disabled={loading || passwordMismatch}
-              className="w-full relative px-6 py-3.5 bg-black/5 dark:bg-obsidian-950 border border-gold-accent/40 text-gold-accent hover:text-obsidian-950 dark:hover:text-white hover:bg-gold-accent/10 hover:border-gold-accent text-xs font-bold tracking-[0.25em] font-sans transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group rounded-none"
+              className={`min-h-11 w-full cursor-pointer rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
             >
-              <span className="absolute bottom-1.5 left-2.5 w-1.5 h-1.5 border-b border-l border-gold-accent/0 group-hover:border-gold-accent/60 transition-all duration-300"></span>
-              <span className="absolute top-1.5 right-2.5 w-1.5 h-1.5 border-t border-r border-gold-accent/0 group-hover:border-gold-accent/60 transition-all duration-300"></span>
-
               {loading ? "Creating account..." : "Create account"}
             </button>
           </div>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 text-center relative">
-          <span className="text-[9px] tracking-widest text-obsidian-950/30 dark:text-white/30 font-mono">
-            ALREADY HAVE AN ACCOUNT?{" "}
-            <Link
-              href="/signin"
-              className="text-gold-accent hover:text-white transition-colors duration-300 font-bold underline underline-offset-4 decoration-gold-accent/20 hover:decoration-white/40"
-            >
-              Back to log in
-            </Link>
-          </span>
+        <div className="mt-8 border-t border-line pt-6 text-center text-sm text-muted">
+          Already have an account?{" "}
+          <Link
+            href="/signin"
+            className={`rounded font-semibold text-primary underline underline-offset-4 transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
+          >
+            Back to log in
+          </Link>
         </div>
       </div>
     </div>

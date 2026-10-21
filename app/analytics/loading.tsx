@@ -1,147 +1,364 @@
-/**
- * Analytics Loading Skeleton
- * ──────────────────────────
- * Next.js จะแสดงไฟล์นี้ขณะโหลดหน้า /analytics
- *
- * จำลองโครงสร้าง analytics page:
- *   - Header + time-range selector (7D / 30D)
- *   - Summary cards 3 ใบ (Avg Calories, Consistency Score, Streak)
- *   - Charts 2 กล่อง (Calorie bar chart, Protein horizontal bars)
- *
- * แท่งกราฟ skeleton ใช้ความสูงสุ่มเพื่อให้ดูเหมือนข้อมูลจริง
- */
+"use client";
 
-export default function AnalyticsLoading() {
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import { logger } from "@/lib/logger";
+
+// Types for the Analytics API Response
+interface DailyData {
+  day: string;
+  date: string;
+  calories: number;
+  targetCal: number;
+  protein: number;
+  targetPro: number;
+}
+
+interface AnalyticsStats {
+  averageCalories: number;
+  consistencyScore: number;
+  currentStreak: number;
+  activeDays: boolean[];
+  targetCal: number;
+}
+
+interface AnalyticsResponse {
+  weeklyData: DailyData[];
+  stats: AnalyticsStats;
+}
+
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const rangeButton = (active: boolean) =>
+  `min-h-11 cursor-pointer rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${active ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"
+  }`;
+
+const cardClass = "rounded-2xl border border-line bg-surface p-6 shadow-soft";
+
+export default function AnalyticsPage() {
+  const [timeRange, setTimeRange] = useState<"7D" | "30D">("7D");
+  const [fetching, setFetching] = useState(false);
+
+  const [data, setData] = useState<DailyData[]>([]);
+  const [stats, setStats] = useState<AnalyticsStats>({
+    averageCalories: 0,
+    consistencyScore: 0,
+    currentStreak: 0,
+    activeDays: [],
+    targetCal: 2000,
+  });
+  const { data: session, status } = useSession();
+
+  // ห่อ fetchAnalytics ด้วย useCallback เพื่อให้ SSE effect
+  // เรียก refetch ได้โดยไม่ต้องสร้างฟังก์ชันใหม่ทุก render
+  const fetchAnalytics = useCallback(async () => {
+    setFetching(true);
+    try {
+      const days = timeRange === "7D" ? 7 : 30;
+      const response = await axios.get<AnalyticsResponse>(`/api/analytics?days=${days}`);
+      setData(response.data.weeklyData);
+      setStats(response.data.stats);
+    } catch (error) {
+      logger.error({ err: error, timeRange }, "Error fetching analytics data");
+    } finally {
+      setFetching(false);
+    }
+  }, [timeRange]);
+
+  // โหลดข้อมูล analytics ครั้งแรก และโหลดใหม่เมื่อ timeRange เปลี่ยน
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const fetchData = async () => {
+      await fetchAnalytics();
+    };
+    fetchData();
+  }, [fetchAnalytics, status, session?.user?.id]);
+
+  // SSE — รับ Real-time event จาก Server
+  // แยก useEffect ออกจาก fetch เพื่อให้ lifecycle ชัดเจน:
+  // effect นี้จะ connect ครั้งเดียวตอน authenticated และ cleanup ตอน unmount
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    // สร้างการเชื่อมต่อ SSE จาก Browser → Server
+    // เมื่อสร้างแล้ว Browser จะเชื่อมต่อไปยัง URL ที่กำหนด และรอ Server ส่ง Event มา
+    const eventSource = new EventSource("/api/events");
+
+    // เมื่อ EventSource ได้รับ message จาก Server → ให้เรียกฟังก์ชันนี้
+    // event คือ ข้อมูลที่ Browser ได้รับจาก SSE
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      // กรองเฉพาะ event ของ user คนนี้เท่านั้น
+      if (Number(data.userId) !== session?.user?.id) return;
+
+      // ถ้ามีการเพิ่ม/ลบ Meal หรืออัปเดต Profile → โหลด analytics ใหม่
+      if (
+        data.type === "meal.created" ||
+        data.type === "meal.deleted" ||
+        data.type === "profile.updated"
+      ) {
+        fetchAnalytics();
+      }
+    };
+
+    eventSource.onerror = () => {
+      console.error("SSE connection error");
+    };
+
+    return () => {
+      // ปิด SSE connection → ไปเรียก cancel() ที่ app/api/events/route.ts
+      eventSource.close();
+    };
+  }, [status, session?.user?.id, fetchAnalytics]);
+
+  const loading = status === "loading" || (status === "authenticated" && fetching);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4">
+        <p role="status" className="animate-pulse text-base text-muted motion-reduce:animate-none">
+          Loading analytics...
+        </p>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
+        <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center shadow-soft">
+          <h2 className="text-2xl font-semibold tracking-tight text-ink">Restricted access</h2>
+          <p className="mt-3 text-base leading-7 text-muted">Please log in to view analytics</p>
+          <Link
+            href="/signin"
+            className={`mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
+          >
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const recentActive = stats.activeDays.slice(-7);
+  const isUnderTarget = stats.averageCalories <= stats.targetCal;
+
   return (
-    <div className="min-h-screen bg-[#f8f6f1] dark:bg-obsidian-950 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* ── Header + time selector ── */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-3">
-            {/* Title row พร้อม geometric icon */}
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 bg-gold-accent/30 rotate-45 animate-pulse" />
-              <div className="h-8 w-40 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-            </div>
-            {/* "PERFORMANCE OVERVIEW" label */}
-            <div className="h-3 w-44 rounded bg-gold-accent/20 animate-pulse" />
+    <div className="relative min-h-[85vh] flex-1 bg-canvas px-4 py-8 text-ink selection:bg-highlight selection:text-ink md:py-12">
+      <div className="mx-auto max-w-280 space-y-8">
+
+        {/* Header Section */}
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-ink">Analytics</h1>
+            <p className="mt-1 text-sm font-medium text-muted">Performance overview</p>
           </div>
 
-          {/* Time range selector skeleton */}
-          <div className="flex items-center border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-1">
-            <div className="h-8 w-20 bg-gold-accent/15 animate-pulse" />
-            <div className="h-8 w-20 bg-black/5 dark:bg-white/5 animate-pulse" />
+          {/* Time Range Selector */}
+          <div className="inline-flex rounded-xl bg-primary-tint p-1">
+            <button
+              onClick={() => setTimeRange("7D")}
+              aria-pressed={timeRange === "7D"}
+              className={rangeButton(timeRange === "7D")}
+            >
+              7 days
+            </button>
+            <button
+              onClick={() => setTimeRange("30D")}
+              aria-pressed={timeRange === "30D"}
+              className={rangeButton(timeRange === "30D")}
+            >
+              30 days
+            </button>
           </div>
         </div>
 
-        {/* ── Summary cards (3 ใบ) ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Highlights / Summary Cards */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Card 1: Average Calories */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6 overflow-hidden">
-            <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold-accent" />
-            <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold-accent" />
-
-            <div className="h-2.5 w-24 rounded bg-black/10 dark:bg-white/10 animate-pulse mb-4" />
+          <div className={cardClass}>
+            <p className="mb-3 text-sm font-medium text-muted">Avg calories</p>
             <div className="flex items-baseline gap-2">
-              <div className="h-10 w-24 rounded bg-black/15 dark:bg-white/15 animate-pulse" />
-              <div className="h-3 w-16 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+              <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.averageCalories}</span>
+              <span className="text-sm text-muted">kcal/day</span>
             </div>
-            <div className="mt-4 h-3 w-36 rounded bg-emerald-accent/15 animate-pulse" />
+
+            {/* Status Indicator */}
+            <p className="mt-4 flex items-center gap-2 text-sm">
+              {isUnderTarget ? (
+                <>
+                  <span className="font-semibold text-primary tabular-nums">↓ {Math.abs(stats.targetCal - stats.averageCalories)} kcal</span>
+                  <span className="text-muted">Under target</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-danger tabular-nums">↑ {stats.averageCalories - stats.targetCal} kcal</span>
+                  <span className="text-muted">Over target</span>
+                </>
+              )}
+            </p>
           </div>
 
           {/* Card 2: Consistency Score */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6 overflow-hidden">
-            <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold-accent" />
-            <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold-accent" />
-
-            <div className="h-2.5 w-32 rounded bg-black/10 dark:bg-white/10 animate-pulse mb-4" />
+          <div className={cardClass}>
+            <p className="mb-3 text-sm font-medium text-muted">Consistency score</p>
             <div className="flex items-baseline gap-2">
-              <div className="h-10 w-16 rounded bg-gold-accent/20 animate-pulse" />
-              <div className="h-3 w-6 rounded bg-gold-accent/15 animate-pulse" />
+              <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.consistencyScore}</span>
+              <span className="text-sm text-muted">%</span>
             </div>
-            {/* Progress bar skeleton */}
-            <div className="w-full h-1 bg-black/5 dark:bg-white/5 mt-4">
-              <div className="h-full w-3/5 bg-gold-accent/25 animate-pulse" />
+
+            {/* Simple Progress Line */}
+            <div
+              role="progressbar"
+              aria-label="Consistency score"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(stats.consistencyScore)}
+              className="mt-4 h-2 w-full overflow-hidden rounded-full bg-primary-tint"
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-1000 motion-reduce:transition-none"
+                style={{ width: `${stats.consistencyScore}%` }}
+              ></div>
             </div>
           </div>
 
           {/* Card 3: Current Streak */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6 overflow-hidden">
-            <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold-accent" />
-            <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold-accent" />
-
-            <div className="h-2.5 w-28 rounded bg-black/10 dark:bg-white/10 animate-pulse mb-4" />
+          <div className={cardClass}>
+            <p className="mb-3 text-sm font-medium text-muted">Current streak</p>
             <div className="flex items-baseline gap-2">
-              <div className="h-10 w-12 rounded bg-black/15 dark:bg-white/15 animate-pulse" />
-              <div className="h-3 w-12 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+              <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.currentStreak}</span>
+              <span className="text-sm text-muted">days</span>
             </div>
-            {/* Streak dots */}
-            <div className="mt-4 flex gap-1">
-              {[65, 100, 40, 100, 80, 100, 55].map((_, i) => (
-                <div key={i} className={`h-2 flex-1 ${i % 2 === 0 ? 'bg-emerald-accent/20' : 'bg-black/10 dark:bg-white/10'} animate-pulse`} />
+
+            <div
+              role="img"
+              aria-label={`${recentActive.filter(Boolean).length} of the last ${recentActive.length} days active`}
+              className="mt-4 flex gap-1"
+            >
+              {/* แสดง Streak ของ 7 วันล่าสุด */}
+              {recentActive.map((active, i) => (
+                <div key={i} className={`h-2 flex-1 rounded-full ${active ? "bg-primary" : "bg-line"}`}></div>
               ))}
+              {stats.activeDays.length === 0 && (
+                <div className="h-2 flex-1 rounded-full bg-line"></div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* ── Charts section (2 กล่อง) ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Calorie bar chart skeleton */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6">
-            <div className="flex justify-between items-end mb-8">
-              <div className="space-y-2">
-                <div className="h-4 w-28 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                <div className="h-2.5 w-16 rounded bg-black/5 dark:bg-white/8 animate-pulse" />
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+          {/* Calorie Trend Chart (Custom CSS Bar Chart) */}
+          <div className={cardClass}>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-ink">Calorie intake</h2>
+                <p className="mt-1 text-sm text-muted">Last {timeRange === "7D" ? "7 days" : "30 days"}</p>
               </div>
-              {/* Legend */}
-              <div className="flex gap-3">
-                <div className="h-2.5 w-20 rounded bg-black/5 dark:bg-white/8 animate-pulse" />
-                <div className="h-2.5 w-16 rounded bg-gold-accent/15 animate-pulse" />
+              <div className="flex flex-wrap gap-4 text-sm text-muted">
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-primary"></span> Consumed</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-danger"></span> Over target</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-0 w-3 border-t-2 border-dashed border-secondary"></span> Target</div>
               </div>
             </div>
 
-            {/* แท่งกราฟ skeleton — ความสูงต่างกันเพื่อให้ดู realistic */}
-            <div className="h-48 flex items-end justify-between gap-2 relative">
-              {/* เส้น target line */}
-              <div className="absolute top-[20%] left-0 w-full border-t border-dashed border-gold-accent/15" />
-              {[55, 70, 40, 85, 60, 45, 75].map((h, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center">
+            {/* Chart Area */}
+            <div className="relative flex h-48 items-end justify-between gap-1 sm:gap-2">
+              {/* Target Line Guideline (Assumed around 80% height) */}
+              <div aria-hidden="true" className="absolute left-0 top-[20%] z-0 w-full border-t-2 border-dashed border-secondary/60"></div>
+
+              {data.map((d, i) => {
+                // คำนวณความสูงของแท่งกราฟเทียบกับ Target (สมมติให้ Target อยู่ที่ความสูง 80%)
+                const heightPercent = d.targetCal > 0 ? Math.min((d.calories / d.targetCal) * 80, 100) : 0;
+                const isOver = d.calories > d.targetCal;
+                const isZero = d.calories === 0;
+
+                return (
                   <div
-                    className="w-full max-w-10 bg-black/10 dark:bg-white/10 animate-pulse"
-                    style={{ height: `${h}%` }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="h-5" />
-          </div>
-
-          {/* Protein horizontal bars skeleton */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6">
-            <div className="flex justify-between items-end mb-8">
-              <div className="space-y-2">
-                <div className="h-4 w-28 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                <div className="h-2.5 w-16 rounded bg-black/5 dark:bg-white/8 animate-pulse" />
-              </div>
-              <div className="h-2.5 w-20 rounded bg-emerald-accent/15 animate-pulse" />
-            </div>
-
-            {/* แถวโปรตีน skeleton — ความกว้างต่างกัน */}
-            <div className="h-48 flex flex-col justify-between">
-              {[60, 80, 35, 90, 50, 70, 45].map((w, i) => (
-                <div key={i} className="flex items-center gap-4 py-1">
-                  <div className="w-8 h-2.5 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                  <div className="flex-1 h-3 bg-black/5 dark:bg-white/5 relative overflow-hidden">
+                    key={i}
+                    role="img"
+                    aria-label={`${d.day}: ${d.calories} kcal${isOver ? ", over target" : ""}`}
+                    className="group relative z-10 flex h-full flex-1 flex-col items-center justify-end"
+                  >
+                    {/* Bar */}
                     <div
-                      className="h-full bg-emerald-accent/20 animate-pulse"
-                      style={{ width: `${w}%` }}
-                    />
+                      className={`relative w-full max-w-10 rounded-t-md transition-all duration-500 ease-out motion-reduce:transition-none ${isOver ? "bg-danger" : isZero ? "bg-line" : "bg-primary group-hover:bg-primary-hover"}`}
+                      style={{ height: `${heightPercent}%`, minHeight: isZero ? '4px' : '0' }}
+                    >
+                      {/* Tooltip on Hover */}
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-line bg-surface px-2 py-1 text-xs font-medium text-ink opacity-0 shadow-lift transition-opacity group-hover:opacity-100"
+                      >
+                        {d.calories} kcal
+                      </div>
+                    </div>
+                    {/* Label (Show less labels if 30D to avoid crowding) */}
+                    {(timeRange === "7D" || i % 4 === 0) && (
+                      <span aria-hidden="true" className="absolute -bottom-6 mt-3 text-xs text-muted">{d.day}</span>
+                    )}
                   </div>
-                  <div className="w-10 h-2.5 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                </div>
-              ))}
+                )
+              })}
+            </div>
+            {/* Space for labels */}
+            <div className="h-6"></div>
+          </div>
+
+          {/* Protein Trend Chart (Custom CSS Stacked/Gauge style) */}
+          <div className={cardClass}>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-ink">Protein intake</h2>
+                <p className="mt-1 text-sm text-muted">Last {timeRange === "7D" ? "7 days" : "30 days"}</p>
+              </div>
+              <div className="flex gap-4 text-sm text-muted">
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-secondary"></span> Consumed</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-0.5 bg-ink"></span> Target</div>
+              </div>
+            </div>
+
+            {/* Chart Area */}
+            <div
+              role="region"
+              aria-label="Daily protein intake"
+              tabIndex={0}
+              className={`custom-scrollbar relative flex h-48 flex-col justify-between overflow-y-auto pr-2 ${focusRing}`}
+            >
+              {data.map((d, i) => {
+                const proteinPercent = d.targetPro > 0 ? Math.min((d.protein / d.targetPro) * 100, 100) : 0;
+                // Hide rows with 0 protein in 30D view to save space, or just show them compact
+                if (timeRange === "30D" && d.protein === 0) return null;
+
+                return (
+                  <div key={i} className="group flex cursor-default items-center gap-2 py-1 sm:gap-4">
+                    <span className="w-10 text-right text-xs text-muted transition-colors group-hover:text-ink">{d.day}</span>
+
+                    {/* Horizontal Bar */}
+                    <div aria-hidden="true" className="relative h-3 flex-1 overflow-hidden rounded-full bg-primary-tint">
+                      <div
+                        className="h-full rounded-full bg-secondary transition-all duration-700 ease-out motion-reduce:transition-none"
+                        style={{ width: `${proteinPercent}%` }}
+                      ></div>
+                      {/* Target Marker */}
+                      <div className="absolute right-0 top-0 h-full w-0.5 bg-ink/60"></div>
+                    </div>
+
+                    <span className="w-14 text-right text-sm font-medium text-ink tabular-nums">
+                      {d.protein}g
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
+
         </div>
       </div>
     </div>

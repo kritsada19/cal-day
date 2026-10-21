@@ -29,6 +29,77 @@ type ProfileApiResponse = {
   };
 };
 
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const primaryButton = `inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`;
+const secondaryButton = `inline-flex min-h-11 items-center justify-center rounded-xl bg-primary-tint px-5 py-2.5 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`;
+
+function MetricTile({
+  label,
+  targetLabel,
+  unit,
+  progress,
+  percent,
+  emptyMessage,
+  loading,
+  barClassName,
+  dotClassName,
+}: {
+  label: string;
+  targetLabel: string;
+  unit: string;
+  progress: { consumed: number; target: number } | undefined;
+  percent: number;
+  emptyMessage: string;
+  loading: boolean;
+  barClassName: string;
+  dotClassName: string;
+}) {
+  return (
+    <div className="rounded-xl border border-line bg-canvas p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-medium text-muted">
+          <span aria-hidden="true" className={`h-2 w-2 rounded-full ${dotClassName}`} />
+          {label}
+        </p>
+        <p className="text-sm font-semibold text-ink tabular-nums">{targetLabel}</p>
+      </div>
+
+      {loading ? (
+        <div role="status" className="mt-3">
+          <span className="sr-only">Loading {label.toLowerCase()}...</span>
+          <div className="h-9 w-32 animate-pulse rounded-lg bg-primary-tint motion-reduce:animate-none" />
+        </div>
+      ) : progress ? (
+        <p className="mt-3 text-ink">
+          <span className="text-3xl font-bold tabular-nums">{progress.consumed}</span>
+          <span className="text-sm text-muted tabular-nums">
+            {" "}
+            / {progress.target} {unit}
+          </span>
+        </p>
+      ) : (
+        <p className="mt-3 text-sm leading-6 text-muted">{emptyMessage}</p>
+      )}
+
+      <div
+        role="progressbar"
+        aria-label={`${label} progress`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(percent)}
+        className="mt-4 h-2 overflow-hidden rounded-full bg-primary-tint"
+      >
+        <div
+          className={`h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none ${barClassName}`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [summary, setSummary] = useState<ProfileApiResponse | null>(null);
@@ -111,180 +182,150 @@ export default function DashboardPage() {
   const bmiStatus = summary?.bmiStatus ?? null;
 
   return (
-    <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 relative overflow-hidden bg-[#f8f6f1] dark:bg-obsidian-950">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+    <div className="relative min-h-[85vh] flex-1 overflow-hidden bg-canvas px-4 py-8 text-ink selection:bg-highlight selection:text-ink md:py-12">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-xl max-w-full -translate-x-1/2 rounded-full bg-highlight/40 blur-3xl"
+      />
 
-      <div className="mx-auto max-w-6xl relative">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative mx-auto max-w-280">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] tracking-[0.35em] text-gold-accent font-mono uppercase">
-              Daily dashboard
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[0.2em] text-obsidian-950 dark:text-white">
+            <p className="text-sm font-medium text-muted">Daily dashboard</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">
               Your nutrition overview
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/meals/new"
-              className="inline-flex items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
-            >
+            <Link href="/meals/new" className={primaryButton}>
               Add meal
             </Link>
-            <Link
-              href="/profile"
-              className="inline-flex items-center justify-center border border-black/10 dark:border-white/10 bg-white/70 dark:bg-obsidian-900 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-obsidian-950/70 dark:text-white/70 transition-all duration-300 hover:border-gold-accent/50 hover:text-gold-accent"
-            >
+            <Link href="/profile" className={secondaryButton}>
               View profile
             </Link>
           </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <section className="relative overflow-hidden border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.12),transparent_45%)] pointer-events-none" />
-            <span className="absolute -top-px -left-px h-3 w-3 border-l border-t border-gold-accent" />
-            <span className="absolute -top-px -right-px h-3 w-3 border-r border-t border-gold-accent" />
-            <span className="absolute -bottom-px -left-px h-3 w-3 border-b border-l border-gold-accent" />
-            <span className="absolute -bottom-px -right-px h-3 w-3 border-b border-r border-gold-accent" />
-
-            <div className="flex flex-col gap-6 md:flex-row md:items-center">
-              <div className="flex h-20 w-20 items-center justify-center border border-gold-accent/50 bg-black/5 dark:bg-obsidian-950 text-2xl font-bold text-gold-accent">
+          <section className="rounded-2xl border border-line bg-surface p-6 shadow-soft md:p-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-highlight text-xl font-bold text-ink">
                 {status === "loading" ? "..." : initials}
               </div>
 
-              <div className="flex-1">
-                <p className="text-[10px] tracking-[0.35em] text-obsidian-950/45 dark:text-white/45 font-mono uppercase">
-                  Today&apos;s focus
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[0.18em] text-obsidian-950 dark:text-white">
-                  {status === "loading" ? "LOADING DATA" : displayName}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-muted">Today&apos;s focus</p>
+                <h2 className="mt-1 truncate text-2xl font-semibold tracking-tight text-ink">
+                  {status === "loading" ? "Loading data" : displayName}
                 </h2>
-                <p className="mt-2 text-sm text-obsidian-950/60 dark:text-white/60">
+                <p className="mt-2 text-base leading-7 text-muted">
                   Add meals in natural language and let the app estimate calories and protein for your day.
                 </p>
               </div>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <div className="rounded border border-gold-accent/20 bg-black/5 dark:bg-obsidian-950/70 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Calories</p>
-                  <p className="text-[10px] font-semibold tracking-[0.25em] text-gold-accent">
-                    {nutritionTargets ? `${nutritionTargets.calories} kcal` : "—"}
-                  </p>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-                  <div className="h-full rounded-full bg-gold-accent transition-all" style={{ width: `${calorieProgress}%` }} />
-                </div>
-                <p className="mt-3 text-sm text-obsidian-950/65 dark:text-white/65">
-                  {dailyProgress ? `${dailyProgress.calories.consumed} / ${dailyProgress.calories.target} kcal` : "Complete your profile to unlock your target."}
-                </p>
-              </div>
-
-              <div className="rounded border border-emerald-accent/20 bg-black/5 dark:bg-obsidian-950/70 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Protein</p>
-                  <p className="text-[10px] font-semibold tracking-[0.25em] text-emerald-accent">
-                    {nutritionTargets ? `${nutritionTargets.protein} g` : "—"}
-                  </p>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-                  <div className="h-full rounded-full bg-emerald-accent transition-all" style={{ width: `${proteinProgress}%` }} />
-                </div>
-                <p className="mt-3 text-sm text-obsidian-950/65 dark:text-white/65">
-                  {dailyProgress ? `${dailyProgress.protein.consumed} / ${dailyProgress.protein.target} g` : "Protein goal will appear once your profile is ready."}
-                </p>
-              </div>
+              <MetricTile
+                label="Calories"
+                targetLabel={nutritionTargets ? `${nutritionTargets.calories} kcal` : "—"}
+                unit="kcal"
+                progress={dailyProgress?.calories}
+                percent={calorieProgress}
+                emptyMessage="Complete your profile to unlock your target."
+                loading={!hasLoadedProfile}
+                barClassName="bg-primary"
+                dotClassName="bg-primary"
+              />
+              <MetricTile
+                label="Protein"
+                targetLabel={nutritionTargets ? `${nutritionTargets.protein} g` : "—"}
+                unit="g"
+                progress={dailyProgress?.protein}
+                percent={proteinProgress}
+                emptyMessage="Protein goal will appear once your profile is ready."
+                loading={!hasLoadedProfile}
+                barClassName="bg-secondary"
+                dotClassName="bg-secondary"
+              />
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950/60 p-4">
-                <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Goal</p>
-                <p className="mt-2 text-sm font-semibold text-obsidian-950 dark:text-white">
+            <dl className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-line bg-canvas p-4">
+                <dt className="text-sm text-muted">Goal</dt>
+                <dd className="mt-1 text-base font-semibold text-ink">
                   {profile?.goal ? profile.goal : nutritionTargets?.goalLabel ?? "—"}
-                </p>
+                </dd>
               </div>
-              <div className="rounded border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950/60 p-4">
-                <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">BMI</p>
-                <p className="mt-2 text-sm font-semibold text-obsidian-950 dark:text-white">{bmi ?? "—"}</p>
+              <div className="rounded-xl border border-line bg-canvas p-4">
+                <dt className="text-sm text-muted">BMI</dt>
+                <dd className="mt-1 text-base font-semibold text-ink tabular-nums">{bmi ?? "—"}</dd>
               </div>
-              <div className={`rounded border p-4 ${bmiStatus?.tone || "border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950/60"}`}>
-                <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Status</p>
-                <p className="mt-2 text-sm font-semibold">
+              <div className={`rounded-xl border p-4 ${bmiStatus?.tone || "border-line bg-canvas text-ink"}`}>
+                <dt className="text-sm text-muted">Status</dt>
+                <dd className="mt-1 text-base font-semibold">
                   {bmiStatus?.label ?? "No data"}
-                </p>
+                </dd>
               </div>
-            </div>
+            </dl>
 
-            <div className="mt-6 rounded border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950/60 p-4">
-              <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Personal details</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-6 rounded-xl border border-line bg-canvas p-4 md:p-5">
+              <h3 className="text-base font-semibold text-ink">Personal details</h3>
+              <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Gender</p>
-                  <p className="mt-1 text-sm font-semibold text-obsidian-950 dark:text-white">{profile?.gender || "—"}</p>
+                  <dt className="text-sm text-muted">Gender</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.gender || "—"}</dd>
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Age</p>
-                  <p className="mt-1 text-sm font-semibold text-obsidian-950 dark:text-white">{profile?.age ? `${profile.age} years` : "—"}</p>
+                  <dt className="text-sm text-muted">Age</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.age ? `${profile.age} years` : "—"}</dd>
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Weight</p>
-                  <p className="mt-1 text-sm font-semibold text-obsidian-950 dark:text-white">{profile?.weight ? `${profile.weight} kg` : "—"}</p>
+                  <dt className="text-sm text-muted">Weight</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.weight ? `${profile.weight} kg` : "—"}</dd>
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Height</p>
-                  <p className="mt-1 text-sm font-semibold text-obsidian-950 dark:text-white">{profile?.height ? `${profile.height} cm` : "—"}</p>
+                  <dt className="text-sm text-muted">Height</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.height ? `${profile.height} cm` : "—"}</dd>
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Exercise level</p>
-                  <p className="mt-1 text-sm font-semibold text-obsidian-950 dark:text-white">{profile?.exerciseLevel || "—"}</p>
+                  <dt className="text-sm text-muted">Exercise level</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.exerciseLevel || "—"}</dd>
                 </div>
                 <div>
-                  <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Goal</p>
-                  <p className="mt-1 text-sm font-semibold text-obsidian-950 dark:text-white">{profile?.goal || nutritionTargets?.goalLabel || "—"}</p>
+                  <dt className="text-sm text-muted">Goal</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.goal || nutritionTargets?.goalLabel || "—"}</dd>
                 </div>
-              </div>
+              </dl>
             </div>
           </section>
 
           <aside className="space-y-6">
-            <div className="relative overflow-hidden border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6">
-              <span className="absolute -top-px -left-px h-2.5 w-2.5 border-l border-t border-gold-accent" />
-              <span className="absolute -bottom-px -right-px h-2.5 w-2.5 border-b border-r border-gold-accent" />
-
-              <p className="text-[10px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Quick insights</p>
-              <div className="mt-4 space-y-3 text-sm text-obsidian-950/70 dark:text-white/70">
-                <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-2">
-                  <span className="text-obsidian-950/45 dark:text-white/45">BMR</span>
-                  <span className="font-semibold text-obsidian-950 dark:text-white">{nutritionTargets?.bmr ?? "—"}</span>
+            <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+              <h2 className="text-lg font-semibold text-ink">Quick insights</h2>
+              <dl className="mt-3 divide-y divide-line text-base">
+                <div className="flex items-center justify-between py-3">
+                  <dt className="text-muted">BMR</dt>
+                  <dd className="font-semibold text-ink tabular-nums">{nutritionTargets?.bmr ?? "—"}</dd>
                 </div>
-                <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-2">
-                  <span className="text-obsidian-950/45 dark:text-white/45">TDEE</span>
-                  <span className="font-semibold text-obsidian-950 dark:text-white">{nutritionTargets?.tdee ?? "—"}</span>
+                <div className="flex items-center justify-between py-3">
+                  <dt className="text-muted">TDEE</dt>
+                  <dd className="font-semibold text-ink tabular-nums">{nutritionTargets?.tdee ?? "—"}</dd>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-obsidian-950/45 dark:text-white/45">Profile</span>
-                  <span className="font-semibold text-obsidian-950 dark:text-white">
+                <div className="flex items-center justify-between py-3 pb-0">
+                  <dt className="text-muted">Profile</dt>
+                  <dd className="font-semibold text-ink">
                     {hasLoadedProfile ? (summary ? "Ready" : "Needs setup") : "Loading"}
-                  </span>
+                  </dd>
                 </div>
-              </div>
+              </dl>
             </div>
 
-            <div className="relative overflow-hidden border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6">
-              <span className="absolute -top-px -left-px h-2.5 w-2.5 border-l border-t border-gold-accent" />
-              <span className="absolute -bottom-px -right-px h-2.5 w-2.5 border-b border-r border-gold-accent" />
-
-              <p className="text-[10px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Next step</p>
-              <p className="mt-3 text-sm leading-7 text-obsidian-950/70 dark:text-white/70">
+            <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+              <h2 className="text-lg font-semibold text-ink">Next step</h2>
+              <p className="mt-3 text-base leading-7 text-muted">
                 Add your personal details to unlock a complete daily nutrition plan and keep your dashboard meaningful.
               </p>
-              <Link
-                href="/profile/form"
-                className="mt-5 inline-flex items-center justify-center border border-gold-accent/40 bg-black/5 dark:bg-obsidian-950 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/10 hover:text-obsidian-950 dark:hover:text-white"
-              >
+              <Link href="/profile/form" className={`mt-5 ${primaryButton}`}>
                 Fill profile
               </Link>
             </div>

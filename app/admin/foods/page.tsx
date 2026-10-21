@@ -56,6 +56,13 @@ interface FoodsApiResponse {
   pagination: PaginationMeta;
 }
 
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const fieldClass = `min-h-11 rounded-xl border border-secondary bg-surface px-4 text-base text-ink placeholder:text-muted transition-colors duration-200 hover:border-primary focus:border-primary ${focusRing}`;
+const tintButton = `inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary-tint px-4 text-sm font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
+const pageButton = `flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-primary-tint text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 ${focusRing}`;
+
 export default function AdminFoodsPage() {
   const { data: session, status } = useSession();
 
@@ -117,12 +124,13 @@ export default function AdminFoodsPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-[#f8f6f1] dark:bg-obsidian-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-gold-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-mono tracking-widest text-gold-accent uppercase">
-            Loading Admin Control Center...
-          </p>
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas">
+        <div role="status" className="flex flex-col items-center gap-4">
+          <div
+            aria-hidden="true"
+            className="h-10 w-10 animate-spin rounded-full border-2 border-line border-t-primary motion-reduce:animate-none"
+          />
+          <p className="text-base text-muted">Loading admin control center...</p>
         </div>
       </div>
     );
@@ -130,20 +138,20 @@ export default function AdminFoodsPage() {
 
   if (status === "unauthenticated" || session?.user?.role !== "ADMIN") {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-[#f8f6f1] dark:bg-obsidian-950 px-4 py-16">
-        <div className="max-w-md w-full text-center p-8 bg-white/80 dark:bg-obsidian-900 border border-red-500/30 relative">
-          <span className="absolute -top-px -left-px w-2 h-2 border-t border-l border-red-500" />
-          <span className="absolute -bottom-px -right-px w-2 h-2 border-b border-r border-red-500" />
-          <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-obsidian-950 dark:text-white uppercase tracking-wider mb-2">
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-16">
+        <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center shadow-soft">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-danger/10 text-danger">
+            <Shield className="h-8 w-8" strokeWidth={1.75} aria-hidden="true" />
+          </div>
+          <h2 className="mb-2 text-2xl font-semibold tracking-tight text-ink">
             Access Denied
           </h2>
-          <p className="text-sm text-obsidian-950/70 dark:text-white/70 mb-6">
+          <p className="mb-6 text-base leading-7 text-muted">
             You do not have administrative permissions to view this section.
           </p>
           <Link
             href="/"
-            className="inline-block px-6 py-2.5 bg-obsidian-950 text-white dark:bg-white dark:text-obsidian-950 font-mono text-xs uppercase tracking-widest hover:bg-gold-accent dark:hover:bg-gold-accent dark:hover:text-obsidian-950 transition-colors"
+            className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-2.5 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
           >
             Return to Safety
           </Link>
@@ -157,23 +165,24 @@ export default function AdminFoodsPage() {
   const totalPageProtein = foodEntries.reduce((acc, curr) => acc + (curr.protein || 0), 0);
 
   return (
-    <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-14 relative overflow-hidden bg-[#f8f6f1] dark:bg-obsidian-950 text-obsidian-950 dark:text-white transition-colors duration-300">
-      {/* Subtle Background Gradients */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.06),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] pointer-events-none" />
+    <div className="relative min-h-[85vh] flex-1 overflow-hidden bg-canvas px-4 py-8 text-ink selection:bg-highlight selection:text-ink md:py-12">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-xl max-w-full -translate-x-1/2 rounded-full bg-highlight/40 blur-3xl"
+      />
 
-      <div className="max-w-7xl mx-auto relative">
+      <div className="relative mx-auto max-w-280">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.3em] text-gold-accent">
-              <Shield className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2 text-sm font-medium text-muted">
+              <Shield className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               <span>Admin Management</span>
             </div>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight">
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight">
               Food Directory
             </h1>
-            <p className="text-xs text-obsidian-950/60 dark:text-white/60 mt-1">
+            <p className="mt-1 text-base text-muted">
               Monitor, filter, and search system food entries across all meals.
             </p>
           </div>
@@ -182,10 +191,12 @@ export default function AdminFoodsPage() {
             <button
               onClick={() => fetchFoodEntries()}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-mono uppercase tracking-wider bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 hover:border-gold-accent dark:hover:border-gold-accent transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className={tintButton}
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${loading ? "animate-spin text-gold-accent" : ""}`}
+                className={`h-4 w-4 ${loading ? "animate-spin motion-reduce:animate-none" : ""}`}
+                strokeWidth={1.75}
+                aria-hidden="true"
               />
               <span>Refresh</span>
             </button>
@@ -193,70 +204,56 @@ export default function AdminFoodsPage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="p-5 bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 relative group">
-            <span className="absolute -top-px -left-px w-1.5 h-1.5 border-t border-l border-gold-accent" />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-obsidian-950/60 dark:text-white/60">
-                  Total Food Entries
-                </p>
-                <p className="text-2xl font-bold mt-1 font-mono">{pagination.total}</p>
-              </div>
-              <div className="w-10 h-10 flex items-center justify-center bg-gold-accent/10 border border-gold-accent/30 text-gold-accent">
-                <Utensils className="w-5 h-5" />
-              </div>
+        <dl className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <div>
+              <dt className="text-sm text-muted">Total Food Entries</dt>
+              <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">{pagination.total}</dd>
+            </div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-tint text-primary">
+              <Utensils className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             </div>
           </div>
 
-          <div className="p-5 bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 relative group">
-            <span className="absolute -top-px -left-px w-1.5 h-1.5 border-t border-l border-amber-500" />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-obsidian-950/60 dark:text-white/60">
-                  Page Calories
-                </p>
-                <p className="text-2xl font-bold mt-1 font-mono text-amber-600 dark:text-amber-400">
-                  {Math.round(totalPageCalories).toLocaleString()} kcal
-                </p>
-              </div>
-              <div className="w-10 h-10 flex items-center justify-center bg-amber-500/10 border border-amber-500/30 text-amber-500">
-                <Flame className="w-5 h-5" />
-              </div>
+          <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <div>
+              <dt className="text-sm text-muted">Page Calories</dt>
+              <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-primary">
+                {Math.round(totalPageCalories).toLocaleString()} <span className="text-base font-medium text-muted">kcal</span>
+              </dd>
+            </div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-tint text-primary">
+              <Flame className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             </div>
           </div>
 
-          <div className="p-5 bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 relative group">
-            <span className="absolute -top-px -left-px w-1.5 h-1.5 border-t border-l border-emerald-500" />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-obsidian-950/60 dark:text-white/60">
-                  Page Protein
-                </p>
-                <p className="text-2xl font-bold mt-1 font-mono text-emerald-600 dark:text-emerald-400">
-                  {Math.round(totalPageProtein).toLocaleString()} g
-                </p>
-              </div>
-              <div className="w-10 h-10 flex items-center justify-center bg-emerald-500/10 border border-emerald-500/30 text-emerald-500">
-                <Dumbbell className="w-5 h-5" />
-              </div>
+          <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <div>
+              <dt className="text-sm text-muted">Page Protein</dt>
+              <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">
+                {Math.round(totalPageProtein).toLocaleString()} <span className="text-base font-medium text-muted">g</span>
+              </dd>
+            </div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-highlight text-ink">
+              <Dumbbell className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             </div>
           </div>
-        </div>
+        </dl>
 
         {/* Filter and Search Bar */}
-        <div className="p-4 bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 mb-6 flex flex-col md:flex-row gap-3 justify-between items-center">
+        <div className="mb-6 flex flex-col items-stretch justify-between gap-3 rounded-2xl border border-line bg-surface p-4 shadow-soft md:flex-row md:items-center">
           <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-obsidian-950/40 dark:text-white/40" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" strokeWidth={1.75} aria-hidden="true" />
             <input
               type="text"
+              aria-label="Search food entries"
               placeholder="Search by food name, user, or email..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-9 pr-8 py-2 text-xs bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 focus:border-gold-accent focus:outline-none transition-colors"
+              className={`${fieldClass} w-full pl-10 pr-12`}
             />
             {search && (
               <button
@@ -264,29 +261,31 @@ export default function AdminFoodsPage() {
                   setSearch("");
                   setPage(1);
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-obsidian-950/40 dark:text-white/40 hover:text-gold-accent cursor-pointer"
+                aria-label="Clear search"
+                className={`absolute right-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-200 hover:text-primary ${focusRing}`}
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               </button>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+          <div className="flex w-full flex-wrap items-center justify-end gap-3 md:w-auto">
             <div className="flex items-center gap-2">
-              <Filter className="w-3.5 h-3.5 text-gold-accent" />
-              <span className="text-[10px] font-mono uppercase tracking-wider text-obsidian-950/60 dark:text-white/60">
+              <Filter className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+              <span className="text-sm font-medium text-muted">
                 Filters:
               </span>
             </div>
 
             {/* Meal Filter */}
             <select
+              aria-label="Filter by meal type"
               value={mealFilter}
               onChange={(e) => {
                 setMealFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-3 py-2 text-xs bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 focus:border-gold-accent focus:outline-none transition-colors cursor-pointer"
+              className={`${fieldClass} cursor-pointer`}
             >
               <option value="">All Meals</option>
               <option value="BREAKFAST">Breakfast</option>
@@ -299,11 +298,14 @@ export default function AdminFoodsPage() {
 
         {/* Error Notification */}
         {error && (
-          <div className="p-4 mb-6 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center justify-between">
+          <div
+            role="alert"
+            className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-danger/30 bg-danger/10 p-4 text-sm font-medium text-danger"
+          >
             <span>{error}</span>
             <button
               onClick={() => fetchFoodEntries()}
-              className="underline font-mono uppercase text-[10px] hover:text-red-500 cursor-pointer"
+              className={`min-h-11 cursor-pointer rounded-lg px-3 text-sm font-semibold underline underline-offset-4 ${focusRing}`}
             >
               Retry
             </button>
@@ -311,52 +313,54 @@ export default function AdminFoodsPage() {
         )}
 
         {/* Food Table / Grid */}
-        <div className="bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 overflow-hidden relative">
-          <span className="absolute -top-px -left-px w-2 h-2 border-t border-l border-gold-accent" />
-          <span className="absolute -bottom-px -right-px w-2 h-2 border-b border-r border-gold-accent" />
-
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
           {loading ? (
-            <div className="p-12 text-center text-xs font-mono tracking-widest text-gold-accent uppercase flex items-center justify-center gap-3">
-              <RefreshCw className="w-4 h-4 animate-spin" />
+            <div role="status" className="flex items-center justify-center gap-3 p-12 text-base text-muted">
+              <RefreshCw className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.75} aria-hidden="true" />
               <span>Fetching food records...</span>
             </div>
           ) : foodEntries.length === 0 ? (
-            <div className="p-12 text-center text-obsidian-950/60 dark:text-white/60 text-xs font-mono">
+            <div className="p-12 text-center text-base text-muted">
               No food entries found matching the search criteria.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+            <div
+              role="region"
+              aria-label="Food entries table"
+              tabIndex={0}
+              className={`overflow-x-auto ${focusRing}`}
+            >
+              <table className="w-full min-w-5xl border-collapse text-left text-base">
                 <thead>
-                  <tr className="border-b border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 font-mono text-[10px] uppercase tracking-widest text-obsidian-950/70 dark:text-white/70">
-                    <th className="p-4">Food Item</th>
-                    <th className="p-4">Meal Type</th>
-                    <th className="p-4">Amount</th>
-                    <th className="p-4">Calories</th>
-                    <th className="p-4">Protein</th>
-                    <th className="p-4">Logged By</th>
-                    <th className="p-4">Date</th>
-                    <th className="p-4 text-right">Actions</th>
+                  <tr className="border-b border-line bg-canvas text-sm font-semibold text-muted">
+                    <th scope="col" className="p-4">Food Item</th>
+                    <th scope="col" className="p-4">Meal Type</th>
+                    <th scope="col" className="p-4">Amount</th>
+                    <th scope="col" className="p-4">Calories</th>
+                    <th scope="col" className="p-4">Protein</th>
+                    <th scope="col" className="p-4">Logged By</th>
+                    <th scope="col" className="p-4">Date</th>
+                    <th scope="col" className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/5 dark:divide-white/5">
+                <tbody className="divide-y divide-line">
                   {foodEntries.map((item) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-gold-accent/5 transition-colors group cursor-pointer"
+                      className="cursor-pointer transition-colors duration-200 hover:bg-primary-tint"
                       onClick={() => setSelectedFood(item)}
                     >
                       {/* Food Info */}
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 flex items-center justify-center bg-gold-accent/10 border border-gold-accent/30 text-gold-accent font-mono font-bold text-xs shrink-0">
-                            <Utensils className="w-4 h-4" />
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-tint text-primary">
+                            <Utensils className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold truncate text-obsidian-950 dark:text-white group-hover:text-gold-accent transition-colors">
+                            <p className="truncate font-semibold text-ink">
                               {item.foodName}
                             </p>
-                            <p className="text-[11px] text-obsidian-950/60 dark:text-white/60 truncate font-mono">
+                            <p className="truncate text-sm text-muted">
                               ID: #{item.id}
                             </p>
                           </div>
@@ -365,46 +369,46 @@ export default function AdminFoodsPage() {
 
                       {/* Meal Type */}
                       <td className="p-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase bg-black/5 dark:bg-white/5 text-obsidian-950/70 dark:text-white/70 border border-black/10 dark:border-white/10">
+                        <span className="inline-flex min-h-7 items-center rounded-full border border-line px-3 text-sm font-semibold text-muted">
                           {item.meal?.mealType || "N/A"}
                         </span>
                       </td>
 
                       {/* Amount */}
-                      <td className="p-4 font-mono text-[11px]">
+                      <td className="p-4 text-sm tabular-nums text-ink">
                         {item.amount} {item.unit}
                       </td>
 
                       {/* Calories */}
-                      <td className="p-4 font-mono font-semibold text-amber-600 dark:text-amber-400">
+                      <td className="p-4 font-semibold tabular-nums text-primary">
                         {item.calories} kcal
                       </td>
 
                       {/* Protein */}
-                      <td className="p-4 font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                      <td className="p-4 font-semibold tabular-nums text-ink">
                         {item.protein} g
                       </td>
 
                       {/* Logged By */}
                       <td className="p-4">
                         {item.meal?.user ? (
-                          <div className="flex flex-col text-[11px]">
-                            <span className="font-semibold text-obsidian-950 dark:text-white">
+                          <div className="flex min-w-0 flex-col text-sm">
+                            <span className="font-semibold text-ink">
                               {item.meal.user.name || "Unnamed User"}
                             </span>
-                            <span className="text-[10px] font-mono text-obsidian-950/50 dark:text-white/50 truncate">
+                            <span className="truncate text-sm text-muted">
                               {item.meal.user.email}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[10px] font-mono text-obsidian-950/40 dark:text-white/40 italic">
+                          <span className="text-sm italic text-muted">
                             Unknown
                           </span>
                         )}
                       </td>
 
                       {/* Date */}
-                      <td className="p-4 font-mono text-[11px] text-obsidian-950/60 dark:text-white/60">
+                      <td className="p-4 text-sm tabular-nums text-muted">
                         {item.meal?.createdAt
                           ? new Date(item.meal.createdAt).toLocaleDateString("en-US", {
                             year: "numeric",
@@ -421,7 +425,7 @@ export default function AdminFoodsPage() {
                             e.stopPropagation();
                             setSelectedFood(item);
                           }}
-                          className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border border-black/10 dark:border-white/10 hover:border-gold-accent hover:text-gold-accent transition-colors bg-white/50 dark:bg-obsidian-950 cursor-pointer"
+                          className={tintButton}
                         >
                           Details
                         </button>
@@ -435,8 +439,8 @@ export default function AdminFoodsPage() {
 
           {/* Pagination Controls */}
           {pagination.totalPages > 1 && (
-            <div className="p-4 border-t border-black/10 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
-              <span className="text-obsidian-950/60 dark:text-white/60">
+            <div className="flex flex-col items-center justify-between gap-3 border-t border-line p-4 text-sm sm:flex-row">
+              <span className="text-muted">
                 Page {pagination.page} of {pagination.totalPages} ({pagination.total} total items)
               </span>
 
@@ -444,19 +448,21 @@ export default function AdminFoodsPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1 || loading}
-                  className="p-2 bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 disabled:opacity-40 hover:border-gold-accent transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  aria-label="Previous page"
+                  className={pageButton}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                 </button>
-                <span className="px-3 py-1 bg-gold-accent/10 border border-gold-accent/30 text-gold-accent font-bold">
+                <span aria-current="page" className="flex h-11 min-w-11 items-center justify-center rounded-xl bg-highlight px-3 font-bold tabular-nums text-ink">
                   {page}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                   disabled={page >= pagination.totalPages || loading}
-                  className="p-2 bg-white dark:bg-obsidian-950 border border-black/10 dark:border-white/10 disabled:opacity-40 hover:border-gold-accent transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  aria-label="Next page"
+                  className={pageButton}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -466,80 +472,75 @@ export default function AdminFoodsPage() {
 
       {/* Food Details Modal */}
       {selectedFood && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-[#f8f6f1] dark:bg-obsidian-900 border border-gold-accent/40 max-w-lg w-full p-6 relative shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <span className="absolute -top-px -left-px w-3 h-3 border-t-2 border-l-2 border-gold-accent" />
-            <span className="absolute -bottom-px -right-px w-3 h-3 border-b-2 border-r-2 border-gold-accent" />
-
-            <div className="flex items-center justify-between pb-4 border-b border-black/10 dark:border-white/10">
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="food-details-title"
+        >
+          <div className="relative w-full max-w-lg rounded-2xl border border-line bg-surface p-6 shadow-lift">
+            <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 flex items-center justify-center bg-gold-accent/15 border border-gold-accent/40 text-gold-accent font-mono font-bold text-sm">
-                  <Utensils className="w-5 h-5" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-tint text-primary">
+                  <Utensils className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-base text-obsidian-950 dark:text-white">
+                <div className="min-w-0">
+                  <h3 id="food-details-title" className="truncate text-lg font-semibold tracking-tight text-ink">
                     {selectedFood.foodName}
                   </h3>
-                  <p className="text-xs font-mono text-obsidian-950/60 dark:text-white/60">
+                  <p className="text-sm text-muted">
                     ID: #{selectedFood.id} &bull; {selectedFood.meal?.mealType}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedFood(null)}
-                className="text-obsidian-950/50 dark:text-white/50 hover:text-gold-accent transition-colors cursor-pointer"
+                aria-label="Close dialog"
+                className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors duration-200 hover:bg-primary-tint hover:text-ink ${focusRing}`}
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
               </button>
             </div>
 
-            <div className="py-4 space-y-4 text-xs font-mono">
+            <div className="space-y-5 py-4">
               {/* Nutritional Breakdown Grid */}
-              <div className="grid grid-cols-2 gap-3 p-3 bg-white/50 dark:bg-obsidian-950 border border-black/5 dark:border-white/5">
+              <dl className="grid grid-cols-2 gap-4 rounded-xl border border-line bg-canvas p-4">
                 <div>
-                  <span className="text-[10px] uppercase text-obsidian-950/50 dark:text-white/50 block">
-                    Serving Amount
-                  </span>
-                  <span className="font-bold text-obsidian-950 dark:text-white mt-0.5 block">
+                  <dt className="text-sm text-muted">Serving Amount</dt>
+                  <dd className="mt-0.5 text-base font-semibold tabular-nums text-ink">
                     {selectedFood.amount} {selectedFood.unit}
-                  </span>
+                  </dd>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase text-obsidian-950/50 dark:text-white/50 block">
-                    Meal Type
-                  </span>
-                  <span className="font-bold text-gold-accent mt-0.5 block">
+                  <dt className="text-sm text-muted">Meal Type</dt>
+                  <dd className="mt-0.5 text-base font-semibold text-ink">
                     {selectedFood.meal?.mealType || "N/A"}
-                  </span>
+                  </dd>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase text-obsidian-950/50 dark:text-white/50 block">
-                    Calories
-                  </span>
-                  <span className="font-bold text-amber-600 dark:text-amber-400 mt-0.5 block">
+                  <dt className="text-sm text-muted">Calories</dt>
+                  <dd className="mt-0.5 text-base font-semibold tabular-nums text-primary">
                     {selectedFood.calories} kcal
-                  </span>
+                  </dd>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase text-obsidian-950/50 dark:text-white/50 block">
-                    Protein
-                  </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                  <dt className="text-sm text-muted">Protein</dt>
+                  <dd className="mt-0.5 text-base font-semibold tabular-nums text-ink">
                     {selectedFood.protein} g
-                  </span>
+                  </dd>
                 </div>
-              </div>
+              </dl>
 
               {/* User Metadata */}
               <div>
-                <h4 className="text-[10px] uppercase tracking-widest text-gold-accent mb-2 flex items-center gap-1.5">
-                  <UserIcon className="w-3.5 h-3.5" />
+                <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
+                  <UserIcon className="h-4 w-4 text-primary" strokeWidth={1.75} aria-hidden="true" />
                   <span>Logged User & Timestamp</span>
                 </h4>
-                <div className="p-3 bg-white/50 dark:bg-obsidian-950 border border-black/5 dark:border-white/5 space-y-1.5 text-[11px]">
+                <div className="space-y-1.5 rounded-xl border border-line bg-canvas p-4 text-base text-muted">
                   <div>
                     User:{" "}
-                    <strong className="text-obsidian-950 dark:text-white">
+                    <strong className="font-semibold text-ink">
                       {selectedFood.meal?.user?.name || "Unnamed User"}
                     </strong>{" "}
                     ({selectedFood.meal?.user?.email})
@@ -554,10 +555,10 @@ export default function AdminFoodsPage() {
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="flex justify-end pt-2">
               <button
                 onClick={() => setSelectedFood(null)}
-                className="px-5 py-2 text-xs font-mono uppercase bg-obsidian-950 text-white dark:bg-white dark:text-obsidian-950 hover:bg-gold-accent dark:hover:bg-gold-accent dark:hover:text-obsidian-950 transition-colors cursor-pointer"
+                className={`inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-primary px-6 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
               >
                 Close
               </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { logger } from "@/lib/logger";
@@ -27,6 +28,15 @@ interface AnalyticsResponse {
   weeklyData: DailyData[];
   stats: AnalyticsStats;
 }
+
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const rangeButton = (active: boolean) =>
+  `min-h-11 cursor-pointer rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${active ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"
+  }`;
+
+const cardClass = "rounded-2xl border border-line bg-surface p-6 shadow-soft";
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<"7D" | "30D">("7D");
@@ -109,149 +119,159 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f6f1] dark:bg-obsidian-950 flex items-center justify-center">
-        <div className="text-gold-accent font-mono text-sm tracking-widest animate-pulse">LOADING ANALYTICS...</div>
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4">
+        <p role="status" className="animate-pulse text-base text-muted motion-reduce:animate-none">
+          Loading analytics...
+        </p>
       </div>
     );
   }
 
   if (status === "unauthenticated") {
     return (
-      <div className="min-h-screen bg-[#f8f6f1] dark:bg-obsidian-950 flex flex-col items-center justify-center p-4">
-        <h2 className="text-obsidian-950 dark:text-white text-xl font-bold tracking-widest mb-4">RESTRICTED ACCESS</h2>
-        <p className="text-obsidian-950/50 dark:text-white/50 text-sm mb-8 font-mono">PLEASE LOG IN TO VIEW ANALYTICS</p>
-        <a href="/signin" className="px-6 py-2 border border-gold-accent text-gold-accent hover:bg-gold-accent hover:text-black transition-colors text-xs font-bold tracking-widest">
-          SIGN IN
-        </a>
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
+        <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center shadow-soft">
+          <h2 className="text-2xl font-semibold tracking-tight text-ink">Restricted access</h2>
+          <p className="mt-3 text-base leading-7 text-muted">Please log in to view analytics</p>
+          <Link
+            href="/signin"
+            className={`mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
+          >
+            Sign in
+          </Link>
+        </div>
       </div>
     );
   }
 
+  const recentActive = stats.activeDays.slice(-7);
+  const isUnderTarget = stats.averageCalories <= stats.targetCal;
+
   return (
-    <div className="min-h-screen bg-[#f8f6f1] dark:bg-obsidian-950 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="relative min-h-[85vh] flex-1 bg-canvas px-4 py-8 text-ink selection:bg-highlight selection:text-ink md:py-12">
+      <div className="mx-auto max-w-280 space-y-8">
 
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-[0.25em] text-obsidian-950 dark:text-white font-sans uppercase flex items-center gap-3">
-              {/* ตกแต่งด้วยไอคอนสไตล์ Geometric */}
-              <span className="w-4 h-4 bg-gold-accent flex items-center justify-center rotate-45">
-                <span className="w-2 h-2 bg-[#f8f6f1] dark:bg-obsidian-950"></span>
-              </span>
-              Analytics
-            </h1>
-            <p className="text-[10px] font-mono tracking-widest text-gold-accent mt-2">
-              PERFORMANCE OVERVIEW
-            </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-ink">Analytics</h1>
+            <p className="mt-1 text-sm font-medium text-muted">Performance overview</p>
           </div>
 
           {/* Time Range Selector */}
-          <div className="flex items-center border border-black/10 dark:border-white/10 bg-white/70 dark:bg-obsidian-900 p-1">
+          <div className="inline-flex rounded-xl bg-primary-tint p-1">
             <button
               onClick={() => setTimeRange("7D")}
-              className={`px-4 py-1.5 text-[10px] font-mono tracking-widest transition-all duration-300 ${timeRange === "7D" ? "bg-gold-accent text-black font-bold" : "text-obsidian-950/50 dark:text-white/50 hover:text-obsidian-950 dark:hover:text-white"}`}
+              aria-pressed={timeRange === "7D"}
+              className={rangeButton(timeRange === "7D")}
             >
-              7 DAYS
+              7 days
             </button>
             <button
               onClick={() => setTimeRange("30D")}
-              className={`px-4 py-1.5 text-[10px] font-mono tracking-widest transition-all duration-300 ${timeRange === "30D" ? "bg-gold-accent text-black font-bold" : "text-obsidian-950/50 dark:text-white/50 hover:text-obsidian-950 dark:hover:text-white"}`}
+              aria-pressed={timeRange === "30D"}
+              className={rangeButton(timeRange === "30D")}
             >
-              30 DAYS
+              30 days
             </button>
           </div>
         </div>
 
         {/* Highlights / Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Card 1: Average Calories */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6 group overflow-hidden">
-            <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold-accent"></span>
-            <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold-accent"></span>
-
-            <p className="text-[10px] font-mono tracking-[0.3em] text-obsidian-950/50 dark:text-white/50 mb-4">AVG CALORIES</p>
+          <div className={cardClass}>
+            <p className="mb-3 text-sm font-medium text-muted">Avg calories</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-obsidian-950 dark:text-white tracking-wider">{stats.averageCalories}</span>
-              <span className="text-xs text-obsidian-950/40 dark:text-white/40 font-mono">kcal/day</span>
+              <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.averageCalories}</span>
+              <span className="text-sm text-muted">kcal/day</span>
             </div>
 
             {/* Status Indicator */}
-            <div className="mt-4 flex items-center gap-2 text-xs font-mono">
-              {stats.averageCalories <= stats.targetCal ? (
+            <p className="mt-4 flex items-center gap-2 text-sm">
+              {isUnderTarget ? (
                 <>
-                  <span className="text-emerald-accent text-glow-emerald">↓ {Math.abs(stats.targetCal - stats.averageCalories)} kcal</span>
-                  <span className="text-obsidian-950/30 dark:text-white/30">UNDER TARGET</span>
+                  <span className="font-semibold text-primary tabular-nums">↓ {Math.abs(stats.targetCal - stats.averageCalories)} kcal</span>
+                  <span className="text-muted">Under target</span>
                 </>
               ) : (
                 <>
-                  <span className="text-red-400">↑ {stats.averageCalories - stats.targetCal} kcal</span>
-                  <span className="text-obsidian-950/30 dark:text-white/30">OVER TARGET</span>
+                  <span className="font-semibold text-danger tabular-nums">↑ {stats.averageCalories - stats.targetCal} kcal</span>
+                  <span className="text-muted">Over target</span>
                 </>
               )}
-            </div>
+            </p>
           </div>
 
           {/* Card 2: Consistency Score */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6 group overflow-hidden">
-            <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold-accent"></span>
-            <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold-accent"></span>
-
-            <p className="text-[10px] font-mono tracking-[0.3em] text-obsidian-950/50 dark:text-white/50 mb-4">CONSISTENCY SCORE</p>
+          <div className={cardClass}>
+            <p className="mb-3 text-sm font-medium text-muted">Consistency score</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gold-accent text-glow-gold tracking-wider">{stats.consistencyScore}</span>
-              <span className="text-xs text-gold-accent/40 font-mono">%</span>
+              <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.consistencyScore}</span>
+              <span className="text-sm text-muted">%</span>
             </div>
 
             {/* Simple Progress Line */}
-            <div className="w-full h-1 bg-black/10 dark:bg-white/5 mt-4 relative">
-              <div className="absolute top-0 left-0 h-full bg-gold-accent shadow-glow-gold transition-all duration-1000" style={{ width: `${stats.consistencyScore}%` }}></div>
+            <div
+              role="progressbar"
+              aria-label="Consistency score"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(stats.consistencyScore)}
+              className="mt-4 h-2 w-full overflow-hidden rounded-full bg-primary-tint"
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-1000 motion-reduce:transition-none"
+                style={{ width: `${stats.consistencyScore}%` }}
+              ></div>
             </div>
           </div>
 
           {/* Card 3: Current Streak */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6 group overflow-hidden">
-            <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold-accent"></span>
-            <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold-accent"></span>
-
-            <p className="text-[10px] font-mono tracking-[0.3em] text-obsidian-950/50 dark:text-white/50 mb-4">CURRENT STREAK</p>
+          <div className={cardClass}>
+            <p className="mb-3 text-sm font-medium text-muted">Current streak</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-obsidian-950 dark:text-white tracking-wider">{stats.currentStreak}</span>
-              <span className="text-xs text-obsidian-950/40 dark:text-white/40 font-mono">DAYS</span>
+              <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.currentStreak}</span>
+              <span className="text-sm text-muted">days</span>
             </div>
 
-            <div className="mt-4 flex gap-1">
+            <div
+              role="img"
+              aria-label={`${recentActive.filter(Boolean).length} of the last ${recentActive.length} days active`}
+              className="mt-4 flex gap-1"
+            >
               {/* แสดง Streak ของ 7 วันล่าสุด */}
-              {stats.activeDays.slice(-7).map((active, i) => (
-                <div key={i} className={`h-2 flex-1 ${active ? 'bg-emerald-accent shadow-glow-emerald' : 'bg-black/10 dark:bg-white/10'}`}></div>
+              {recentActive.map((active, i) => (
+                <div key={i} className={`h-2 flex-1 rounded-full ${active ? "bg-primary" : "bg-line"}`}></div>
               ))}
               {stats.activeDays.length === 0 && (
-                <div className="h-2 flex-1 bg-black/10 dark:bg-white/10"></div>
+                <div className="h-2 flex-1 rounded-full bg-line"></div>
               )}
             </div>
           </div>
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
           {/* Calorie Trend Chart (Custom CSS Bar Chart) */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6">
-            <div className="flex justify-between items-end mb-8">
+          <div className={cardClass}>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold tracking-widest text-obsidian-950 dark:text-white uppercase">Calorie Intake</h3>
-                <p className="text-[10px] font-mono text-obsidian-950/40 dark:text-white/40 mt-1">LAST {timeRange}</p>
+                <h2 className="text-lg font-semibold text-ink">Calorie intake</h2>
+                <p className="mt-1 text-sm text-muted">Last {timeRange === "7D" ? "7 days" : "30 days"}</p>
               </div>
-              <div className="flex gap-4 text-[10px] font-mono text-obsidian-950/60 dark:text-white/60">
-                <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-black/20 dark:bg-white/20"></span> Consumed</div>
-                <div className="flex items-center gap-1.5"><span className="w-2 h-0.5 bg-gold-accent"></span> Target</div>
+              <div className="flex flex-wrap gap-4 text-sm text-muted">
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-primary"></span> Consumed</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-danger"></span> Over target</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-0 w-3 border-t-2 border-dashed border-secondary"></span> Target</div>
               </div>
             </div>
 
             {/* Chart Area */}
-            <div className="h-48 flex items-end justify-between gap-1 sm:gap-2 relative">
+            <div className="relative flex h-48 items-end justify-between gap-1 sm:gap-2">
               {/* Target Line Guideline (Assumed around 80% height) */}
-              <div className="absolute top-[20%] left-0 w-full border-t border-dashed border-gold-accent/30 z-0"></div>
+              <div aria-hidden="true" className="absolute left-0 top-[20%] z-0 w-full border-t-2 border-dashed border-secondary/60"></div>
 
               {data.map((d, i) => {
                 // คำนวณความสูงของแท่งกราฟเทียบกับ Target (สมมติให้ Target อยู่ที่ความสูง 80%)
@@ -260,68 +280,77 @@ export default function AnalyticsPage() {
                 const isZero = d.calories === 0;
 
                 return (
-                  <div key={i} className="relative flex flex-col items-center flex-1 z-10 group">
-                    {/* Tooltip on Hover */}
-                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-obsidian-950 border border-black/20 dark:border-white/20 px-2 py-1 text-[10px] font-mono text-obsidian-950 dark:text-white pointer-events-none whitespace-nowrap z-20">
-                      {d.calories} kcal
-                    </div>
-
+                  <div
+                    key={i}
+                    role="img"
+                    aria-label={`${d.day}: ${d.calories} kcal${isOver ? ", over target" : ""}`}
+                    className="group relative z-10 flex h-full flex-1 flex-col items-center justify-end"
+                  >
                     {/* Bar */}
                     <div
-                      className={`w-full max-w-10 transition-all duration-500 ease-out ${isOver ? 'bg-red-500/80' : isZero ? 'bg-black/5 dark:bg-white/5' : 'bg-black/20 dark:bg-white/20 hover:bg-black/30 dark:hover:bg-white/30'}`}
+                      className={`relative w-full max-w-10 rounded-t-md transition-all duration-500 ease-out motion-reduce:transition-none ${isOver ? "bg-danger" : isZero ? "bg-line" : "bg-primary group-hover:bg-primary-hover"}`}
                       style={{ height: `${heightPercent}%`, minHeight: isZero ? '4px' : '0' }}
                     >
-                      {/* ขีดไฮไลต์ด้านบนแท่งกราฟ */}
-                      {!isZero && (
-                        <div className={`w-full h-1 ${isOver ? 'bg-red-400' : 'bg-black/50 dark:bg-white/50'}`}></div>
-                      )}
+                      {/* Tooltip on Hover */}
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-line bg-surface px-2 py-1 text-xs font-medium text-ink opacity-0 shadow-lift transition-opacity group-hover:opacity-100"
+                      >
+                        {d.calories} kcal
+                      </div>
                     </div>
                     {/* Label (Show less labels if 30D to avoid crowding) */}
                     {(timeRange === "7D" || i % 4 === 0) && (
-                      <span className="text-[9px] font-mono text-obsidian-950/40 dark:text-white/40 mt-3 absolute -bottom-5">{d.day}</span>
+                      <span aria-hidden="true" className="absolute -bottom-6 mt-3 text-xs text-muted">{d.day}</span>
                     )}
                   </div>
                 )
               })}
             </div>
             {/* Space for labels */}
-            <div className="h-5"></div>
+            <div className="h-6"></div>
           </div>
 
           {/* Protein Trend Chart (Custom CSS Stacked/Gauge style) */}
-          <div className="relative bg-white/80 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-6">
-            <div className="flex justify-between items-end mb-8">
+          <div className={cardClass}>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold tracking-widest text-obsidian-950 dark:text-white uppercase">Protein Intake</h3>
-                <p className="text-[10px] font-mono text-obsidian-950/40 dark:text-white/40 mt-1">LAST {timeRange}</p>
+                <h2 className="text-lg font-semibold text-ink">Protein intake</h2>
+                <p className="mt-1 text-sm text-muted">Last {timeRange === "7D" ? "7 days" : "30 days"}</p>
               </div>
-              <div className="flex gap-4 text-[10px] font-mono text-obsidian-950/60 dark:text-white/60">
-                <div className="flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-accent"></span> Consumed</div>
+              <div className="flex gap-4 text-sm text-muted">
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-secondary"></span> Consumed</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-0.5 bg-ink"></span> Target</div>
               </div>
             </div>
 
             {/* Chart Area */}
-            <div className="h-48 flex flex-col justify-between relative overflow-y-auto pr-2 custom-scrollbar">
+            <div
+              role="region"
+              aria-label="Daily protein intake"
+              tabIndex={0}
+              className={`custom-scrollbar relative flex h-48 flex-col justify-between overflow-y-auto pr-2 ${focusRing}`}
+            >
               {data.map((d, i) => {
                 const proteinPercent = d.targetPro > 0 ? Math.min((d.protein / d.targetPro) * 100, 100) : 0;
                 // Hide rows with 0 protein in 30D view to save space, or just show them compact
                 if (timeRange === "30D" && d.protein === 0) return null;
 
                 return (
-                  <div key={i} className="flex items-center gap-2 sm:gap-4 group cursor-default py-1">
-                    <span className="w-8 text-[9px] font-mono text-obsidian-950/40 dark:text-white/40 text-right group-hover:text-obsidian-950 dark:group-hover:text-white transition-colors">{d.day}</span>
+                  <div key={i} className="group flex cursor-default items-center gap-2 py-1 sm:gap-4">
+                    <span className="w-10 text-right text-xs text-muted transition-colors group-hover:text-ink">{d.day}</span>
 
                     {/* Horizontal Bar */}
-                    <div className="flex-1 h-3 bg-black/5 dark:bg-white/5 relative overflow-hidden">
+                    <div aria-hidden="true" className="relative h-3 flex-1 overflow-hidden rounded-full bg-primary-tint">
                       <div
-                        className="h-full bg-emerald-accent shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-700 ease-out"
+                        className="h-full rounded-full bg-secondary transition-all duration-700 ease-out motion-reduce:transition-none"
                         style={{ width: `${proteinPercent}%` }}
                       ></div>
                       {/* Target Marker */}
-                      <div className="absolute top-0 right-0 h-full w-px bg-black/40 dark:bg-white/40"></div>
+                      <div className="absolute right-0 top-0 h-full w-0.5 bg-ink/60"></div>
                     </div>
 
-                    <span className="w-12 text-[10px] font-mono text-obsidian-950/80 dark:text-white/80 text-right">
+                    <span className="w-14 text-right text-sm font-medium text-ink tabular-nums">
                       {d.protein}g
                     </span>
                   </div>

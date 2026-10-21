@@ -30,6 +30,11 @@ interface Meal {
     foodEntries: MealEntry[];
 }
 
+const focusRing =
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const monthButton = `inline-flex min-h-11 items-center rounded-xl bg-primary-tint px-4 text-sm font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`;
+
 export default function MealCalendar() {
     // สร้าง state สำหรับเก็บวันที่ปัจจุบัน และ ข้อมูลสรุปรายเดือน
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -136,254 +141,254 @@ export default function MealCalendar() {
         }
     };
 
+    const monthName = currentDate.toLocaleString("en-US", { month: "long" });
+
     return (
         <>
-        {/* ── Confirm Delete Modal ── */}
-        {confirmModal && (
-            <div
-                className="fixed inset-0 z-50 flex items-center justify-center"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="confirm-modal-title"
-            >
-                {/* Backdrop */}
+            {/* ── Confirm Delete Modal ── */}
+            {confirmModal && (
                 <div
-                    className="absolute inset-0 bg-obsidian-950/70 backdrop-blur-sm"
-                    onClick={() => setConfirmModal(null)}
-                />
+                    className="fixed inset-0 z-60 flex items-center justify-center"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="confirm-modal-title"
+                >
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setConfirmModal(null)}
+                    />
 
-                {/* Modal Card */}
-                <div className="relative z-10 w-full max-w-sm mx-4 bg-[#f8f6f1] dark:bg-obsidian-900 border border-black/10 dark:border-white/10 shadow-glow-gold p-8">
-                    {/* Corner accents */}
-                    <span className="absolute -top-px -left-px h-3 w-3 border-l border-t border-gold-accent" />
-                    <span className="absolute -top-px -right-px h-3 w-3 border-r border-t border-gold-accent" />
-                    <span className="absolute -bottom-px -left-px h-3 w-3 border-b border-l border-gold-accent" />
-                    <span className="absolute -bottom-px -right-px h-3 w-3 border-b border-r border-gold-accent" />
+                    {/* Modal Card */}
+                    <div className="relative z-10 mx-4 w-full max-w-sm rounded-2xl border border-line bg-surface p-6 shadow-lift sm:p-8">
+                        <p className="mb-2 text-sm font-medium text-muted">Confirm action</p>
+                        <h3 id="confirm-modal-title" className="mb-2 text-xl font-semibold tracking-tight text-ink">
+                            Delete this meal?
+                        </h3>
+                        <p className="mb-8 text-base leading-7 text-muted">
+                            This action cannot be undone. The meal and all its food entries will be permanently removed.
+                        </p>
 
-                    {/* Radial glow */}
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.05),transparent_55%)] pointer-events-none dark:block hidden" />
-
-                    <p className="text-[10px] tracking-[0.35em] text-gold-accent font-mono uppercase mb-3">Confirm Action</p>
-                    <h3 id="confirm-modal-title" className="text-lg font-semibold tracking-wide text-obsidian-950 dark:text-white mb-2">
-                        Delete this meal?
-                    </h3>
-                    <p className="text-sm text-obsidian-950/60 dark:text-white/50 mb-8">
-                        This action cannot be undone. The meal and all its food entries will be permanently removed.
-                    </p>
-
-                    <div className="flex gap-3 justify-end">
-                        <button
-                            type="button"
-                            onClick={() => setConfirmModal(null)}
-                            className="px-4 py-2 text-xs font-mono uppercase tracking-widest border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 text-obsidian-950/70 dark:text-white/60 hover:bg-black/10 dark:hover:bg-white/10 transition-colors rounded"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleConfirmDelete}
-                            className="px-4 py-2 text-xs font-mono uppercase tracking-widest border border-red-400/40 bg-red-500/10 text-red-500 dark:text-red-300 hover:bg-red-500/20 hover:border-red-400/60 transition-colors rounded"
-                        >
-                            Delete
-                        </button>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmModal(null)}
+                                className={`min-h-11 cursor-pointer rounded-xl bg-primary-tint px-5 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmDelete}
+                                className={`min-h-11 cursor-pointer rounded-xl bg-danger px-5 text-base font-semibold text-on-primary transition-opacity duration-200 hover:opacity-90 ${focusRing}`}
+                            >
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-        <div className="mt-10 relative overflow-hidden border border-black/10 dark:border-white/10 bg-[#f8f6f1] dark:bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.05),transparent_45%)] pointer-events-none dark:block hidden" />
-
-            {/* ขอบมุมตกแต่ง (สไตล์เดียวกับโปรเจกต์คุณ) */}
-            <span className="absolute -top-px -left-px h-3 w-3 border-l border-t border-gold-accent" />
-            <span className="absolute -top-px -right-px h-3 w-3 border-r border-t border-gold-accent" />
-            <span className="absolute -bottom-px -left-px h-3 w-3 border-b border-l border-gold-accent" />
-            <span className="absolute -bottom-px -right-px h-3 w-3 border-b border-r border-gold-accent" />
-
-            <div className="mb-6 flex items-center justify-between">
-                <div>
-                    <p className="text-[10px] tracking-[0.35em] text-gold-accent font-mono uppercase">
-                        History
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-[0.18em] text-obsidian-950 dark:text-white">
+            )}
+            <div className="mt-10 rounded-2xl border border-line bg-surface p-4 shadow-soft sm:p-6 md:p-8">
+                <div className="mb-6">
+                    <p className="text-sm font-medium text-muted">History</p>
+                    <h2 className="mt-1 text-2xl font-semibold tracking-tight text-ink">
                         Daily Meals Calendar
                     </h2>
                 </div>
-            </div>
 
-            <div className="rounded border border-black/10 dark:border-white/10 bg-white/70 dark:bg-obsidian-950/60 p-10 text-center text-obsidian-950/50 dark:text-white/50">
-                {/* แถบหัวตารางและปุ่มเปลี่ยนเดือน */}
-                <div className="mb-4 flex items-center justify-between px-2">
-                    <button
-                        onClick={handlePrevMonth}
-                        className="text-xs font-mono uppercase tracking-wider text-obsidian-950/40 dark:text-white/40 hover:text-obsidian-950/80 dark:hover:text-white/80 transition-colors px-2 py-1 border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 rounded"
-                    >
-                        &larr; Prev
-                    </button>
+                <div>
+                    {/* แถบหัวตารางและปุ่มเปลี่ยนเดือน */}
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                        <button
+                            onClick={handlePrevMonth}
+                            aria-label="Previous month"
+                            className={monthButton}
+                        >
+                            &larr; Prev
+                        </button>
 
-                    <span className="text-sm font-semibold tracking-widest text-gold-accent uppercase">
-                        {currentDate.toLocaleString("en-US", { month: "long" })} {currentDate.getFullYear()}
-                    </span>
+                        <span aria-live="polite" className="text-base font-semibold text-ink">
+                            {monthName} {currentDate.getFullYear()}
+                        </span>
 
-                    <button
-                        onClick={handleNextMonth}
-                        className="text-xs font-mono uppercase tracking-wider text-obsidian-950/40 dark:text-white/40 hover:text-obsidian-950/80 dark:hover:text-white/80 transition-colors px-2 py-1 border border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 rounded"
-                    >
-                        Next &rarr;
-                    </button>
-                </div>
+                        <button
+                            onClick={handleNextMonth}
+                            aria-label="Next month"
+                            className={monthButton}
+                        >
+                            Next &rarr;
+                        </button>
+                    </div>
 
 
-                {/* Grid ปฏิทิน (แบ่ง 7 คอลัมน์) */}
-                <div className="grid grid-cols-7 gap-1 text-center text-sm">
+                    {/* Grid ปฏิทิน (แบ่ง 7 คอลัมน์) */}
+                    <div className="grid grid-cols-7 gap-1 text-center text-sm sm:gap-2">
 
-                    {/* 1. หัวตาราง วันอาทิตย์ - เสาร์ */}
-                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                        <div key={day} className="py-2 text-obsidian-950/40 dark:text-white/40 font-mono text-[10px] uppercase tracking-wider">
-                            {day}
-                        </div>
-                    ))}
-
-                    {/* 2. ช่องว่างก่อนถึงวันที่ 1 (ดันให้วันที่ 1 ไปอยู่ตรงกับวันในสัปดาห์ที่ถูกต้อง) */}
-                    {Array.from({ length: startingDay }).map((_, index) => (
-                        <div key={`empty-${index}`} className="p-2" />
-                    ))}
-
-                    {/* 3. วนลูปวาดกล่องใส่วันที่ 1 ถึงวันสุดท้ายของเดือน */}
-                    {Array.from({ length: daysInMonth }).map((_, index) => {
-                        const dayNumber = index + 1;
-
-                        // -- เพิ่มโค้ดเช็คว่าเป็น "วันนี้" หรือไม่ ตรงนี้ --
-                        const realToday = new Date(); // ดึงวันที่ของวันนี้จริงๆ จากระบบ
-                        const isToday =
-                            dayNumber === realToday.getDate() &&
-                            currentDate.getMonth() === realToday.getMonth() &&
-                            currentDate.getFullYear() === realToday.getFullYear();
-
-                        // หาว่าวันนี้มีข้อมูล summary หรือไม่
-                        const daySummary = summaries.find(s => {
-                            const summaryDate = new Date(s.date);
-                            return summaryDate.getDate() === dayNumber;
-                        });
-
-                        return (
-                            <button
-                                key={dayNumber}
-                                onClick={() => handleDayClick(dayNumber)}
-                                // -- ปรับแก้ className ตรงนี้ เพื่อเพิ่มสีของ isToday --
-                                className={`flex flex-col items-center justify-center min-h-16 p-1 border rounded transition-colors 
-                                            ${selectedDate?.getDate() === dayNumber
-                                        ? "bg-black/10 dark:bg-white/20 border-black/20 dark:border-white/40" // สีตอนถูกคลิกเลือก
-                                        : isToday
-                                            ? "border-emerald-accent/50 bg-emerald-accent/10 text-emerald-accent" // สีพิเศษสำหรับ "วันนี้"
-                                            : "border-black/5 dark:border-white/5 bg-white dark:bg-obsidian-950/40 hover:bg-black/5 dark:hover:bg-white/10 text-obsidian-950/80 dark:text-white/80" // สีปกติ
-                                    }`}
-                            >
-                                <span className={isToday ? "font-bold" : ""}>{dayNumber}</span>
-
-                                {/* ถ้าวันนั้นมีการกินอาหาร ให้โชว์จุดและแคลอรี่รวม */}
-                                {daySummary && (
-                                    <div className="mt-1 flex flex-col items-center">
-                                        <span className="h-1 w-1 rounded-full bg-gold-accent mb-1"></span>
-                                        <span className="text-[9px] font-mono text-gold-accent">
-                                            {daySummary.totalCalories}
-                                        </span>
-                                    </div>
-                                )}
-                            </button>
-                        );
-                    })}
-
-                </div>
-
-            </div>
-            {/* --- ส่วนแสดงรายการอาหารรายวัน (จะแสดงก็ต่อเมื่อมีการกดเลือกวันที่) --- */}
-            {selectedDate && (
-                <div className="mt-8 pt-6 border-t border-black/10 dark:border-white/10 text-left">
-                    <h3 className="text-sm font-semibold tracking-widest text-gold-accent uppercase mb-4">
-                        Meals on {selectedDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                    </h3>
-
-                    {(() => {
-                        const selectedDaySummary = summaries.find(s => {
-                            const summaryDate = new Date(s.date);
-                            return summaryDate.getDate() === selectedDate.getDate() &&
-                                summaryDate.getMonth() === selectedDate.getMonth() &&
-                                summaryDate.getFullYear() === selectedDate.getFullYear();
-                        });
-
-                        if (!selectedDaySummary) return null;
-
-                        return (
-                            <div className="mb-6 grid grid-cols-2 gap-4">
-                                <div className="rounded border border-gold-accent/20 bg-white dark:bg-obsidian-950/70 p-4">
-                                    <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Total Calories</p>
-                                    <p className="mt-1 text-lg font-semibold text-gold-accent">
-                                        {selectedDaySummary.totalCalories} <span className="text-xs text-obsidian-950/50 dark:text-white/50">kcal</span>
-                                    </p>
-                                    {selectedDaySummary.targetCalories > 0 && (
-                                        <p className="mt-1 text-[10px] text-obsidian-950/40 dark:text-white/40">
-                                            Target: {selectedDaySummary.targetCalories} kcal
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="rounded border border-emerald-accent/20 bg-white dark:bg-obsidian-950/70 p-4">
-                                    <p className="text-[9px] tracking-[0.3em] text-obsidian-950/40 dark:text-white/40 font-mono uppercase">Total Protein</p>
-                                    <p className="mt-1 text-lg font-semibold text-emerald-accent">
-                                        {selectedDaySummary.totalProtein} <span className="text-xs text-obsidian-950/50 dark:text-white/50">g</span>
-                                    </p>
-                                    {selectedDaySummary.targetProtein > 0 && (
-                                        <p className="mt-1 text-[10px] text-obsidian-950/40 dark:text-white/40">
-                                            Target: {selectedDaySummary.targetProtein} g
-                                        </p>
-                                    )}
-                                </div>
+                        {/* 1. หัวตาราง วันอาทิตย์ - เสาร์ */}
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+                            <div key={day} className="py-2 text-xs font-medium text-muted">
+                                {day}
                             </div>
-                        );
-                    })()}
+                        ))}
 
-                    {isLoadingDaily ? (
-                        <p className="text-sm text-obsidian-950/50 dark:text-white/50">Loading meals...</p>
-                    ) : dailyMeals.length === 0 ? (
-                        <p className="text-sm text-obsidian-950/50 dark:text-white/50">No meals recorded for this day.</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {deleteError && (
-                                <p role="alert" className="text-sm text-red-300">{deleteError}</p>
-                            )}
-                            {dailyMeals.map((meal) => (
-                                <div key={meal.id} className="bg-white dark:bg-obsidian-950/50 border border-black/5 dark:border-white/5 p-4 rounded">
-                                    <div className="mb-2 flex items-center justify-between gap-4">
-                                        <p className="text-xs font-mono text-obsidian-950/40 dark:text-white/40 uppercase">
-                                            {meal.mealType}
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDeleteMeal(meal.id)}
-                                            disabled={deletingMealId === meal.id}
-                                            className="rounded border border-red-400/30 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-red-500 dark:text-red-300 transition-colors hover:border-red-300 hover:bg-red-400/10 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            {deletingMealId === meal.id ? "Deleting..." : "Delete"}
-                                        </button>
-                                    </div>
+                        {/* 2. ช่องว่างก่อนถึงวันที่ 1 (ดันให้วันที่ 1 ไปอยู่ตรงกับวันในสัปดาห์ที่ถูกต้อง) */}
+                        {Array.from({ length: startingDay }).map((_, index) => (
+                            <div key={`empty-${index}`} className="p-2" />
+                        ))}
 
-                                    {/* วนลูปแสดงอาหารแต่ละอย่างในมื้อนั้น */}
-                                    {meal.foodEntries.map((food) => (
-                                        <div key={food.id} className="flex justify-between items-center text-sm text-obsidian-950/80 dark:text-white/80 mt-1">
-                                            <span>{food.foodName}</span>
-                                            <div className="flex gap-4 text-xs font-mono">
-                                                <span className="text-gold-accent">{food.calories} kcal</span>
-                                                <span className="text-emerald-accent">{food.protein}g protein</span>
-                                            </div>
+                        {/* 3. วนลูปวาดกล่องใส่วันที่ 1 ถึงวันสุดท้ายของเดือน */}
+                        {Array.from({ length: daysInMonth }).map((_, index) => {
+                            const dayNumber = index + 1;
+
+                            // -- เพิ่มโค้ดเช็คว่าเป็น "วันนี้" หรือไม่ ตรงนี้ --
+                            const realToday = new Date(); // ดึงวันที่ของวันนี้จริงๆ จากระบบ
+                            const isToday =
+                                dayNumber === realToday.getDate() &&
+                                currentDate.getMonth() === realToday.getMonth() &&
+                                currentDate.getFullYear() === realToday.getFullYear();
+
+                            // หาว่าวันนี้มีข้อมูล summary หรือไม่
+                            const daySummary = summaries.find(s => {
+                                const summaryDate = new Date(s.date);
+                                return summaryDate.getDate() === dayNumber;
+                            });
+
+                            const isSelected = selectedDate?.getDate() === dayNumber;
+
+                            return (
+                                <button
+                                    key={dayNumber}
+                                    onClick={() => handleDayClick(dayNumber)}
+                                    aria-pressed={isSelected}
+                                    aria-current={isToday ? "date" : undefined}
+                                    aria-label={`${monthName} ${dayNumber}, ${currentDate.getFullYear()}${daySummary ? `, ${daySummary.totalCalories} kcal` : ""}`}
+                                    // -- สีตามสถานะ: เลือกอยู่ > วันนี้ > ปกติ --
+                                    className={`flex min-h-16 cursor-pointer flex-col items-center justify-center rounded-xl border p-1 text-base transition-colors duration-200 ${focusRing}
+                                            ${isSelected
+                                            ? "border-primary bg-primary-tint text-primary ring-1 ring-primary" // สีตอนถูกคลิกเลือก
+                                            : isToday
+                                                ? "border-secondary bg-highlight text-ink" // สีพิเศษสำหรับ "วันนี้"
+                                                : "border-line bg-surface text-ink hover:bg-primary-tint" // สีปกติ
+                                        }`}
+                                >
+                                    <span className={isToday ? "font-bold" : "font-medium"}>{dayNumber}</span>
+
+                                    {/* ถ้าวันนั้นมีการกินอาหาร ให้โชว์จุดและแคลอรี่รวม */}
+                                    {daySummary && (
+                                        <div className="mt-1 flex flex-col items-center">
+                                            <span aria-hidden="true" className="mb-0.5 h-1 w-1 rounded-full bg-primary"></span>
+                                            <span className="text-xs font-medium text-primary tabular-nums">
+                                                {daySummary.totalCalories}
+                                            </span>
                                         </div>
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
+                                    )}
+                                </button>
+                            );
+                        })}
 
-        </div>
+                    </div>
+
+                </div>
+                {/* --- ส่วนแสดงรายการอาหารรายวัน (จะแสดงก็ต่อเมื่อมีการกดเลือกวันที่) --- */}
+                {selectedDate && (
+                    <div className="mt-8 border-t border-line pt-6 text-left">
+                        <h3 className="mb-4 text-lg font-semibold tracking-tight text-ink">
+                            Meals on {selectedDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                        </h3>
+
+                        {(() => {
+                            const selectedDaySummary = summaries.find(s => {
+                                const summaryDate = new Date(s.date);
+                                return summaryDate.getDate() === selectedDate.getDate() &&
+                                    summaryDate.getMonth() === selectedDate.getMonth() &&
+                                    summaryDate.getFullYear() === selectedDate.getFullYear();
+                            });
+
+                            if (!selectedDaySummary) return null;
+
+                            return (
+                                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="rounded-xl border border-line bg-canvas p-4">
+                                        <p className="flex items-center gap-2 text-sm font-medium text-muted">
+                                            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
+                                            Total Calories
+                                        </p>
+                                        <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
+                                            {selectedDaySummary.totalCalories} <span className="text-sm font-normal text-muted">kcal</span>
+                                        </p>
+                                        {selectedDaySummary.targetCalories > 0 && (
+                                            <p className="mt-1 text-sm text-muted tabular-nums">
+                                                Target: {selectedDaySummary.targetCalories} kcal
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="rounded-xl border border-line bg-canvas p-4">
+                                        <p className="flex items-center gap-2 text-sm font-medium text-muted">
+                                            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-secondary" />
+                                            Total Protein
+                                        </p>
+                                        <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
+                                            {selectedDaySummary.totalProtein} <span className="text-sm font-normal text-muted">g</span>
+                                        </p>
+                                        {selectedDaySummary.targetProtein > 0 && (
+                                            <p className="mt-1 text-sm text-muted tabular-nums">
+                                                Target: {selectedDaySummary.targetProtein} g
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {isLoadingDaily ? (
+                            <div role="status" className="space-y-3">
+                                <span className="sr-only">Loading meals...</span>
+                                <div className="h-20 animate-pulse rounded-xl bg-primary-tint motion-reduce:animate-none" />
+                                <div className="h-20 animate-pulse rounded-xl bg-primary-tint motion-reduce:animate-none" />
+                            </div>
+                        ) : dailyMeals.length === 0 ? (
+                            <p className="rounded-xl border border-dashed border-line p-6 text-center text-base text-muted">
+                                No meals recorded for this day.
+                            </p>
+                        ) : (
+                            <div className="space-y-4">
+                                {deleteError && (
+                                    <p role="alert" className="text-sm font-medium text-danger">{deleteError}</p>
+                                )}
+                                {dailyMeals.map((meal) => (
+                                    <div key={meal.id} className="rounded-xl border border-line bg-canvas p-4">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <p className="text-sm font-semibold capitalize text-muted">
+                                                {meal.mealType}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteMeal(meal.id)}
+                                                disabled={deletingMealId === meal.id}
+                                                className={`min-h-11 cursor-pointer rounded-xl px-3 text-sm font-semibold text-danger transition-colors duration-200 hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
+                                            >
+                                                {deletingMealId === meal.id ? "Deleting..." : "Delete"}
+                                            </button>
+                                        </div>
+
+                                        {/* วนลูปแสดงอาหารแต่ละอย่างในมื้อนั้น */}
+                                        {meal.foodEntries.map((food) => (
+                                            <div key={food.id} className="mt-2 flex flex-col gap-1 text-base text-ink sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                                                <span>{food.foodName}</span>
+                                                <div className="flex gap-4 text-sm tabular-nums">
+                                                    <span className="font-medium text-primary">{food.calories} kcal</span>
+                                                    <span className="text-muted">{food.protein}g protein</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+            </div>
         </>
     );
 }
