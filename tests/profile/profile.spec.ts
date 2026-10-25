@@ -85,10 +85,10 @@ test.describe('Profile', () => {
   });
 
   test('แสดง PLAN และ AI REMAINING ใน account info', async ({ page }) => {
-    const accountDetails = page.getByRole('complementary');
+    const accountDetails = page.getByRole('heading', { name: 'Account details' }).locator('..');
 
-    await expect(accountDetails.getByText('PLAN', { exact: true })).toBeVisible();
-    await expect(accountDetails.getByText('AI REMAINING', { exact: true })).toBeVisible();
+    await expect(accountDetails.getByText(/Plan/i)).toBeVisible();
+    await expect(accountDetails.getByText(/AI remaining/i)).toBeVisible();
   });
 
 });
