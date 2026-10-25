@@ -29,16 +29,69 @@
 
   --shadow-glow-gold: 0 0 15px rgba(212, 175, 55, 0.25);
   --shadow-glow-emerald: 0 0 15px rgba(0, 223, 137, 0.25);
+
+  /* ── CalDay Design System: shadows (Soft & Rounded) ───── */
+  --shadow-soft: 0 1px 2px rgba(48, 72, 82, 0.06);
+  --shadow-lift: 0 8px 24px rgba(48, 72, 82, 0.12);
 }
 
-/* ── Light mode base ────────────────────────────────────── */
+/* ── CalDay Design System: color tokens ─────────────────────
+   Light is the primary mode. Dark values are provisional.
+   Utilities: bg-canvas, bg-surface, border-line, text-ink,
+   text-muted, bg-primary, text-on-primary, bg-primary-hover,
+   bg-primary-tint, text-secondary, bg-highlight, text-danger.
+   Note: the "border" token is exposed as "line" so it does not
+   clash with Tailwind's own `border` utility.
+   ─────────────────────────────────────────────────────────── */
+:root {
+  --ds-canvas: #F6F9FA;
+  --ds-surface: #FFFFFF;
+  --ds-line: #DCE6E9;
+  --ds-ink: #304852;
+  --ds-muted: #4B6B73;
+  --ds-primary: #36595F;
+  --ds-primary-hover: #2B4A4F;
+  --ds-primary-tint: #E6F1F5;
+  --ds-on-primary: #FFFFFF;
+  --ds-secondary: #5F818A;
+  --ds-highlight: #B9DBE6;
+  --ds-danger: #B42318;
+}
+
+.dark {
+  --ds-canvas: #1E2F35;
+  --ds-surface: #26383F;
+  --ds-line: #3A5560;
+  --ds-ink: #F6F9FA;
+  --ds-muted: #A9C3CB;
+  --ds-primary: #B9DBE6;
+  --ds-primary-hover: #D3E9F0;
+  --ds-primary-tint: #2F454D;
+  --ds-on-primary: #1E2F35;
+  --ds-secondary: #8FB1BA;
+  --ds-highlight: #36595F;
+  --ds-danger: #F97066;
+}
+
+@theme inline {
+  --color-canvas: var(--ds-canvas);
+  --color-surface: var(--ds-surface);
+  --color-line: var(--ds-line);
+  --color-ink: var(--ds-ink);
+  --color-muted: var(--ds-muted);
+  --color-primary: var(--ds-primary);
+  --color-primary-hover: var(--ds-primary-hover);
+  --color-primary-tint: var(--ds-primary-tint);
+  --color-on-primary: var(--ds-on-primary);
+  --color-secondary: var(--ds-secondary);
+  --color-highlight: var(--ds-highlight);
+  --color-danger: var(--ds-danger);
+
+  --font-sans: var(--font-plus-jakarta), var(--font-noto-thai), ui-sans-serif, system-ui, sans-serif;
+}
+
 html {
-  background-color: #f8f6f1;
-  color: #0c0c0e;
-}
-
-/* ── Dark mode base ─────────────────────────────────────── */
-html.dark {
-  background-color: #050506;
-  color: #ffffff;
+  background-color: var(--ds-canvas);
+  color: var(--ds-ink);
+  font-family: var(--font-plus-jakarta), var(--font-noto-thai), ui-sans-serif, system-ui, sans-serif;
 }

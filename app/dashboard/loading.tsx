@@ -8,99 +8,93 @@
  *   - Main section (avatar, progress bar แคลอรี่ & โปรตีน, stat cards)
  *   - Sidebar (quick insights + next step)
  *
- * ใช้ animate-pulse เพื่อทำเอฟเฟกต์กะพริบ
- * สีและ spacing ดึงจาก design system เดิม (obsidian, gold-accent)
+ * ใช้ animate-pulse เพื่อทำเอฟเฟกต์กะพริบ (ปิดอัตโนมัติเมื่อผู้ใช้ตั้งค่า reduced motion)
+ * สีและ spacing ใช้ token ของ CalDay Design System (canvas, surface, line, primary-tint)
  */
+
+const pulse = "animate-pulse motion-reduce:animate-none";
 
 export default function DashboardLoading() {
   return (
-    <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 relative overflow-hidden bg-[#f8f6f1] dark:bg-obsidian-950">
-      {/* ── Background decorations เหมือนหน้าจริง ── */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.015)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+    <div className="relative min-h-[85vh] flex-1 overflow-hidden bg-canvas px-4 py-8 md:py-12">
+      {/* อ่านออกเสียงให้โปรแกรมอ่านหน้าจอ ส่วนโครงด้านล่างซ่อนไว้ */}
+      <div role="status">
+        <span className="sr-only">Loading dashboard...</span>
+      </div>
 
-      <div className="mx-auto max-w-6xl relative">
+      {/* ── Background decoration เหมือนหน้าจริง ── */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-xl max-w-full -translate-x-1/2 rounded-full bg-highlight/40 blur-3xl"
+      />
+
+      <div aria-hidden="true" className="relative mx-auto max-w-280">
         {/* ── Header skeleton ── */}
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-3">
             {/* Label เล็ก ๆ "Daily dashboard" */}
-            <div className="h-3 w-28 rounded bg-gold-accent/20 animate-pulse" />
+            <div className={`h-4 w-28 rounded bg-line ${pulse}`} />
             {/* Heading "Your nutrition overview" */}
-            <div className="h-8 w-64 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+            <div className={`h-9 w-64 max-w-full rounded-lg bg-line ${pulse}`} />
           </div>
           {/* ปุ่ม Add meal + View profile */}
           <div className="flex gap-3">
-            <div className="h-9 w-24 border border-gold-accent/20 bg-gold-accent/5 animate-pulse" />
-            <div className="h-9 w-28 border border-black/10 dark:border-white/10 bg-white/70 dark:bg-obsidian-900 animate-pulse" />
+            <div className={`h-11 w-28 rounded-xl bg-primary-tint ${pulse}`} />
+            <div className={`h-11 w-32 rounded-xl bg-primary-tint ${pulse}`} />
           </div>
         </div>
 
         {/* ── Grid layout เหมือนหน้าจริง: main + sidebar ── */}
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           {/* ── Main section ── */}
-          <section className="relative overflow-hidden border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.12),transparent_45%)] pointer-events-none" />
-            {/* มุมตกแต่ง (corner accents) */}
-            <span className="absolute -top-px -left-px h-3 w-3 border-l border-t border-gold-accent" />
-            <span className="absolute -top-px -right-px h-3 w-3 border-r border-t border-gold-accent" />
-            <span className="absolute -bottom-px -left-px h-3 w-3 border-b border-l border-gold-accent" />
-            <span className="absolute -bottom-px -right-px h-3 w-3 border-b border-r border-gold-accent" />
-
+          <section className="rounded-2xl border border-line bg-surface p-6 shadow-soft md:p-8">
             {/* Avatar + ชื่อผู้ใช้ */}
-            <div className="flex flex-col gap-6 md:flex-row md:items-center">
-              <div className="h-20 w-20 border border-gold-accent/30 bg-black/5 dark:bg-obsidian-950 animate-pulse" />
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className={`h-16 w-16 shrink-0 rounded-full bg-primary-tint ${pulse}`} />
               <div className="flex-1 space-y-3">
-                <div className="h-3 w-20 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                <div className="h-7 w-48 rounded bg-black/15 dark:bg-white/15 animate-pulse" />
-                <div className="h-4 w-72 rounded bg-black/5 dark:bg-white/8 animate-pulse" />
+                <div className={`h-4 w-24 rounded bg-line ${pulse}`} />
+                <div className={`h-7 w-48 max-w-full rounded-lg bg-line ${pulse}`} />
+                <div className={`h-4 w-full max-w-md rounded bg-primary-tint ${pulse}`} />
               </div>
             </div>
 
-            {/* Progress bars — Calories & Protein */}
+            {/* Progress — Calories & Protein */}
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {/* Calorie progress skeleton */}
-              <div className="rounded border border-gold-accent/20 bg-black/5 dark:bg-obsidian-950/70 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="h-2.5 w-16 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                  <div className="h-2.5 w-20 rounded bg-gold-accent/20 animate-pulse" />
+              {[
+                { key: "calories", fill: "w-2/3" },
+                { key: "protein", fill: "w-1/2" },
+              ].map((tile) => (
+                <div key={tile.key} className="rounded-xl border border-line bg-canvas p-4">
+                  <div className="flex items-center justify-between">
+                    <div className={`h-4 w-20 rounded bg-line ${pulse}`} />
+                    <div className={`h-4 w-16 rounded bg-line ${pulse}`} />
+                  </div>
+                  <div className={`mt-3 h-9 w-32 rounded-lg bg-primary-tint ${pulse}`} />
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-primary-tint">
+                    <div className={`h-full ${tile.fill} rounded-full bg-line ${pulse}`} />
+                  </div>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-                  <div className="h-full w-2/3 rounded-full bg-gold-accent/30 animate-pulse" />
-                </div>
-                <div className="h-3.5 w-36 rounded bg-black/5 dark:bg-white/8 animate-pulse" />
-              </div>
-              {/* Protein progress skeleton */}
-              <div className="rounded border border-emerald-accent/20 bg-black/5 dark:bg-obsidian-950/70 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="h-2.5 w-14 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                  <div className="h-2.5 w-16 rounded bg-emerald-accent/20 animate-pulse" />
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-                  <div className="h-full w-1/2 rounded-full bg-emerald-accent/30 animate-pulse" />
-                </div>
-                <div className="h-3.5 w-40 rounded bg-black/5 dark:bg-white/8 animate-pulse" />
-              </div>
+              ))}
             </div>
 
             {/* Stat cards — Goal, BMI, Status */}
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="rounded border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950/60 p-4 space-y-3">
-                  <div className="h-2.5 w-12 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                  <div className="h-4 w-20 rounded bg-black/15 dark:bg-white/15 animate-pulse" />
+                <div key={i} className="space-y-3 rounded-xl border border-line bg-canvas p-4">
+                  <div className={`h-4 w-12 rounded bg-line ${pulse}`} />
+                  <div className={`h-5 w-20 rounded bg-primary-tint ${pulse}`} />
                 </div>
               ))}
             </div>
 
-            {/* Personal details skeleton */}
-            <div className="mt-6 rounded border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950/60 p-4">
-              <div className="h-2.5 w-28 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {/* Personal details */}
+            <div className="mt-6 rounded-xl border border-line bg-canvas p-4 md:p-5">
+              <div className={`h-5 w-32 rounded bg-line ${pulse}`} />
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="space-y-2">
-                    <div className="h-2 w-14 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                    <div className="h-4 w-24 rounded bg-black/15 dark:bg-white/15 animate-pulse" />
+                    <div className={`h-4 w-16 rounded bg-line ${pulse}`} />
+                    <div className={`h-5 w-24 rounded bg-primary-tint ${pulse}`} />
                   </div>
                 ))}
               </div>
@@ -110,32 +104,26 @@ export default function DashboardLoading() {
           {/* ── Sidebar ── */}
           <aside className="space-y-6">
             {/* Quick insights card */}
-            <div className="relative overflow-hidden border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6">
-              <span className="absolute -top-px -left-px h-2.5 w-2.5 border-l border-t border-gold-accent" />
-              <span className="absolute -bottom-px -right-px h-2.5 w-2.5 border-b border-r border-gold-accent" />
-
-              <div className="h-2.5 w-24 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-              <div className="mt-4 space-y-3">
+            <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+              <div className={`h-6 w-32 rounded bg-line ${pulse}`} />
+              <div className="mt-3 divide-y divide-line">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-2 last:border-0">
-                    <div className="h-3 w-10 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                    <div className="h-3 w-12 rounded bg-black/15 dark:bg-white/15 animate-pulse" />
+                  <div key={i} className="flex items-center justify-between py-3">
+                    <div className={`h-4 w-10 rounded bg-line ${pulse}`} />
+                    <div className={`h-4 w-14 rounded bg-primary-tint ${pulse}`} />
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Next step card */}
-            <div className="relative overflow-hidden border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6">
-              <span className="absolute -top-px -left-px h-2.5 w-2.5 border-l border-t border-gold-accent" />
-              <span className="absolute -bottom-px -right-px h-2.5 w-2.5 border-b border-r border-gold-accent" />
-
-              <div className="h-2.5 w-20 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+            <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+              <div className={`h-6 w-24 rounded bg-line ${pulse}`} />
               <div className="mt-3 space-y-2">
-                <div className="h-3.5 w-full rounded bg-black/5 dark:bg-white/8 animate-pulse" />
-                <div className="h-3.5 w-4/5 rounded bg-black/5 dark:bg-white/8 animate-pulse" />
+                <div className={`h-4 w-full rounded bg-primary-tint ${pulse}`} />
+                <div className={`h-4 w-4/5 rounded bg-primary-tint ${pulse}`} />
               </div>
-              <div className="mt-5 h-9 w-28 border border-gold-accent/20 bg-gold-accent/5 animate-pulse" />
+              <div className={`mt-5 h-11 w-32 rounded-xl bg-primary-tint ${pulse}`} />
             </div>
           </aside>
         </div>

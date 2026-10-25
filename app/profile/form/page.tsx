@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const fieldClass = `w-full min-h-11 rounded-xl border border-secondary bg-surface px-4 py-3 text-base text-ink placeholder:text-muted transition-colors duration-200 hover:border-primary focus:border-primary ${focusRing}`;
+const labelTextClass = "block text-sm font-medium text-ink";
+const primaryButton = `inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`;
+const secondaryLink = `inline-flex min-h-11 items-center justify-center rounded-xl bg-primary-tint px-5 py-2.5 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`;
+
 export default function ProfileFormPage() {
   const router = useRouter();
   const { status } = useSession();
@@ -69,20 +77,20 @@ export default function ProfileFormPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-[#f8f6f1] dark:bg-obsidian-950 px-4 py-10">
-        <p className="text-sm uppercase tracking-[0.35em] text-obsidian-950/60 dark:text-white/60">Loading...</p>
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
+        <p role="status" className="text-base text-muted">Loading...</p>
       </div>
     );
   }
 
   if (status !== "authenticated") {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-[#f8f6f1] dark:bg-obsidian-950 px-4 py-10">
-        <div className="w-full max-w-md rounded border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-8 text-center">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-gold-accent">Access required</p>
-          <h1 className="mt-3 text-2xl font-semibold text-obsidian-950 dark:text-white">Please sign in first</h1>
-          <p className="mt-3 text-sm text-obsidian-950/60 dark:text-white/60">You need to log in before filling in your personal information.</p>
-          <Link href="/signin" className="mt-6 inline-flex w-full items-center justify-center border border-gold-accent/40 bg-black/5 dark:bg-obsidian-950 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/10 hover:text-obsidian-950 dark:hover:text-white">
+      <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
+        <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center shadow-soft">
+          <p className="text-sm font-medium text-muted">Access required</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Please sign in first</h1>
+          <p className="mt-3 text-base leading-7 text-muted">You need to log in before filling in your personal information.</p>
+          <Link href="/signin" className={`mt-6 ${primaryButton}`}>
             Go to sign in
           </Link>
         </div>
@@ -91,26 +99,31 @@ export default function ProfileFormPage() {
   }
 
   return (
-    <div className="min-h-[85vh] flex-1 px-4 py-10 md:py-16 bg-[#f8f6f1] dark:bg-obsidian-950">
-      <div className="mx-auto max-w-3xl rounded border border-black/10 dark:border-white/10 bg-white/80 dark:bg-obsidian-900 p-6 shadow-glow-gold md:p-8">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="relative min-h-[85vh] flex-1 overflow-hidden bg-canvas px-4 py-8 text-ink selection:bg-highlight selection:text-ink md:py-12">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-xl max-w-full -translate-x-1/2 rounded-full bg-highlight/40 blur-3xl"
+      />
+
+      <div className="relative mx-auto max-w-3xl rounded-2xl border border-line bg-surface p-6 shadow-soft md:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.35em] text-gold-accent">Personal information</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[0.2em] text-obsidian-950 dark:text-white">Fill your profile</h1>
+            <p className="text-sm font-medium text-muted">Personal information</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">Fill your profile</h1>
           </div>
-          <Link href="/profile" className="inline-flex items-center justify-center border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-obsidian-950/70 dark:text-white/70 transition-all duration-300 hover:border-gold-accent/50 hover:text-gold-accent">
+          <Link href="/profile" className={secondaryLink}>
             Back to profile
           </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
-            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Gender</span>
+            <label className="block space-y-2">
+              <span className={labelTextClass}>Gender</span>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
+                className={`${fieldClass} cursor-pointer`}
                 required
               >
                 <option value="">Select</option>
@@ -119,50 +132,50 @@ export default function ProfileFormPage() {
               </select>
             </label>
 
-            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Age</span>
+            <label className="block space-y-2">
+              <span className={labelTextClass}>Age</span>
               <input
                 type="number"
                 min="1"
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
+                className={fieldClass}
                 required
               />
             </label>
 
-            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Weight (kg)</span>
+            <label className="block space-y-2">
+              <span className={labelTextClass}>Weight (kg)</span>
               <input
                 type="number"
                 min="1"
                 step="0.1"
                 value={formData.weight}
                 onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
+                className={fieldClass}
                 required
               />
             </label>
 
-            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Height (cm)</span>
+            <label className="block space-y-2">
+              <span className={labelTextClass}>Height (cm)</span>
               <input
                 type="number"
                 min="1"
                 step="0.1"
                 value={formData.height}
                 onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
+                className={fieldClass}
                 required
               />
             </label>
 
-            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Exercise level</span>
+            <label className="block space-y-2">
+              <span className={labelTextClass}>Exercise level</span>
               <select
                 value={formData.exerciseLevel}
                 onChange={(e) => setFormData({ ...formData, exerciseLevel: e.target.value })}
-                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
+                className={`${fieldClass} cursor-pointer`}
                 required
               >
                 <option value="">Select</option>
@@ -174,12 +187,12 @@ export default function ProfileFormPage() {
               </select>
             </label>
 
-            <label className="space-y-2 text-sm text-obsidian-950/70 dark:text-white/70">
-              <span className="block text-[10px] uppercase tracking-[0.3em] text-obsidian-950/45 dark:text-white/45">Goal</span>
+            <label className="block space-y-2">
+              <span className={labelTextClass}>Goal</span>
               <select
                 value={formData.goal}
                 onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                className="w-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-obsidian-950 px-3 py-3 text-obsidian-950 dark:text-white outline-none transition focus:border-gold-accent"
+                className={`${fieldClass} cursor-pointer`}
                 required
               >
                 <option value="">Select</option>
@@ -193,7 +206,7 @@ export default function ProfileFormPage() {
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-3 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 disabled:cursor-not-allowed disabled:opacity-70 hover:text-obsidian-950 dark:hover:text-white"
+            className={primaryButton}
           >
             {isSaving ? "Saving..." : "Save profile"}
           </button>

@@ -51,12 +51,12 @@ test.describe('Analytics', () => {
     await page.waitForLoadState('networkidle');
 
     // คลิกปุ่ม 30 DAYS
-    const btn30 = page.getByRole('button', { name: '30 DAYS' });
+    const btn30 = page.getByRole('button', { name: /30 days/i });
     await btn30.click();
 
-    // ปุ่ม 30 DAYS ต้องกลายเป็น active (มีสี gold accent — class bg-gold-accent)
-    // ตรวจสอบผ่าน class ที่เปลี่ยนไป
-    await expect(btn30).toHaveClass(/bg-gold-accent/);
+    // ใช้ state ที่ UI จริงใช้งาน: aria-pressed
+    // ไม่ควรเชื่อมกับ CSS class ที่เป็น implementation detail
+    await expect(btn30).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('แสดง stat cards: AVG CALORIES, CONSISTENCY SCORE', async ({ page }) => {

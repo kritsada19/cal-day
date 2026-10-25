@@ -9,33 +9,29 @@ export const metadata: Metadata = {
 
 export default function CheckoutCancelPage() {
   return (
-    <div className="relative flex min-h-[85vh] flex-1 items-center overflow-hidden bg-[#f8f6f1] px-4 py-12 dark:bg-obsidian-950 sm:py-16">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.1),transparent_58%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-size-[3rem_3rem] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)]" />
+    <div className="relative flex min-h-[85vh] flex-1 items-center overflow-hidden bg-canvas px-4 py-12 text-ink selection:bg-highlight selection:text-ink sm:py-16">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-xl max-w-full -translate-x-1/2 rounded-full bg-highlight/40 blur-3xl"
+      />
 
-      <section className="relative mx-auto w-full max-w-xl overflow-hidden border border-black/10 bg-white/85 p-6 backdrop-blur-sm dark:border-white/10 dark:bg-obsidian-900/90 sm:p-10">
-        <span className="absolute -top-px -left-px h-5 w-5 border-t border-l border-gold-accent" />
-        <span className="absolute -bottom-px -right-px h-5 w-5 border-b border-r border-gold-accent" />
-        <div className="absolute top-0 right-0 h-px w-1/2 bg-linear-to-l from-gold-accent to-transparent" />
-
-        <div className="relative text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center border border-gold-accent/50 bg-gold-accent/10 text-gold-accent">
-            <CreditCard className="h-7 w-7" strokeWidth={1.5} aria-hidden="true" />
+      <section className="relative mx-auto w-full max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-soft sm:p-10">
+        <div className="text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-highlight text-ink">
+            <CreditCard className="h-7 w-7" strokeWidth={1.75} aria-hidden="true" />
           </div>
-          <p className="mt-7 font-mono text-[10px] tracking-[0.35em] text-gold-accent uppercase">
-            Checkout cancelled
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[0.15em] text-obsidian-950 dark:text-white sm:text-4xl">
-            NO CHANGES MADE
+          <p className="mt-6 text-sm font-medium text-muted">Checkout cancelled</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+            No changes made
           </h1>
-          <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-obsidian-950/65 dark:text-white/65">
+          <p className="mx-auto mt-4 max-w-md text-base leading-7 text-muted">
             Your payment was not completed and your current plan has not changed. You can return whenever you&apos;re ready.
           </p>
         </div>
 
-        <div className="relative mt-8 flex gap-3 border-y border-black/10 py-5 dark:border-white/10">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gold-accent" aria-hidden="true" />
-          <p className="text-sm leading-6 text-obsidian-950/65 dark:text-white/65">
+        <div className="mt-8 flex gap-3 border-y border-line py-5">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} aria-hidden="true" />
+          <p className="text-base leading-7 text-muted">
             Your payment details were handled securely by Stripe. No charge was made for this checkout.
           </p>
         </div>
@@ -43,16 +39,16 @@ export default function CheckoutCancelPage() {
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           <Link
             href="/subscription"
-            className="inline-flex items-center justify-center border border-gold-accent bg-gold-accent px-5 py-3.5 text-xs font-bold tracking-[0.18em] text-obsidian-950 transition-colors hover:bg-gold-400"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-5 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            TRY AGAIN
+            Try again
           </Link>
           <Link
             href="/dashboard"
-            className="inline-flex items-center justify-center gap-2 border border-black/10 bg-black/5 px-5 py-3.5 text-xs font-bold tracking-[0.18em] text-obsidian-950/75 transition-colors hover:border-gold-accent/50 hover:text-gold-accent dark:border-white/10 dark:bg-obsidian-950 dark:text-white/75"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary-tint px-5 py-3 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            DASHBOARD
+            <ArrowLeft className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+            Dashboard
           </Link>
         </div>
       </section>

@@ -5,6 +5,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import axios from "axios";
+import {
+  LayoutDashboard,
+  Plus,
+  TrendingUp,
+  CreditCard,
+  User,
+  Users,
+  Utensils,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 import { logger } from "@/lib/logger";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
@@ -12,6 +23,7 @@ interface NavItem {
   label: string;
   href: string;
   active: boolean;
+  icon: LucideIcon;
 }
 
 type ProfileApiResponse = {
@@ -24,9 +36,73 @@ type ProfileApiResponse = {
   };
 };
 
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+const sideLinkClass = (active: boolean) =>
+  `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-200 ${focusRing} ${active
+    ? "bg-primary-tint text-primary"
+    : "text-muted hover:bg-primary-tint hover:text-ink"
+  }`;
+
+function Brand({ wordmarkClassName = "" }: { wordmarkClassName?: string }) {
+  return (
+    <Link href="/" className={`flex items-center gap-3 rounded-xl ${focusRing}`}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          aria-hidden="true"
+        >
+          <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5" />
+          <polygon points="12 7 17 10 17 14 12 17 7 14 7 10" fill="currentColor" fillOpacity="0.25" />
+        </svg>
+      </span>
+      <span className={`flex flex-col leading-tight ${wordmarkClassName}`}>
+        <span className="text-lg font-bold tracking-tight text-ink">CALDAY</span>
+        <span className="text-xs text-muted">Daily tracker</span>
+      </span>
+    </Link>
+  );
+}
+
+function TabLink({ item }: { item: NavItem }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      aria-current={item.active ? "page" : undefined}
+      className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors duration-200 ${focusRing} ${item.active ? "text-primary" : "text-muted"
+        }`}
+    >
+      <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+      {item.label}
+    </Link>
+  );
+}
+
+function TabAction({ item }: { item: NavItem }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      aria-current={item.active ? "page" : undefined}
+      className={`relative flex min-h-16 flex-col items-center justify-end pb-2 text-xs font-medium ${focusRing} ${item.active ? "text-primary" : "text-muted"
+        }`}
+    >
+      <span className="absolute -top-6 left-1/2 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-on-primary shadow-lift ring-4 ring-surface transition-colors duration-200 hover:bg-primary-hover">
+        <Icon className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
+      </span>
+      {item.label}
+    </Link>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
   const [userData, setUserData] = useState<ProfileApiResponse | null>(null);
 
@@ -104,313 +180,207 @@ export default function Navbar() {
 
   if (!mounted) return null;
 
-  const navItemsForUser: NavItem[] = [
-    { label: "Dashboard", href: "/dashboard", active: pathname === "/dashboard" },
-    { label: "New Entry", href: "/meals/new", active: pathname === "/meals/new" },
-    { label: "Analytics", href: "/analytics", active: pathname === "/analytics" },
-    { label: "Subscription", href: "/subscription", active: pathname === "/subscription" },
-  ];
+  const isAdmin = session?.user?.role === "ADMIN";
+  const profileHref = isAdmin ? "/admin/profile" : "/profile";
+  const plan = userData?.subscription?.plan;
+
+  const dashboardItem: NavItem = { label: "Dashboard", href: "/dashboard", active: pathname === "/dashboard", icon: LayoutDashboard };
+  const newEntryItem: NavItem = { label: "New Entry", href: "/meals/new", active: pathname === "/meals/new", icon: Plus };
+  const analyticsItem: NavItem = { label: "Analytics", href: "/analytics", active: pathname === "/analytics", icon: TrendingUp };
+  const subscriptionItem: NavItem = { label: "Subscription", href: "/subscription", active: pathname === "/subscription", icon: CreditCard };
+  const profileItem: NavItem = { label: "Profile", href: profileHref, active: pathname === profileHref, icon: User };
+
+  const navItemsForUser: NavItem[] = [dashboardItem, newEntryItem, analyticsItem, subscriptionItem];
 
   const navItemsForAdmin: NavItem[] = [
-    { label: "Dashboard", href: "/admin/dashboard", active: pathname === "/admin/dashboard" },
-    { label: "Users", href: "/admin/users", active: pathname === "/admin/users" },
-    { label: "Foods", href: "/admin/foods", active: pathname === "/admin/foods" },
+    { label: "Dashboard", href: "/admin/dashboard", active: pathname === "/admin/dashboard", icon: LayoutDashboard },
+    { label: "Users", href: "/admin/users", active: pathname === "/admin/users", icon: Users },
+    { label: "Foods", href: "/admin/foods", active: pathname === "/admin/foods", icon: Utensils },
   ];
 
-  return (
-    <nav className="w-full bg-[#f8f6f1] dark:bg-obsidian-950 border-b border-black/10 dark:border-white/10 sticky top-0 z-50 shadow-glow-gold">
-      {/* Premium Top Golden Laser Line Accent */}
-      <div className="h-px w-full bg-linear-to-r from-transparent via-gold-accent to-transparent"></div>
+  /* ───────────── Logged out: simple top header ───────────── */
+  if (!session?.user) {
+    return (
+      <header className="sticky top-0 z-50 border-b border-line bg-surface/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-280 items-center justify-between gap-2 px-4 sm:px-6">
+          <Brand wordmarkClassName="hidden min-[400px]:flex" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-
-          {/* Left Section: Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-3 group">
-              {/* Geometric Sharp Logo Icon */}
-              <div className="relative w-9 h-9 flex items-center justify-center bg-white/70 dark:bg-obsidian-900 border border-gold-accent/40 group-hover:border-gold-accent transition-colors duration-300">
-                {/* Accent corner brackets to enhance sharp mechanical design */}
-                <span className="absolute -top-px -left-px w-1.25 h-1.25 border-t border-l border-gold-accent"></span>
-                <span className="absolute -bottom-px -right-px w-1.25 h-1.25 border-b border-r border-gold-accent"></span>
-
-                {/* Inner flame core SVG */}
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-5 h-5 text-gold-accent group-hover:scale-110 group-hover:text-white transition-all duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5" />
-                  <polygon points="12 7 17 10 17 14 12 17 7 14 7 10" fill="currentColor" fillOpacity="0.2" />
-                </svg>
-              </div>
-
-              {/* Monospaced track letter Logo text */}
-              <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-[0.3em] text-obsidian-950 dark:text-white font-sans group-hover:text-gold-accent transition-colors duration-300">
-                  CALDAY
-                </span>
-                <span className="text-[8px] tracking-[0.45em] text-obsidian-950/40 dark:text-white/40 font-mono">
-                  DAILY TRACKER
-                </span>
-              </div>
-            </Link>
-          </div>
-
-          {/* Middle Section: Navigation Menu Items (desktop, login-only) */}
-          {session?.user && (
-            <div className="hidden lg:flex space-x-1">
-              {(session.user?.role === "ADMIN" ? navItemsForAdmin : navItemsForUser).map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`relative px-6 py-2.5 text-xs font-semibold tracking-[0.2em] transition-all duration-300 font-sans border-t border-transparent hover:text-gold-500 rounded-none group ${item.active
-                    ? "text-gold-accent bg-black/5 dark:bg-white/5 border-t-gold-accent"
-                    : "text-obsidian-950/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5"
-                    }`}
-                >
-                  {/* Hover bracket decoration */}
-                  <span className="absolute bottom-1 left-2 w-1.5 h-1.5 border-b border-l border-gold-accent/0 group-hover:border-gold-accent/40 transition-all duration-300"></span>
-                  <span className="absolute top-1 right-2 w-1.5 h-1.5 border-t border-r border-gold-accent/0 group-hover:border-gold-accent/40 transition-all duration-300"></span>
-
-                  {item.label}
-
-                  {/* Bottom line for active tab */}
-                  {item.active && (
-                    <span className="absolute bottom-0 left-0 w-full h-px bg-gold-accent text-glow-gold"></span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* Right Section: Calorie status indicator and Profile (desktop) */}
-          {session?.user ? (
-            <div className="hidden lg:flex items-center gap-6">
-
-              {/* Calorie Stats Card (Geometric, Sharp) */}
-              {session?.user?.role !== "ADMIN" && (
-                <div className="bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 px-4 py-2 flex items-center gap-4 relative overflow-hidden group">
-                  {/* Corner decor */}
-                  <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-black/20 dark:border-white/20"></span>
-                  <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-black/20 dark:border-white/20"></span>
-
-
-                  {target > 0 ? (
-                    <div className="flex flex-col">
-                      <div className="flex justify-between items-baseline gap-8 text-[10px] tracking-wider text-obsidian-950/50 dark:text-white/50 font-mono">
-                        <span>DAILY BALANCE</span>
-                        <span className="text-obsidian-950 dark:text-white font-semibold">
-                          <span className="text-emerald-accent text-glow-emerald font-bold">{consumed}</span> / {target} kcal
-                        </span>
-                      </div>
-
-                      {/* Target Progress Bar */}
-                      <div className="w-48 h-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 mt-1.5 relative">
-                        <div
-                          className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
-                          style={{ width: `${percentage}%` }}
-                        />
-                        {/* Subtle target ticks */}
-                        <span className="absolute top-0 left-1/2 w-px h-full bg-black/20 dark:bg-white/20"></span>
-                        <span className="absolute top-0 left-3/4 w-px h-full bg-black/20 dark:bg-white/20"></span>
-                      </div>
-
-                      <div className="flex justify-between text-[9px] tracking-widest text-obsidian-950/30 dark:text-white/30 font-mono mt-1">
-                        <span>PROGRESS</span>
-                        <span className="text-gold-accent text-glow-gold font-semibold">{remaining} KCAL LEFT</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center w-48 py-1.5">
-                      <Link
-                        href="/profile/form"
-                        className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
-                      >
-                        FILL PROFILE
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Profile Avatar & Rank Widget */}
-              <Link href={session?.user?.role === "ADMIN" ? "/admin/profile" : "/profile"} className="flex items-center gap-3">
-                {/* Sharp Profile Container */}
-                <div className="relative group cursor-pointer">
-                  {/* Diagonal cut capsule */}
-                  <div className="bg-white/70 dark:bg-linear-to-r dark:from-obsidian-900 dark:to-obsidian-800 border border-black/10 dark:border-white/10 hover:border-gold-accent/50 px-4 py-1.5 flex items-center gap-3 transition-colors duration-300">
-                    <div className="flex flex-col text-right">
-                      <span className="text-xs font-bold tracking-wider text-obsidian-950 dark:text-white">{session?.user?.name}</span>
-                      <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">{userData?.subscription?.plan} PLAN</span>
-                    </div>
-                    {/* Avatar Frame (Sharp Box) */}
-                    <div className="w-8 h-8 bg-black/5 dark:bg-obsidian-700 border border-gold-accent flex items-center justify-center text-xs font-bold text-gold-accent group-hover:bg-gold-accent group-hover:text-obsidian-950 transition-all duration-300">
-                      {session?.user?.name?.substring(0, 2)}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Theme Toggle */}
-              <ThemeToggle />
-
-            </div>
-          ) : (
-            <div className="hidden lg:flex items-center gap-4">
-              <Link href="/signin" className="px-4 py-2 text-xs font-semibold tracking-[0.2em] text-obsidian-950/70 dark:text-white/80 hover:text-gold-accent transition-colors duration-200">
-                LOG IN
-              </Link>
-              <Link href="/signup" className="px-4 py-2 text-xs font-semibold tracking-[0.2em] text-obsidian-950/70 dark:text-white/80 hover:text-gold-accent transition-colors duration-200">
-                CREATE ACCOUNT
-              </Link>
-              {/* Theme Toggle (unauthenticated) */}
-              <ThemeToggle />
-            </div>
-          )}
-
-          {/* Mobile menu button (Hamburger Menu, Sharp) */}
-          <div className="flex lg:hidden items-center gap-2">
-            <ThemeToggle />
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-expanded={mobileMenuOpen}
-              aria-label="Toggle navigation menu"
-              className="bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 hover:border-gold-accent p-2 text-obsidian-950/80 dark:text-white/80 hover:text-obsidian-950 dark:hover:text-white transition-colors duration-200"
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Link
+              href="/signin"
+              className={`inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-muted transition-colors duration-200 hover:bg-primary-tint hover:text-ink sm:px-4 ${focusRing}`}
             >
-              {mobileMenuOpen ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className={`inline-flex min-h-11 items-center rounded-xl bg-primary px-3 text-sm font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover sm:px-4 ${focusRing}`}
+            >
+              <span className="sm:hidden">Sign up</span>
+              <span className="hidden sm:inline">Create account</span>
+            </Link>
+            <ThemeToggle />
           </div>
-
         </div>
-      </div>
+      </header>
+    );
+  }
 
-      {/* Mobile Menu Panel — animated slide-down via grid-template-rows */}
-      <div
-        aria-hidden={!mobileMenuOpen}
-        className={`lg:hidden grid overflow-hidden transition-all duration-300 ease-in-out ${mobileMenuOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-          }`}
-      >
-        <div className="overflow-hidden">
-          <div className="border-t border-black/10 dark:border-white/10 bg-[#f8f6f1] dark:bg-obsidian-950 px-4 py-4 space-y-4">
+  /* ───────────── Logged in ───────────── */
+  const desktopItems = isAdmin ? navItemsForAdmin : navItemsForUser;
 
-            {/* Nav links — login only */}
-            {session?.user && (
-              <div className="flex flex-col space-y-1">
-                {(session.user?.role === "ADMIN" ? navItemsForAdmin : navItemsForUser).map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`w-full block text-left px-4 py-3 text-xs font-semibold tracking-[0.2em] transition-all duration-200 border-l-2 ${item.active
-                      ? "text-gold-accent bg-black/5 dark:bg-white/5 border-l-gold-accent"
-                      : "text-obsidian-950/60 dark:text-white/60 border-l-transparent hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col gap-6 overflow-y-auto border-r border-line bg-surface p-4 lg:flex">
+        <div className="px-1 pt-1">
+          <Brand />
+        </div>
 
-            {/* Calorie widget + profile + sign out — login only */}
-            {session?.user && (
+        <nav aria-label="Main" className="flex flex-col gap-1">
+          {desktopItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                aria-current={item.active ? "page" : undefined}
+                className={sideLinkClass(item.active)}
+              >
+                <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {!isAdmin && (
+          <div className="rounded-2xl border border-line bg-canvas p-4">
+            {target > 0 ? (
               <>
-                {/* Mobile Calorie Stats Widget */}
-                {session?.user?.role !== "ADMIN" && (
-                  <div className="bg-white/70 dark:bg-obsidian-900 border border-black/10 dark:border-white/10 p-4 space-y-3">
-                    {target > 0 ? (
-                      <>
-                        <div className="flex justify-between items-baseline text-[10px] tracking-wider text-obsidian-950/50 dark:text-white/50 font-mono">
-                          <span>DAILY BALANCE</span>
-                          <span className="text-obsidian-950 dark:text-white font-semibold">
-                            <span className="text-emerald-accent font-bold">{consumed}</span> / {target} kcal
-                          </span>
-                        </div>
-
-                        {/* Target Progress Bar */}
-                        <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 relative">
-                          <div
-                            className="h-full bg-emerald-accent shadow-glow-emerald transition-all duration-500 ease-out"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex items-center justify-center pt-2">
-                        <Link
-                          href="/profile/form"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="inline-flex w-full items-center justify-center border border-gold-accent/40 bg-gold-accent/10 px-4 py-2.5 text-[10px] font-semibold tracking-[0.25em] text-gold-accent transition-all duration-300 hover:bg-gold-accent/20 hover:text-obsidian-950 dark:hover:text-white"
-                        >
-                          FILL PROFILE
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Mobile Profile Display */}
-                <Link
-                  href={session?.user?.role === "ADMIN" ? "/admin/profile" : "/profile"}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 border-t border-black/10 dark:border-white/10 pt-4 px-1"
+                <p className="text-sm font-medium text-muted">Daily balance</p>
+                <p className="mt-1 text-ink">
+                  <span className="text-2xl font-bold tabular-nums">{consumed}</span>
+                  <span className="text-sm text-muted tabular-nums"> / {target} kcal</span>
+                </p>
+                <div
+                  role="progressbar"
+                  aria-label="Daily calories"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(percentage)}
+                  className="mt-3 h-2 w-full overflow-hidden rounded-full bg-primary-tint"
                 >
-                  <div className="w-10 h-10 bg-black/5 dark:bg-obsidian-700 border border-gold-accent flex items-center justify-center text-sm font-bold text-gold-accent">
-                    {session?.user?.name?.substring(0, 2) || "?"}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold tracking-wider text-obsidian-950 dark:text-white">{session?.user?.name || "MEMBER"}</span>
-                    <span className="text-[8px] font-mono tracking-widest text-gold-accent font-bold">{userData?.subscription?.plan} PLAN</span>
-                  </div>
-                </Link>
-
-                {/* Sign Out */}
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    signOut({ callbackUrl: "/" });
-                  }}
-                  className="w-full text-left px-4 py-3 text-xs font-semibold tracking-[0.2em] text-red-500/80 hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/5 border-l-2 border-l-transparent hover:border-l-red-500/50 transition-all duration-200"
-                >
-                  SIGN OUT
-                </button>
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out motion-reduce:transition-none"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-sm text-muted tabular-nums">{remaining} kcal left</p>
               </>
+            ) : (
+              <Link
+                href="/profile/form"
+                className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
+              >
+                Fill profile
+              </Link>
             )}
+          </div>
+        )}
 
-            {/* Auth links — logged-out only */}
-            {!session?.user && (
-              <div className="flex flex-col space-y-1 border-t border-black/10 dark:border-white/10 pt-4">
-                <Link
-                  href="/signin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full block text-left px-4 py-3 text-xs font-semibold tracking-[0.2em] text-obsidian-950/70 dark:text-white/80 hover:text-gold-accent hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200"
-                >
-                  LOG IN
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full block text-left px-4 py-3 text-xs font-semibold tracking-[0.2em] text-obsidian-950/70 dark:text-white/80 hover:text-gold-accent hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200"
-                >
-                  CREATE ACCOUNT
-                </Link>
-              </div>
-            )}
+        <div className="mt-auto flex flex-col gap-2 border-t border-line pt-4">
+          <Link
+            href={profileHref}
+            className={`flex items-center gap-3 rounded-xl p-2 transition-colors duration-200 hover:bg-primary-tint ${focusRing}`}
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-highlight text-sm font-bold text-ink">
+              {session?.user?.name?.substring(0, 2)}
+            </span>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-sm font-semibold text-ink">{session?.user?.name}</span>
+              {plan && <span className="text-xs text-muted">{plan} plan</span>}
+            </span>
+          </Link>
 
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className={`flex min-h-11 flex-1 items-center gap-3 rounded-xl px-3 text-sm font-medium text-danger transition-colors duration-200 hover:bg-primary-tint ${focusRing}`}
+            >
+              <LogOut className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              Sign out
+            </button>
+            <ThemeToggle />
           </div>
         </div>
-      </div>
-    </nav>
+      </aside>
+
+      {/* Mobile top bar */}
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 backdrop-blur lg:hidden">
+        <Brand wordmarkClassName="hidden min-[360px]:flex" />
+
+        <div className="flex min-w-0 items-center gap-1">
+          {!isAdmin &&
+            (target > 0 ? (
+              <div className="mr-1 flex min-w-0 flex-col items-end">
+                <span className="text-xs font-semibold text-ink tabular-nums">
+                  {consumed} / {target} kcal
+                </span>
+                <div
+                  role="progressbar"
+                  aria-label="Daily calories"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(percentage)}
+                  className="mt-1 h-1.5 w-20 overflow-hidden rounded-full bg-primary-tint"
+                >
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out motion-reduce:transition-none"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/profile/form"
+                className={`mr-1 inline-flex min-h-11 items-center rounded-xl bg-primary px-3 text-xs font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
+              >
+                Fill profile
+              </Link>
+            ))}
+          <ThemeToggle />
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            aria-label="Sign out"
+            className={`flex h-11 w-11 items-center justify-center rounded-xl text-danger transition-colors duration-200 hover:bg-primary-tint ${focusRing}`}
+          >
+            <LogOut className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile bottom tab bar */}
+      <nav
+        aria-label="Main"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] shadow-lift lg:hidden"
+      >
+        {isAdmin ? (
+          <div className="grid grid-cols-4">
+            {[...navItemsForAdmin, profileItem].map((item) => (
+              <TabLink key={item.label} item={item} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-5">
+            <TabLink item={dashboardItem} />
+            <TabLink item={analyticsItem} />
+            <TabAction item={newEntryItem} />
+            <TabLink item={subscriptionItem} />
+            <TabLink item={profileItem} />
+          </div>
+        )}
+      </nav>
+    </>
   );
 }
