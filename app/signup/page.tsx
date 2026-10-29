@@ -4,6 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -12,6 +13,7 @@ const inputBase = `w-full min-h-11 rounded-xl border bg-surface px-4 py-3 text-b
 const inputClass = `${inputBase} border-secondary hover:border-primary focus:border-primary`;
 
 export default function SignupPage() {
+  const t = useTranslations("auth");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,12 +24,12 @@ export default function SignupPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      toast.error("Please provide name, email, password and confirm password");
+      toast.error(t("pleaseProvideRequired"));
       return;
     }
 
     if (passwordMismatch) {
-      toast.error("Passwords do not match");
+      toast.error(t("passwordsDoNotMatch"));
       return;
     }
 
@@ -41,15 +43,15 @@ export default function SignupPage() {
         confirmPassword,
       });
 
-      toast.success(res.data?.message || "User created successfully");
+      toast.success(res.data?.message || t("signupSuccess"));
       setName("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
       const message = axios.isAxiosError(err)
-        ? err.response?.data?.message || "Signup failed"
-        : "Unexpected error";
+        ? err.response?.data?.message || t("signupFailed")
+        : t("signupError");
 
       toast.error(message);
     } finally {
@@ -81,13 +83,13 @@ export default function SignupPage() {
           </div>
 
           <span className="mt-4 text-xl font-bold tracking-tight text-ink">CALDAY</span>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Create your account</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">{t("signupTitle")}</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <label htmlFor="signup-name" className="block text-sm font-medium text-ink">
-              Full name
+              {t("fullName")}
             </label>
             <input
               id="signup-name"
@@ -96,13 +98,13 @@ export default function SignupPage() {
               required
               autoComplete="name"
               className={inputClass}
-              placeholder="Enter your full name"
+              placeholder={t("fullName")}
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="signup-email" className="block text-sm font-medium text-ink">
-              Email address
+              {t("emailAddress")}
             </label>
             <input
               id="signup-email"
@@ -112,13 +114,13 @@ export default function SignupPage() {
               required
               autoComplete="email"
               className={inputClass}
-              placeholder="Enter your email address"
+              placeholder={t("emailAddress")}
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="signup-password" className="block text-sm font-medium text-ink">
-              Password
+              {t("password")}
             </label>
             <input
               id="signup-password"
@@ -128,13 +130,13 @@ export default function SignupPage() {
               required
               autoComplete="new-password"
               className={inputClass}
-              placeholder="Enter a password"
+              placeholder={t("password")}
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-ink">
-              Confirm password
+              {t("confirmPassword")}
             </label>
             <input
               id="signup-confirm-password"
@@ -150,11 +152,11 @@ export default function SignupPage() {
                   ? `${inputBase} border-danger focus:border-danger`
                   : inputClass
               }
-              placeholder="Repeat your password"
+              placeholder={t("confirmPassword")}
             />
             {passwordMismatch && (
               <p id="signup-confirm-password-error" role="alert" className="text-sm font-medium text-danger">
-                Passwords do not match
+                {t("passwordsDoNotMatch")}
               </p>
             )}
           </div>
@@ -165,18 +167,18 @@ export default function SignupPage() {
               disabled={loading || passwordMismatch}
               className={`min-h-11 w-full cursor-pointer rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
             >
-              {loading ? "Creating account..." : "Create account"}
+              {loading ? t("creatingAccount") : t("signupButton")}
             </button>
           </div>
         </form>
 
         <div className="mt-8 border-t border-line pt-6 text-center text-sm text-muted">
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")} {" "}
           <Link
             href="/signin"
             className={`rounded font-semibold text-primary underline underline-offset-4 transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
           >
-            Back to log in
+            {t("backToLogin")}
           </Link>
         </div>
       </div>

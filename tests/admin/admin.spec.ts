@@ -21,9 +21,9 @@ const HAS_ADMIN_CREDS = Boolean(ADMIN_EMAIL && ADMIN_PASSWORD);
 // ──────────────────────────────────────────────
 async function loginAsNormalUser(page: Page) {
   await page.goto('/signin');
-  await page.getByPlaceholder('Enter your email address').fill('test@example.com');
-  await page.getByPlaceholder('Enter your password').fill('password123');
-  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.locator('#signin-email').fill('test@example.com');
+  await page.locator('#signin-password').fill('password123');
+  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
   await page.waitForURL('/');
 }
 
@@ -32,9 +32,9 @@ async function loginAsNormalUser(page: Page) {
 // ──────────────────────────────────────────────
 async function loginAsAdmin(page: Page) {
   await page.goto('/signin');
-  await page.getByPlaceholder('Enter your email address').fill(ADMIN_EMAIL);
-  await page.getByPlaceholder('Enter your password').fill(ADMIN_PASSWORD);
-  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.locator('#signin-email').fill(ADMIN_EMAIL);
+  await page.locator('#signin-password').fill(ADMIN_PASSWORD);
+  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
   await page.waitForURL('/');
 }
 
@@ -48,7 +48,7 @@ test.describe('Admin Guard', () => {
 
     await expect(page).toHaveURL(/\/signin/);
     await expect(
-      page.getByPlaceholder('Enter your email address')
+      page.locator('#signin-email')
     ).toBeVisible();
   });
 
@@ -94,12 +94,12 @@ test.describe('Admin Dashboard (requires ADMIN role)', () => {
 
   test('admin เห็น heading "Admin Dashboard"', async ({ page }) => {
     // ตรวจว่า heading Admin Dashboard แสดงอยู่
-    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 8000 });
+    await expect(page.getByRole('heading', { name: /Admin Dashboard|แดชบอร์ดผู้ดูแล/i })).toBeVisible({ timeout: 8000 });
   });
 
   test('admin เห็น System Overview label', async ({ page }) => {
     // ตรวจว่า label System Overview แสดงอยู่
-    await expect(page.getByText('System Overview')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/System Overview|ภาพรวมระบบ/i)).toBeVisible({ timeout: 5000 });
   });
 
   test('admin เห็น stat cards: AI Usage, Meals stats', async ({ page }) => {
@@ -108,12 +108,12 @@ test.describe('Admin Dashboard (requires ADMIN role)', () => {
 
     // ตรวจว่ามี stat cards แสดงอยู่
     // (ชื่อ label จาก API stats)
-    await expect(page.getByText(/AI Usage|Meals|Total/i).first()).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText(/AI Usage|Meals|Total|การใช้ AI|มื้ออาหาร|ทั้งหมด/i).first()).toBeVisible({ timeout: 8000 });
   });
 
   test('admin เห็นลิงก์ไปหน้า /admin/users', async ({ page }) => {
     // ตรวจว่ามีลิงก์ไปจัดการ users
-    const usersLink = page.getByRole('link', { name: /users/i }).first();
+    const usersLink = page.getByRole('link', { name: /users|ผู้ใช้/i }).first();
     await expect(usersLink).toBeVisible({ timeout: 5000 });
   });
 

@@ -10,9 +10,9 @@ import { test, expect, type Page } from '@playwright/test';
 // ──────────────────────────────────────────────
 async function loginAndGotoDashboard(page: Page) {
   await page.goto('/signin');
-  await page.getByPlaceholder('Enter your email address').fill('test@example.com');
-  await page.getByPlaceholder('Enter your password').fill('password123');
-  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.getByLabel(/Email address|ที่อยู่อีเมล/i).fill('test@example.com');
+  await page.getByLabel(/Password|รหัสผ่าน/i).fill('password123');
+  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
   await page.waitForURL('/');
   await page.goto('/dashboard');
 }
@@ -28,16 +28,16 @@ test.describe('Dashboard', () => {
     // ตรวจว่า URL ถูกต้อง
     await expect(page).toHaveURL('/dashboard');
 
-    // ตรวจว่า heading "Your nutrition overview" แสดงอยู่
-    await expect(page.getByRole('heading', { name: 'Your nutrition overview' })).toBeVisible({ timeout: 8000 });
+    // ตรวจว่า heading หลักแสดงอยู่ทั้งภาษาไทยและอังกฤษ
+    await expect(page.getByRole('heading', { name: /ภาพรวมโภชนาการของคุณ|Your nutrition overview/i })).toBeVisible({ timeout: 8000 });
   });
 
   test('มีปุ่ม Add meal ที่คลิกแล้วไปหน้า /meals/new', async ({ page }) => {
     // รอให้ dashboard โหลดเสร็จก่อน
     await page.waitForLoadState('networkidle');
 
-    // ตรวจว่าลิงก์ Add meal มีอยู่บนหน้า
-    const addMealLink = page.getByRole('link', { name: 'Add meal' });
+    // ตรวจว่าลิงก์เพิ่มมื้ออาหารมีอยู่บนหน้า ทั้งภาษาไทยและอังกฤษ
+    const addMealLink = page.getByRole('link', { name: /เพิ่มมื้ออาหาร|Add meal/i });
     await expect(addMealLink).toBeVisible();
 
     // คลิกแล้วตรวจว่า URL เปลี่ยนไปหน้า meals/new
@@ -49,8 +49,8 @@ test.describe('Dashboard', () => {
     // รอให้ dashboard โหลดเสร็จ
     await page.waitForLoadState('networkidle');
 
-    // ตรวจว่าลิงก์ View profile มีอยู่
-    const profileLink = page.getByRole('link', { name: 'View profile' });
+    // ตรวจว่าลิงก์ดูโปรไฟล์มีอยู่ ทั้งภาษาไทยและอังกฤษ
+    const profileLink = page.getByRole('link', { name: /ดูโปรไฟล์|View profile/i });
     await expect(profileLink).toBeVisible();
 
     // คลิกแล้วตรวจว่าไปหน้า profile
@@ -63,13 +63,13 @@ test.describe('Dashboard', () => {
     await page.waitForLoadState('networkidle');
 
     // ตรวจว่ามี section แสดงแคลอรีอยู่บน dashboard
-    // (มีทั้งกรณีที่ยังไม่ได้ตั้ง profile และที่ตั้งแล้ว)
-    await expect(page.getByText('Calories', { exact: true })).toBeVisible({ timeout: 8000 });
+    // Accept ทั้งคำภาษาไทยและอังกฤษ เพราะหน้าแสดงตาม locale
+    await expect(page.getByText(/^(Calories|แคลอรี่)$/i)).toBeVisible({ timeout: 8000 });
   });
 
   test('แสดง label Daily dashboard ใต้ heading', async ({ page }) => {
-    // ตรวจว่ามีข้อความ "Daily dashboard" ที่เป็น subheading
-    await expect(page.getByText('Daily dashboard')).toBeVisible({ timeout: 5000 });
+    // ตรวจว่ามีข้อความ subheading ไม่ว่าจะเป็นไทยหรืออังกฤษ
+    await expect(page.getByText(/แดชบอร์ดรายวัน|Daily dashboard/i)).toBeVisible({ timeout: 5000 });
   });
 
 });

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Shield,
@@ -109,6 +110,7 @@ function ProfileTile({ label, value, span = false }: { label: string; value: str
 export default function AdminUserDetailPage() {
   const { data: session, status } = useSession();
   const params = useParams();
+  const t = useTranslations("admin");
 
   const userId = params?.id ? String(params.id) : "";
 
@@ -181,7 +183,7 @@ export default function AdminUserDetailPage() {
             aria-hidden="true"
             className="h-10 w-10 animate-spin rounded-full border-2 border-line border-t-primary motion-reduce:animate-none"
           />
-          <p className="text-base text-muted">Loading admin control center...</p>
+          <p className="text-base text-muted">{t("loadingAdminControlCenter")}</p>
         </div>
       </div>
     );
@@ -195,16 +197,16 @@ export default function AdminUserDetailPage() {
             <Shield className="h-8 w-8" strokeWidth={1.75} aria-hidden="true" />
           </div>
           <h2 className="mb-2 text-2xl font-semibold tracking-tight text-ink">
-            Access Denied
+            {t("accessDenied")}
           </h2>
           <p className="mb-6 text-base leading-7 text-muted">
-            You do not have administrative permissions to view this section.
+            {t("accessDeniedMessage")}
           </p>
           <Link
             href="/"
             className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-2.5 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
           >
-            Return to Safety
+            {t("returnToSafety")}
           </Link>
         </div>
       </div>
@@ -231,18 +233,18 @@ export default function AdminUserDetailPage() {
               className={`mb-3 inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-primary transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
             >
               <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-              <span>Back to Users</span>
+              <span>{t("backToUsers")}</span>
             </Link>
 
             <div className="flex items-center gap-2 text-sm font-medium text-muted">
               <Shield className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-              <span>Admin Management</span>
+              <span>{t("adminManagement")}</span>
             </div>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-              User Profile & Activity
+              {t("userProfileAndActivity")}
             </h1>
             <p className="mt-1 text-base text-muted">
-              Detailed account metrics, health parameters, and food logs for user #{userId}.
+              {t("userDetailSubtitle")}{userId}.
             </p>
           </div>
 
@@ -257,7 +259,7 @@ export default function AdminUserDetailPage() {
                 strokeWidth={1.75}
                 aria-hidden="true"
               />
-              <span>Refresh</span>
+              <span>{t("refresh")}</span>
             </button>
           </div>
         </div>
@@ -273,7 +275,7 @@ export default function AdminUserDetailPage() {
               onClick={() => fetchUserData()}
               className={`min-h-11 cursor-pointer rounded-lg px-3 text-sm font-semibold underline underline-offset-4 ${focusRing}`}
             >
-              Retry
+              {t("retry")}
             </button>
           </div>
         )}
@@ -293,7 +295,7 @@ export default function AdminUserDetailPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-xl font-semibold tracking-tight text-ink">
-                    {user.name || "Unnamed User"}
+                    {user.name || t("unnamedUser")}
                   </h2>
                   <div className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted">
                     <Mail className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
@@ -320,7 +322,7 @@ export default function AdminUserDetailPage() {
                       </span>
                     ) : (
                       <span className={`${badgeBase} border border-line text-muted`}>
-                        FREE
+                        {t("free")}
                       </span>
                     )}
                   </div>
@@ -329,15 +331,15 @@ export default function AdminUserDetailPage() {
 
               <dl className="mt-6 space-y-3 border-t border-line pt-4 text-base">
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted">User ID</dt>
+                  <dt className="text-muted">{t("userId")}</dt>
                   <dd className="font-semibold tabular-nums text-ink">#{user.id}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted">Registered</dt>
+                  <dt className="text-muted">{t("registered")}</dt>
                   <dd className="text-ink">{new Date(user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted">Subscription Status</dt>
+                  <dt className="text-muted">{t("subscriptionStatus")}</dt>
                   <dd className="font-semibold uppercase text-ink">{user.subscription?.status || "ACTIVE"}</dd>
                 </div>
               </dl>
@@ -347,27 +349,27 @@ export default function AdminUserDetailPage() {
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft lg:col-span-2">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-ink">
                 <Activity className="h-5 w-5 text-primary" strokeWidth={1.75} aria-hidden="true" />
-                <span>Physical Profile & Nutrition Targets</span>
+                <span>{t("physicalProfile")}</span>
               </h2>
 
               {user.profile ? (
                 <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <ProfileTile label="Gender" value={user.profile.gender || "N/A"} />
-                  <ProfileTile label="Age" value={user.profile.age ? `${user.profile.age} yrs` : "N/A"} />
-                  <ProfileTile label="Weight" value={user.profile.weight ? `${user.profile.weight} kg` : "N/A"} />
-                  <ProfileTile label="Height" value={user.profile.height ? `${user.profile.height} cm` : "N/A"} />
+                  <ProfileTile label={t("gender")} value={user.profile.gender || "N/A"} />
+                  <ProfileTile label={t("age")} value={user.profile.age ? `${user.profile.age} yrs` : "N/A"} />
+                  <ProfileTile label={t("weight")} value={user.profile.weight ? `${user.profile.weight} kg` : "N/A"} />
+                  <ProfileTile label={t("height")} value={user.profile.height ? `${user.profile.height} cm` : "N/A"} />
 
-                  <ProfileTile label="BMR" value={user.profile.bmr ? `${Math.round(user.profile.bmr)} kcal` : "N/A"} />
-                  <ProfileTile label="TDEE" value={user.profile.tdee ? `${Math.round(user.profile.tdee)} kcal` : "N/A"} />
-                  <ProfileTile label="Target Cal" value={user.profile.targetCalories ? `${Math.round(user.profile.targetCalories)} kcal` : "N/A"} />
-                  <ProfileTile label="Target Protein" value={user.profile.targetProtein ? `${Math.round(user.profile.targetProtein)} g` : "N/A"} />
+                  <ProfileTile label={t("bmr")} value={user.profile.bmr ? `${Math.round(user.profile.bmr)} kcal` : "N/A"} />
+                  <ProfileTile label={t("tdee")} value={user.profile.tdee ? `${Math.round(user.profile.tdee)} kcal` : "N/A"} />
+                  <ProfileTile label={t("targetCal")} value={user.profile.targetCalories ? `${Math.round(user.profile.targetCalories)} kcal` : "N/A"} />
+                  <ProfileTile label={t("targetProtein")} value={user.profile.targetProtein ? `${Math.round(user.profile.targetProtein)} g` : "N/A"} />
 
-                  <ProfileTile label="Exercise Level" value={user.profile.exerciseLevel || "N/A"} span />
-                  <ProfileTile label="Fitness Goal" value={user.profile.goal || "N/A"} span />
+                  <ProfileTile label={t("exerciseLevel")} value={user.profile.exerciseLevel || "N/A"} span />
+                  <ProfileTile label={t("fitnessGoal")} value={user.profile.goal || "N/A"} span />
                 </dl>
               ) : (
                 <div className="rounded-xl border border-line bg-canvas p-8 text-center text-base italic text-muted">
-                  No physical profile configured for this user.
+                  {t("noPhysicalProfile")}
                 </div>
               )}
             </div>
@@ -378,7 +380,7 @@ export default function AdminUserDetailPage() {
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
             <div>
-              <dt className="text-sm text-muted">User Food Logs</dt>
+              <dt className="text-sm text-muted">{t("userFoodLogs")}</dt>
               <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">{pagination.total}</dd>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-tint text-primary">
@@ -388,9 +390,9 @@ export default function AdminUserDetailPage() {
 
           <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
             <div>
-              <dt className="text-sm text-muted">Page Calories</dt>
+              <dt className="text-sm text-muted">{t("pageCalories")}</dt>
               <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-primary">
-                {Math.round(totalPageCalories).toLocaleString()} <span className="text-base font-medium text-muted">kcal</span>
+                {Math.round(totalPageCalories).toLocaleString()} <span className="text-base font-medium text-muted">{t("kcal")}</span>
               </dd>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-tint text-primary">
@@ -400,9 +402,9 @@ export default function AdminUserDetailPage() {
 
           <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
             <div>
-              <dt className="text-sm text-muted">Page Protein</dt>
+              <dt className="text-sm text-muted">{t("pageProtein")}</dt>
               <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">
-                {Math.round(totalPageProtein).toLocaleString()} <span className="text-base font-medium text-muted">g</span>
+                {Math.round(totalPageProtein).toLocaleString()} <span className="text-base font-medium text-muted">{t("g")}</span>
               </dd>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-highlight text-ink">
@@ -417,8 +419,8 @@ export default function AdminUserDetailPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" strokeWidth={1.75} aria-hidden="true" />
             <input
               type="text"
-              aria-label="Search food entries"
-              placeholder="Search food entries..."
+              aria-label={t("searchFoodEntries")}
+              placeholder={t("searchFoodEntries")}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -444,7 +446,7 @@ export default function AdminUserDetailPage() {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
               <span className="text-sm font-medium text-muted">
-                Filters:
+                {t("filters")}:
               </span>
             </div>
 
@@ -458,11 +460,11 @@ export default function AdminUserDetailPage() {
               }}
               className={`${fieldClass} cursor-pointer`}
             >
-              <option value="">All Meals</option>
-              <option value="BREAKFAST">Breakfast</option>
-              <option value="LUNCH">Lunch</option>
-              <option value="DINNER">Dinner</option>
-              <option value="SNACK">Snack</option>
+              <option value="">{t("allMeals")}</option>
+              <option value="BREAKFAST">{t("breakfast")}</option>
+              <option value="LUNCH">{t("lunch")}</option>
+              <option value="DINNER">{t("dinner")}</option>
+              <option value="SNACK">{t("snack")}</option>
             </select>
           </div>
         </div>
@@ -472,11 +474,11 @@ export default function AdminUserDetailPage() {
           {loading ? (
             <div role="status" className="flex items-center justify-center gap-3 p-12 text-base text-muted">
               <RefreshCw className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.75} aria-hidden="true" />
-              <span>Fetching food records...</span>
+              <span>{t("fetchingFoodRecords")}</span>
             </div>
           ) : foodEntries.length === 0 ? (
             <div className="p-12 text-center text-base text-muted">
-              No food entries recorded for this user matching the criteria.
+              {t("noEntriesForUser")}
             </div>
           ) : (
             <div
@@ -488,13 +490,13 @@ export default function AdminUserDetailPage() {
               <table className="w-full min-w-208 border-collapse text-left text-base">
                 <thead>
                   <tr className="border-b border-line bg-canvas text-sm font-semibold text-muted">
-                    <th scope="col" className="p-4">Food Item</th>
-                    <th scope="col" className="p-4">Meal Type</th>
-                    <th scope="col" className="p-4">Amount</th>
-                    <th scope="col" className="p-4">Calories</th>
-                    <th scope="col" className="p-4">Protein</th>
-                    <th scope="col" className="p-4">Date</th>
-                    <th scope="col" className="p-4 text-right">Actions</th>
+                    <th scope="col" className="p-4">{t("foodItem")}</th>
+                    <th scope="col" className="p-4">{t("mealType")}</th>
+                    <th scope="col" className="p-4">{t("amount")}</th>
+                    <th scope="col" className="p-4">{t("calories")}</th>
+                    <th scope="col" className="p-4">{t("protein")}</th>
+                    <th scope="col" className="p-4">{t("date")}</th>
+                    <th scope="col" className="p-4 text-right">{t("actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -563,7 +565,7 @@ export default function AdminUserDetailPage() {
                           }}
                           className={tintButton}
                         >
-                          Details
+                          {t("details")}
                         </button>
                       </td>
                     </tr>
@@ -577,7 +579,7 @@ export default function AdminUserDetailPage() {
           {pagination.totalPages > 1 && (
             <div className="flex flex-col items-center justify-between gap-3 border-t border-line p-4 text-sm sm:flex-row">
               <span className="text-muted">
-                Page {pagination.page} of {pagination.totalPages} ({pagination.total} total items)
+                {t("page")} {pagination.page} {t("of")} {pagination.totalPages} ({pagination.total} {t("totalItems")})
               </span>
 
               <div className="flex items-center gap-2">
@@ -641,27 +643,27 @@ export default function AdminUserDetailPage() {
             <div className="space-y-5 py-4">
               <dl className="grid grid-cols-2 gap-4 rounded-xl border border-line bg-canvas p-4">
                 <div>
-                  <dt className="text-sm text-muted">Serving Amount</dt>
+                  <dt className="text-sm text-muted">{t("servingAmount")}</dt>
                   <dd className="mt-0.5 text-base font-semibold tabular-nums text-ink">
                     {selectedFood.amount} {selectedFood.unit}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">Meal Type</dt>
+                  <dt className="text-sm text-muted">{t("mealType")}</dt>
                   <dd className="mt-0.5 text-base font-semibold text-ink">
                     {selectedFood.meal?.mealType || "N/A"}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">Calories</dt>
+                  <dt className="text-sm text-muted">{t("calories")}</dt>
                   <dd className="mt-0.5 text-base font-semibold tabular-nums text-primary">
-                    {selectedFood.calories} kcal
+                    {selectedFood.calories} {t("kcal")}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">Protein</dt>
+                  <dt className="text-sm text-muted">{t("protein")}</dt>
                   <dd className="mt-0.5 text-base font-semibold tabular-nums text-ink">
-                    {selectedFood.protein} g
+                    {selectedFood.protein} {t("g")}
                   </dd>
                 </div>
               </dl>
@@ -669,18 +671,18 @@ export default function AdminUserDetailPage() {
               <div>
                 <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
                   <UserIcon className="h-4 w-4 text-primary" strokeWidth={1.75} aria-hidden="true" />
-                  <span>Logged User & Timestamp</span>
+                  <span>{t("loggedUserAndTimestamp")}</span>
                 </h4>
                 <div className="space-y-1.5 rounded-xl border border-line bg-canvas p-4 text-base text-muted">
                   <div>
-                    User:{" "}
+                    {t("user")}: {" "}
                     <strong className="font-semibold text-ink">
-                      {user?.name || "Unnamed User"}
+                      {user?.name || t("unnamedUser")}
                     </strong>{" "}
                     ({user?.email})
                   </div>
                   <div>
-                    Logged Date:{" "}
+                    {t("loggedDate")}: {" "}
                     {selectedFood.meal?.createdAt
                       ? new Date(selectedFood.meal.createdAt).toLocaleString("en-US")
                       : "-"}
@@ -694,7 +696,7 @@ export default function AdminUserDetailPage() {
                 onClick={() => setSelectedFood(null)}
                 className={`inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-primary px-6 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
               >
-                Close
+                {t("close")}
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import axios from "axios";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import {
     Users,
     Search,
@@ -70,6 +71,7 @@ const badgeBase = "inline-flex min-h-7 items-center gap-1 rounded-full px-3 text
 
 export default function AdminUsersPage() {
     const { data: session, status } = useSession();
+    const t = useTranslations("admin");
 
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [pagination, setPagination] = useState<PaginationMeta>({
@@ -160,7 +162,7 @@ export default function AdminUsersPage() {
                         aria-hidden="true"
                         className="h-10 w-10 animate-spin rounded-full border-2 border-line border-t-primary motion-reduce:animate-none"
                     />
-                    <p className="text-base text-muted">Loading admin control center...</p>
+                    <p className="text-base text-muted">{t("loadingAdminControlCenter")}</p>
                 </div>
             </div>
         );
@@ -174,16 +176,16 @@ export default function AdminUsersPage() {
                         <Shield className="h-8 w-8" strokeWidth={1.75} aria-hidden="true" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold tracking-tight text-ink">
-                        Access Denied
+                        {t("accessDenied")}
                     </h2>
                     <p className="mb-6 text-base leading-7 text-muted">
-                        You do not have administrative permissions to view this section.
+                        {t("accessDeniedMessage")}
                     </p>
                     <Link
                         href="/"
                         className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-2.5 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
                     >
-                        Return to Safety
+                        {t("returnToSafety")}
                     </Link>
                 </div>
             </div>
@@ -207,13 +209,13 @@ export default function AdminUsersPage() {
                     <div>
                         <div className="flex items-center gap-2 text-sm font-medium text-muted">
                             <Shield className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                            <span>Admin Management</span>
+                            <span>{t("adminManagement")}</span>
                         </div>
                         <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-                            User Directory
+                            {t("userDirectory")}
                         </h1>
                         <p className="mt-1 text-base text-muted">
-                            Manage system accounts, subscription tiers, and client profiles.
+                            {t("manageSystemAccounts")}
                         </p>
                     </div>
 
@@ -228,7 +230,7 @@ export default function AdminUsersPage() {
                                 strokeWidth={1.75}
                                 aria-hidden="true"
                             />
-                            <span>Refresh</span>
+                            <span>{t("refresh")}</span>
                         </button>
                     </div>
                 </div>
@@ -237,7 +239,7 @@ export default function AdminUsersPage() {
                 <dl className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
                         <div>
-                            <dt className="text-sm text-muted">Total Accounts</dt>
+                            <dt className="text-sm text-muted">{t("totalAccounts")}</dt>
                             <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">{pagination.total}</dd>
                         </div>
                         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-tint text-primary">
@@ -247,7 +249,7 @@ export default function AdminUsersPage() {
 
                     <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
                         <div>
-                            <dt className="text-sm text-muted">PRO Plan Users</dt>
+                            <dt className="text-sm text-muted">{t("proPlanUsers")}</dt>
                             <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-primary">
                                 {proCount}
                             </dd>
@@ -259,7 +261,7 @@ export default function AdminUsersPage() {
 
                     <div className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 shadow-soft">
                         <div>
-                            <dt className="text-sm text-muted">Administrators</dt>
+                            <dt className="text-sm text-muted">{t("administrators")}</dt>
                             <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">
                                 {adminCount}
                             </dd>
@@ -276,8 +278,8 @@ export default function AdminUsersPage() {
                         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" strokeWidth={1.75} aria-hidden="true" />
                         <input
                             type="text"
-                            aria-label="Search users"
-                            placeholder="Search by name or email..."
+                            aria-label={t("searchUsers")}
+                            placeholder={t("searchByNameEmail")}
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
@@ -291,7 +293,7 @@ export default function AdminUsersPage() {
                                     setSearch("");
                                     setPage(1);
                                 }}
-                                aria-label="Clear search"
+                                aria-label={t("clearSearch")}
                                 className={`absolute right-0.5 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-200 hover:text-primary ${focusRing}`}
                             >
                                 <X className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
@@ -303,7 +305,7 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-2">
                             <Filter className="h-4 w-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
                             <span className="text-sm font-medium text-muted">
-                                Filters:
+                                {t("filters")}:
                             </span>
                         </div>
 
@@ -317,7 +319,7 @@ export default function AdminUsersPage() {
                             }}
                             className={`${fieldClass} cursor-pointer`}
                         >
-                            <option value="">All Roles</option>
+                            <option value="">{t("allRoles")}</option>
                             <option value="USER">USER</option>
                             <option value="ADMIN">ADMIN</option>
                         </select>
@@ -332,7 +334,7 @@ export default function AdminUsersPage() {
                             }}
                             className={`${fieldClass} cursor-pointer`}
                         >
-                            <option value="">All Plans</option>
+                            <option value="">{t("allPlans")}</option>
                             <option value="FREE">FREE</option>
                             <option value="PRO">PRO</option>
                         </select>
@@ -350,7 +352,7 @@ export default function AdminUsersPage() {
                             onClick={() => fetchUsers()}
                             className={`min-h-11 cursor-pointer rounded-lg px-3 text-sm font-semibold underline underline-offset-4 ${focusRing}`}
                         >
-                            Retry
+                            {t("retry")}
                         </button>
                     </div>
                 )}
@@ -360,11 +362,11 @@ export default function AdminUsersPage() {
                     {loading ? (
                         <div role="status" className="flex items-center justify-center gap-3 p-12 text-base text-muted">
                             <RefreshCw className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.75} aria-hidden="true" />
-                            <span>Fetching user records...</span>
+                            <span>{t("fetchingUserRecords")}</span>
                         </div>
                     ) : users.length === 0 ? (
                         <div className="p-12 text-center text-base text-muted">
-                            No user accounts found matching the search criteria.
+                            {t("noUsersFound")}
                         </div>
                     ) : (
                         <div
@@ -376,12 +378,12 @@ export default function AdminUsersPage() {
                             <table className="w-full min-w-4xl border-collapse text-left text-base">
                                 <thead>
                                     <tr className="border-b border-line bg-canvas text-sm font-semibold text-muted">
-                                        <th scope="col" className="p-4">User Info</th>
-                                        <th scope="col" className="p-4">Role</th>
-                                        <th scope="col" className="p-4">Subscription</th>
-                                        <th scope="col" className="p-4">Profile Stats</th>
-                                        <th scope="col" className="p-4">Registered Date</th>
-                                        <th scope="col" className="p-4 text-right">Actions</th>
+                                        <th scope="col" className="p-4">{t("userInfo")}</th>
+                                        <th scope="col" className="p-4">{t("role")}</th>
+                                        <th scope="col" className="p-4">{t("subscription")}</th>
+                                        <th scope="col" className="p-4">{t("profileStats")}</th>
+                                        <th scope="col" className="p-4">{t("registeredDate")}</th>
+                                        <th scope="col" className="p-4 text-right">{t("actions")}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-line">
@@ -414,7 +416,7 @@ export default function AdminUsersPage() {
                                                         </div>
                                                         <div className="min-w-0">
                                                             <p className="truncate font-semibold text-ink">
-                                                                {user.name || "Unnamed User"}
+                                                                {user.name || t("unnamedUser")}
                                                             </p>
                                                             <p className="truncate text-sm text-muted">
                                                                 {user.email}
@@ -474,7 +476,7 @@ export default function AdminUsersPage() {
                                                         </div>
                                                     ) : (
                                                         <span className="text-sm italic text-muted">
-                                                            No profile data
+                                                            {t("noProfileData")}
                                                         </span>
                                                     )}
                                                 </td>
@@ -496,7 +498,7 @@ export default function AdminUsersPage() {
                                                             onClick={(e) => e.stopPropagation()}
                                                             className={tintButton}
                                                         >
-                                                            View
+                                                            {t("view")}
                                                         </Link>
                                                         <button
                                                             onClick={(e) => {
@@ -505,11 +507,11 @@ export default function AdminUsersPage() {
                                                                 setDeleteError(null);
                                                             }}
                                                             disabled={isSelf}
-                                                            title={isSelf ? "Cannot delete your own account" : "Delete user"}
+                                                            title={isSelf ? t("cannotDeleteYourself") : t("deleteUser")}
                                                             className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-danger/40 px-4 text-sm font-semibold text-danger transition-colors duration-200 hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-40 ${focusRing}`}
                                                         >
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                                                            <span>Delete</span>
+                                                            <span>{t("delete")}</span>
                                                         </button>
                                                     </div>
                                                 </td>
@@ -525,8 +527,8 @@ export default function AdminUsersPage() {
                     {pagination.totalPages > 1 && (
                         <div className="flex flex-col items-center justify-between gap-3 border-t border-line p-4 text-sm sm:flex-row">
                             <span className="text-muted">
-                                Page {pagination.page} of {pagination.totalPages} ({pagination.total}{" "}
-                                total users)
+                                {t("page")} {pagination.page} {t("of")} {pagination.totalPages} ({pagination.total}{" "}
+                                {t("totalUsers")})
                             </span>
 
                             <div className="flex items-center gap-2">
@@ -574,10 +576,10 @@ export default function AdminUsersPage() {
                                 </div>
                                 <div>
                                     <h3 id="delete-user-title" className="text-lg font-semibold tracking-tight text-ink">
-                                        Confirm Delete User
+                                        {t("confirmDeleteUser")}
                                     </h3>
                                     <p className="text-sm text-muted">
-                                        Action requires administrator confirmation
+                                        {t("actionRequiresConfirmation")}
                                     </p>
                                 </div>
                             </div>
@@ -600,16 +602,16 @@ export default function AdminUsersPage() {
                                 {userToDelete.email}
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-x-2 text-sm text-muted">
-                                <span>ID: #{userToDelete.id}</span>
+                                <span>{t("id")}: #{userToDelete.id}</span>
                                 <span aria-hidden="true">•</span>
-                                <span>Role: {userToDelete.role}</span>
+                                <span>{t("roleLabel")}: {userToDelete.role}</span>
                                 <span aria-hidden="true">•</span>
-                                <span>Plan: {userToDelete.subscription?.plan || "FREE"}</span>
+                                <span>{t("plan")}: {userToDelete.subscription?.plan || "FREE"}</span>
                             </div>
                         </div>
 
                         <p className="mb-4 text-base leading-7 text-muted">
-                            Are you sure you want to permanently delete this user account? All associated profile data, meal records, and subscription history will be removed.
+                            {t("confirmDeletePrompt")}
                         </p>
 
                         {deleteError && (
@@ -625,7 +627,7 @@ export default function AdminUsersPage() {
                                 disabled={isDeleting}
                                 className={tintButton}
                             >
-                                Cancel
+                                {t("cancel")}
                             </button>
                             <button
                                 onClick={handleDeleteUser}
@@ -635,12 +637,12 @@ export default function AdminUsersPage() {
                                 {isDeleting ? (
                                     <>
                                         <RefreshCw className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.75} aria-hidden="true" />
-                                        <span>Deleting...</span>
+                                        <span>{t("deleting")}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Trash2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                                        <span>Confirm Delete</span>
+                                        <span>{t("confirmDelete")}</span>
                                     </>
                                 )}
                             </button>
