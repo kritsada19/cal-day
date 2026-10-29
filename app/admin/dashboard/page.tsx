@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import axios from "axios";
+import { useTranslations } from "next-intl";
 import {
     Activity,
     Utensils,
@@ -47,6 +48,7 @@ function StatValue({ label, value, highlight = false }: { label: string; value: 
 
 export default function AdminDashboardPage() {
     const { data: session, status } = useSession();
+    const t = useTranslations("admin");
 
     const [aiUsage, setAiUsage] = useState<StatsData | null>(null);
     const [meals, setMeals] = useState<StatsData | null>(null);
@@ -94,7 +96,7 @@ export default function AdminDashboardPage() {
                         aria-hidden="true"
                         className="h-10 w-10 animate-spin rounded-full border-2 border-line border-t-primary motion-reduce:animate-none"
                     />
-                    <p className="text-base text-muted">Loading admin dashboard...</p>
+                    <p className="text-base text-muted">{t("loadingAdminDashboard")}</p>
                 </div>
             </div>
         );
@@ -108,16 +110,16 @@ export default function AdminDashboardPage() {
                         <Shield className="h-8 w-8" strokeWidth={1.75} aria-hidden="true" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold tracking-tight text-ink">
-                        Access Denied
+                        {t("accessDenied")}
                     </h2>
                     <p className="mb-6 text-base leading-7 text-muted">
-                        You do not have administrative permissions to view this section.
+                        {t("accessDeniedMessage")}
                     </p>
                     <Link
                         href="/"
                         className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-2.5 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
                     >
-                        Return to Safety
+                        {t("returnToSafety")}
                     </Link>
                 </div>
             </div>
@@ -137,13 +139,13 @@ export default function AdminDashboardPage() {
                     <div>
                         <div className="flex items-center gap-2 text-sm font-medium text-muted">
                             <Shield className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                            <span>System Overview</span>
+                            <span>{t("systemOverview")}</span>
                         </div>
                         <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-                            Admin Dashboard
+                            {t("adminDashboard")}
                         </h1>
                         <p className="mt-1 text-base text-muted">
-                            Monitor AI usage, meal creation, and system activity.
+                            {t("dashboardSubtitle")}
                         </p>
                     </div>
 
@@ -158,7 +160,7 @@ export default function AdminDashboardPage() {
                                 strokeWidth={1.75}
                                 aria-hidden="true"
                             />
-                            <span>Refresh</span>
+                            <span>{t("refresh")}</span>
                         </button>
                     </div>
                 </div>
@@ -181,8 +183,8 @@ export default function AdminDashboardPage() {
                                 <Activity className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-semibold text-ink">AI Usage Analytics</h2>
-                                <p className="text-sm text-muted">Total AI meal requests</p>
+                                <h2 className="text-lg font-semibold text-ink">{t("aiUsageAnalytics")}</h2>
+                                <p className="text-sm text-muted">{t("totalAiMealRequests")}</p>
                             </div>
                         </div>
 
@@ -190,9 +192,9 @@ export default function AdminDashboardPage() {
                             <StatsSkeleton />
                         ) : (
                             <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                                <StatValue label="Today" value={aiUsage?.today || 0} highlight />
-                                <StatValue label="Last 7 Days" value={aiUsage?.past7Days || 0} />
-                                <StatValue label="Total All Time" value={aiUsage?.total || 0} />
+                                <StatValue label={t("today")} value={aiUsage?.today || 0} highlight />
+                                <StatValue label={t("last7Days")} value={aiUsage?.past7Days || 0} />
+                                <StatValue label={t("totalAllTime")} value={aiUsage?.total || 0} />
                             </dl>
                         )}
                     </div>
@@ -204,8 +206,8 @@ export default function AdminDashboardPage() {
                                 <Utensils className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-semibold text-ink">Meals Database</h2>
-                                <p className="text-sm text-muted">Total created records</p>
+                                <h2 className="text-lg font-semibold text-ink">{t("mealsDatabase")}</h2>
+                                <p className="text-sm text-muted">{t("totalCreatedRecords")}</p>
                             </div>
                         </div>
 
@@ -213,9 +215,9 @@ export default function AdminDashboardPage() {
                             <StatsSkeleton />
                         ) : (
                             <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                                <StatValue label="Today" value={meals?.today || 0} highlight />
-                                <StatValue label="Last 7 Days" value={meals?.past7Days || 0} />
-                                <StatValue label="Total Records" value={meals?.total || 0} />
+                                <StatValue label={t("today")} value={meals?.today || 0} highlight />
+                                <StatValue label={t("last7Days")} value={meals?.past7Days || 0} />
+                                <StatValue label={t("totalAllTime")} value={meals?.total || 0} />
                             </dl>
                         )}
                     </div>
@@ -224,7 +226,7 @@ export default function AdminDashboardPage() {
                 {/* Quick Navigation / Management */}
                 <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold tracking-tight">
                     <Database className="h-5 w-5 text-primary" strokeWidth={1.75} aria-hidden="true" />
-                    <span>Management Access</span>
+                    <span>{t("managementAccess")}</span>
                 </h2>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -237,8 +239,8 @@ export default function AdminDashboardPage() {
                                 <Users className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                             </div>
                             <div>
-                                <h3 className="text-base font-semibold text-ink">Users Directory</h3>
-                                <p className="text-sm text-muted">Manage accounts & subscriptions</p>
+                                <h3 className="text-base font-semibold text-ink">{t("usersDirectory")}</h3>
+                                <p className="text-sm text-muted">{t("manageAccounts")}</p>
                             </div>
                         </div>
                         <ArrowRight className="h-5 w-5 text-muted transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary motion-reduce:transition-none" strokeWidth={1.75} aria-hidden="true" />
@@ -253,8 +255,8 @@ export default function AdminDashboardPage() {
                                 <Utensils className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                             </div>
                             <div>
-                                <h3 className="text-base font-semibold text-ink">Foods Database</h3>
-                                <p className="text-sm text-muted">Manage global food entries</p>
+                                <h3 className="text-base font-semibold text-ink">{t("foodsDatabase")}</h3>
+                                <p className="text-sm text-muted">{t("manageFoodEntries")}</p>
                             </div>
                         </div>
                         <ArrowRight className="h-5 w-5 text-muted transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary motion-reduce:transition-none" strokeWidth={1.75} aria-hidden="true" />

@@ -12,9 +12,9 @@ import { test, expect, type Page } from '@playwright/test';
 // ──────────────────────────────────────────────
 async function loginAsTestUser(page: Page) {
   await page.goto('/signin');
-  await page.getByPlaceholder('Enter your email address').fill('test@example.com');
-  await page.getByPlaceholder('Enter your password').fill('password123');
-  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.locator('#signin-email').fill('test@example.com');
+  await page.locator('#signin-password').fill('password123');
+  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
   // รอให้ redirect สำเร็จก่อนดำเนินการต่อ
   await page.waitForURL('/');
 }
@@ -33,7 +33,10 @@ test.describe('Protected Route Guard', () => {
     // ไม่ว่าจะเป็นแบบใด ต้องไม่เห็นข้อมูลส่วนตัวของ user
     const url = page.url();
     const isRedirected = url.includes('/signin');
-    const hasNutritionText = await page.getByText('Your nutrition overview').isVisible().catch(() => false);
+    const hasNutritionText = await page
+      .getByRole('heading', { name: /Your nutrition overview|ภาพรวมโภชนาการของคุณ/i })
+      .isVisible()
+      .catch(() => false);
 
     // ต้องเป็นอย่างใดอย่างหนึ่ง: redirect หรือไม่แสดงเนื้อหาส่วนตัว
     expect(isRedirected || !hasNutritionText).toBeTruthy();
@@ -60,7 +63,7 @@ test.describe('Logout', () => {
 
     // ขั้นที่ 2: ตรวจว่า dashboard โหลดได้หลัง login
     await page.goto('/dashboard');
-    await expect(page.getByText('Your nutrition overview')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: /Your nutrition overview|ภาพรวมโภชนาการของคุณ/i })).toBeVisible({ timeout: 5000 });
 
     // ขั้นที่ 3: logout โดยการ clear cookies (จำลอง signOut)
     await page.context().clearCookies();

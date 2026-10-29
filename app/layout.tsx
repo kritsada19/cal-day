@@ -7,7 +7,8 @@ import { getSession } from "@/lib/auth/session";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import ThemedToaster from "@/components/ui/ThemedToaster";
 import { env } from "@/lib/env";
-
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,25 +49,31 @@ export default async function RootLayout({
 }>) {
   const session = await getSession();
 
+  // ดึง locale และ messages จาก next-intl ที่ได้จาก request.ts
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} ${plusJakarta.variable} ${notoSansThai.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-dvh flex-col bg-canvas text-ink selection:bg-highlight selection:text-ink antialiased transition-colors duration-300">
-        <SessionProvider session={session}>
-          <ThemeProvider>
-            <Navbar />
-            <main
-              className={`flex-1 flex flex-col ${session?.user ? "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-64" : ""}`}
-            >
-              {children}
-            </main>
-            {/* ThemedToaster reads the resolved theme from next-themes and passes it to Sonner */}
-            <ThemedToaster />
-          </ThemeProvider>
-        </SessionProvider>
+        <NextIntlClientProvider messages={messages}>
+          <SessionProvider session={session}>
+            <ThemeProvider>
+              <Navbar />
+              <main
+                className={`flex-1 flex flex-col ${session?.user ? "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-64" : ""}`}
+              >
+                {children}
+              </main>
+              {/* ThemedToaster reads the resolved theme from next-themes and passes it to Sonner */}
+              <ThemedToaster />
+            </ThemeProvider>
+          </SessionProvider>
+        </NextIntlClientProvider>
       </body>
     </html >
   );

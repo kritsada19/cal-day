@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { useSession, signOut } from "next-auth/react";
 import axios from "axios";
 import {
@@ -17,7 +18,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { setLocaleCookie } from "@/lib/i18n";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import { useTranslations } from "next-intl";
 
 interface NavItem {
   label: string;
@@ -101,9 +104,35 @@ function TabAction({ item }: { item: NavItem }) {
   );
 }
 
+function LanguageSwitcher() {
+  const locale = useLocale();
+  const router = useRouter();
+
+  const handleToggleLocale = () => {
+    const nextLocale = locale === "th" ? "en" : "th";
+
+    // จัดการการสร้าง cookie ผ่าน helper เพื่อให้โปรเจกต์ไม่ต้องสร้าง raw cookie string
+    // กระจายไปตาม component และสามารถบังคับ SameSite/Secure ได้ในที่เดียว
+    setLocaleCookie(nextLocale);
+    router.refresh();
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleToggleLocale}
+      aria-label="Switch language"
+      className={`inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-canvas px-3 text-sm font-semibold text-ink transition-colors duration-200 hover:bg-primary-tint ${focusRing}`}
+    >
+      {locale === "th" ? "EN" : "ไทย"}
+    </button>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const t = useTranslations("navbar");
   const [userData, setUserData] = useState<ProfileApiResponse | null>(null);
 
   const consumed = userData?.dailyProgress.calories.consumed ?? 0;
@@ -184,18 +213,18 @@ export default function Navbar() {
   const profileHref = isAdmin ? "/admin/profile" : "/profile";
   const plan = userData?.subscription?.plan;
 
-  const dashboardItem: NavItem = { label: "Dashboard", href: "/dashboard", active: pathname === "/dashboard", icon: LayoutDashboard };
-  const newEntryItem: NavItem = { label: "New Entry", href: "/meals/new", active: pathname === "/meals/new", icon: Plus };
-  const analyticsItem: NavItem = { label: "Analytics", href: "/analytics", active: pathname === "/analytics", icon: TrendingUp };
-  const subscriptionItem: NavItem = { label: "Subscription", href: "/subscription", active: pathname === "/subscription", icon: CreditCard };
-  const profileItem: NavItem = { label: "Profile", href: profileHref, active: pathname === profileHref, icon: User };
+  const dashboardItem: NavItem = { label: t("dashboard"), href: "/dashboard", active: pathname === "/dashboard", icon: LayoutDashboard };
+  const newEntryItem: NavItem = { label: t("newEntry"), href: "/meals/new", active: pathname === "/meals/new", icon: Plus };
+  const analyticsItem: NavItem = { label: t("analytics"), href: "/analytics", active: pathname === "/analytics", icon: TrendingUp };
+  const subscriptionItem: NavItem = { label: t("subscription"), href: "/subscription", active: pathname === "/subscription", icon: CreditCard };
+  const profileItem: NavItem = { label: t("profile"), href: profileHref, active: pathname === profileHref, icon: User };
 
   const navItemsForUser: NavItem[] = [dashboardItem, newEntryItem, analyticsItem, subscriptionItem];
 
   const navItemsForAdmin: NavItem[] = [
-    { label: "Dashboard", href: "/admin/dashboard", active: pathname === "/admin/dashboard", icon: LayoutDashboard },
-    { label: "Users", href: "/admin/users", active: pathname === "/admin/users", icon: Users },
-    { label: "Foods", href: "/admin/foods", active: pathname === "/admin/foods", icon: Utensils },
+    { label: t("dashboard"), href: "/admin/dashboard", active: pathname === "/admin/dashboard", icon: LayoutDashboard },
+    { label: t("users"), href: "/admin/users", active: pathname === "/admin/users", icon: Users },
+    { label: t("foods"), href: "/admin/foods", active: pathname === "/admin/foods", icon: Utensils },
   ];
 
   /* ───────────── Logged out: simple top header ───────────── */
@@ -206,18 +235,19 @@ export default function Navbar() {
           <Brand wordmarkClassName="hidden min-[400px]:flex" />
 
           <div className="flex items-center gap-1 sm:gap-2">
+            <LanguageSwitcher />
             <Link
               href="/signin"
               className={`inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-muted transition-colors duration-200 hover:bg-primary-tint hover:text-ink sm:px-4 ${focusRing}`}
             >
-              Log in
+              {t("logIn")}
             </Link>
             <Link
               href="/signup"
               className={`inline-flex min-h-11 items-center rounded-xl bg-primary px-3 text-sm font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover sm:px-4 ${focusRing}`}
             >
-              <span className="sm:hidden">Sign up</span>
-              <span className="hidden sm:inline">Create account</span>
+              <span className="sm:hidden">{t("signUp")}</span>
+              <span className="hidden sm:inline">{t("createAccount")}</span>
             </Link>
             <ThemeToggle />
           </div>
@@ -258,14 +288,14 @@ export default function Navbar() {
           <div className="rounded-2xl border border-line bg-canvas p-4">
             {target > 0 ? (
               <>
-                <p className="text-sm font-medium text-muted">Daily balance</p>
+                <p className="text-sm font-medium text-muted">{t("dailyBalance")}</p>
                 <p className="mt-1 text-ink">
                   <span className="text-2xl font-bold tabular-nums">{consumed}</span>
-                  <span className="text-sm text-muted tabular-nums"> / {target} kcal</span>
+                  <span className="text-sm text-muted tabular-nums"> / {target} {t("dailyCalories")}</span>
                 </p>
                 <div
                   role="progressbar"
-                  aria-label="Daily calories"
+                  aria-label={t("dailyCalories")}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={Math.round(percentage)}
@@ -276,14 +306,14 @@ export default function Navbar() {
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <p className="mt-2 text-sm text-muted tabular-nums">{remaining} kcal left</p>
+                <p className="mt-2 text-sm text-muted tabular-nums">{remaining} {t("kcalLeft")}</p>
               </>
             ) : (
               <Link
                 href="/profile/form"
                 className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
               >
-                Fill profile
+                {t("fillProfile")}
               </Link>
             )}
           </div>
@@ -299,17 +329,18 @@ export default function Navbar() {
             </span>
             <span className="flex min-w-0 flex-col leading-tight">
               <span className="truncate text-sm font-semibold text-ink">{session?.user?.name}</span>
-              {plan && <span className="text-xs text-muted">{plan} plan</span>}
+              {plan && <span className="text-xs text-muted">{plan} {t("plan")}</span>}
             </span>
           </Link>
 
           <div className="flex items-center justify-between gap-2">
+            <LanguageSwitcher />
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className={`flex min-h-11 flex-1 items-center gap-3 rounded-xl px-3 text-sm font-medium text-danger transition-colors duration-200 hover:bg-primary-tint ${focusRing}`}
             >
               <LogOut className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-              Sign out
+              {t("signOut")}
             </button>
             <ThemeToggle />
           </div>
@@ -321,6 +352,7 @@ export default function Navbar() {
         <Brand wordmarkClassName="hidden min-[360px]:flex" />
 
         <div className="flex min-w-0 items-center gap-1">
+          <LanguageSwitcher />
           {!isAdmin &&
             (target > 0 ? (
               <div className="mr-1 flex min-w-0 flex-col items-end">

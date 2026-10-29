@@ -15,6 +15,31 @@ CalDay คือเว็บแอปพลิเคชันสำหรับ�
 - **AI Integration:** ใช้ Google Generative AI (Gemini) เพื่อช่วยประมวลผลข้อมูล
 - **Pro Subscriptions:** ระบบสมัครสมาชิกแบบพรีเมียมเพื่อเข้าถึงฟีเจอร์ขั้นสูง จัดการการชำระเงินและบิลลิ่งด้วย Stripe
 - **Real-time Monitoring:** มีระบบ Heartbeat Mechanism เพื่อตรวจสอบสถานะออนไลน์ของผู้ใช้แบบ Real-time ด้วย Redis (Pub/Sub)
+- **Multi-language UI:** รองรับการสลับภาษาไทย/อังกฤษผ่าน Navbar พร้อม fallback อัตโนมัติเป็นภาษาไทยเมื่อ locale ไม่ถูกต้องหรือไม่มีค่า
+
+## 🌐 Internationalization (i18n)
+
+แอปพลิเคชันรองรับภาษาทั้งหมด 2 ภาษา:
+
+- `th` — ภาษาไทย (default)
+- `en` — English
+
+### การทำงานของระบบภาษา
+- Locale ถูกตรวจสอบและ normalize ด้วย whitelist ที่อนุญาตเฉพาะ `th` และ `en`
+- ถ้าผู้ใช้เปิดหน้าโดยไม่มี locale หรือส่ง locale ที่ไม่ถูกต้อง ระบบจะ fallback กลับเป็น `th` อย่างปลอดภัย
+- ค่า locale จะถูกเก็บใน cookie เพื่อให้หน้าเว็บคงสภาพภาษาเดิมเมื่อรีเฟรชหรือกลับมาเยี่ยมชมใหม่
+- การสลับภาษาเกิดจากปุ่มใน Navbar และจะทำการ refresh locale ตามค่าใหม่ทันที
+
+### ตัวอย่างการใช้
+```bash
+# ภาษาไทย (default)
+GET /
+
+# ภาษาอังกฤษ
+Cookie: locale=en
+```
+
+หรือสลับผ่าน UI จากปุ่มภาษาใน Navbar โดยเลือกภาษาไทย/English
 
 ## 💻 Tech Stack (เทคโนโลยีที่ใช้)
 

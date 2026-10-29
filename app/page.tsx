@@ -1,27 +1,16 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-
-const highlights = [
-  {
-    title: "Simple tracking",
-    description: "Keep your nutrition goals clear with a calm and easy-to-read experience.",
-    badge: "01",
-  },
-  {
-    title: "Clear routines",
-    description: "Build steady habits with a simple flow from profile setup to daily planning.",
-    badge: "02",
-  },
-  {
-    title: "Safe profile",
-    description: "Enjoy a secure account experience while your personal information stays organized.",
-    badge: "03",
-  },
-];
-
-const tags = ["Daily goals", "Simple insights", "Clear focus"];
+import { useTranslations } from "next-intl";
 
 export default function Home() {
+  const t = useTranslations("home");
+  const highlights = t.raw("highlights") as Array<{
+    title: string;
+    description: string;
+    badge: string;
+  }>;
+  const tags = t.raw("tags") as string[];
+
   return (
     <div className="relative min-h-[85vh] flex-1 overflow-hidden bg-canvas px-4 py-10 text-ink selection:bg-highlight selection:text-ink md:py-16">
       <div
@@ -34,18 +23,18 @@ export default function Home() {
           <section className="rounded-2xl border border-line bg-surface p-6 shadow-soft sm:p-8 md:p-10">
             <div className="inline-flex items-center gap-2 rounded-full bg-highlight px-3 py-1.5 text-sm font-medium text-ink">
               <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
-              Smart daily tracking
+              {t("badge")}
             </div>
 
             <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-ink sm:text-5xl">
-              CALDAY
+              {t("title")}
               <span className="mt-3 block text-lg font-medium tracking-normal text-primary sm:text-xl">
-                Simple nutrition planning
+                {t("subtitle")}
               </span>
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
-              A calm and focused space to understand your nutrition goals, keep your profile organized, and stay consistent with a simple daily routine.
+              {t("description")}
             </p>
 
             <ul className="mt-7 flex flex-wrap gap-2">
@@ -64,31 +53,27 @@ export default function Home() {
                 href="/signup"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-auto"
               >
-                Start tracking
+                {t("startTracking")}
               </Link>
               <Link
                 href="/signin"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary-tint px-6 py-3 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-auto"
               >
-                Open profile
+                {t("openProfile")}
               </Link>
             </div>
           </section>
 
           <div className="space-y-6">
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft md:p-8">
-              <p className="text-sm font-medium text-muted">What this app does</p>
+              <p className="text-sm font-medium text-muted">{t("sectionTitle")}</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-                Stay focused
+                {t("sectionSubtitle")}
               </h2>
 
               <div className="mt-5 space-y-3 text-base leading-7 text-muted">
-                <p>
-                  Calday helps you keep your daily nutrition habits simple and focused.
-                </p>
-                <p>
-                  You can create an account, fill in your profile, and review your personal targets in one place.
-                </p>
+                <p>{t("sectionText1")}</p>
+                <p>{t("sectionText2")}</p>
               </div>
             </div>
 
@@ -98,13 +83,11 @@ export default function Home() {
                   <Sparkles className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted">Built for clarity</p>
-                  <p className="mt-0.5 text-base font-semibold text-ink">Clean and modern</p>
+                  <p className="text-sm font-medium text-muted">{t("featureTitle")}</p>
+                  <p className="mt-0.5 text-base font-semibold text-ink">{t("featureSubtitle")}</p>
                 </div>
               </div>
-              <p className="mt-4 text-base leading-7 text-muted">
-                The experience stays simple, polished, and easy to understand from the first visit.
-              </p>
+              <p className="mt-4 text-base leading-7 text-muted">{t("featureText")}</p>
             </div>
           </div>
         </div>

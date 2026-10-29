@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Shield, User as UserIcon, Mail, Fingerprint, LogOut, ArrowLeft } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -10,6 +11,7 @@ const focusRing =
 
 export default function AdminProfilePage() {
     const { data: session, status } = useSession();
+    const t = useTranslations("admin");
 
     if (status === "loading") {
         return (
@@ -19,7 +21,7 @@ export default function AdminProfilePage() {
                         aria-hidden="true"
                         className="h-10 w-10 animate-spin rounded-full border-2 border-line border-t-primary motion-reduce:animate-none"
                     />
-                    <p className="text-base text-muted">Loading admin profile...</p>
+                    <p className="text-base text-muted">{t("loadingAdminProfile")}</p>
                 </div>
             </div>
         );
@@ -33,16 +35,16 @@ export default function AdminProfilePage() {
                         <Shield className="h-8 w-8" strokeWidth={1.75} aria-hidden="true" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold tracking-tight text-ink">
-                        Access Denied
+                        {t("accessDenied")}
                     </h2>
                     <p className="mb-6 text-base leading-7 text-muted">
-                        You do not have administrative permissions to view this section.
+                        {t("accessDeniedMessage")}
                     </p>
                     <Link
                         href="/"
                         className={`inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-2.5 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
                     >
-                        Return to Safety
+                        {t("returnToSafety")}
                     </Link>
                 </div>
             </div>
@@ -65,7 +67,7 @@ export default function AdminProfilePage() {
                     className={`mb-6 inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-semibold text-primary transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
                 >
                     <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                    <span>Back to Dashboard</span>
+                    <span>{t("backToDashboard")}</span>
                 </Link>
 
                 <div className="flex flex-col gap-6 md:flex-row md:gap-8">
@@ -79,8 +81,8 @@ export default function AdminProfilePage() {
                                 </div>
                             </div>
 
-                            <h2 className="text-lg font-semibold tracking-tight text-ink">{user?.name || "Administrator"}</h2>
-                            <p className="mt-1 text-sm font-medium text-muted">Super Admin</p>
+                            <h2 className="text-lg font-semibold tracking-tight text-ink">{user?.name || t("administrator")}</h2>
+                            <p className="mt-1 text-sm font-medium text-muted">{t("superAdmin")}</p>
                         </div>
 
                         <button
@@ -88,7 +90,7 @@ export default function AdminProfilePage() {
                             className={`flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-danger/40 bg-surface p-3 text-base font-semibold text-danger transition-colors duration-200 hover:bg-danger/10 ${focusRing}`}
                         >
                             <LogOut className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                            <span>Sign Out</span>
+                            <span>{t("signOut")}</span>
                         </button>
                     </div>
 
@@ -97,22 +99,22 @@ export default function AdminProfilePage() {
                         <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
                             <h1 className="mb-6 flex items-center gap-2 border-b border-line pb-4 text-lg font-semibold text-ink">
                                 <Fingerprint className="h-5 w-5 text-primary" strokeWidth={1.75} aria-hidden="true" />
-                                <span>Identity Information</span>
+                                <span>{t("identityInformation")}</span>
                             </h1>
 
                             <dl className="space-y-6">
                                 <div>
                                     <dt className="mb-1 flex items-center gap-2 text-sm text-muted">
                                         <UserIcon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                                        Full Name
+                                        {t("fullName")}
                                     </dt>
-                                    <dd className="text-base font-medium text-ink">{user?.name || "Not specified"}</dd>
+                                    <dd className="text-base font-medium text-ink">{user?.name || t("notSpecified")}</dd>
                                 </div>
 
                                 <div>
                                     <dt className="mb-1 flex items-center gap-2 text-sm text-muted">
                                         <Mail className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                                        Email Address
+                                        {t("emailAddress")}
                                     </dt>
                                     <dd className="break-all text-base font-medium text-ink">{user?.email}</dd>
                                 </div>
@@ -120,7 +122,7 @@ export default function AdminProfilePage() {
                                 <div>
                                     <dt className="mb-1 flex items-center gap-2 text-sm text-muted">
                                         <Shield className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                                        System Role
+                                        {t("systemRole")}
                                     </dt>
                                     <dd>
                                         <span className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-highlight px-3 text-sm font-semibold text-ink">
@@ -133,10 +135,17 @@ export default function AdminProfilePage() {
                         </div>
 
                         <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
-                            <h2 className="mb-2 text-lg font-semibold text-ink">Administrative Access</h2>
+                            <h2 className="mb-2 text-lg font-semibold text-ink">{t("administrativeAccess")}</h2>
                             <p className="text-base leading-7 text-muted">
-                                You are currently logged in with <span className="font-semibold text-ink">Administrator Privileges</span>.
-                                This account is exempt from daily calorie tracking and profile requirements. You have full access to the User Directory and Food Database management systems.
+                                {t("adminAccessDescription").split("Administrator Privileges").length > 1 ? (
+                                    <>
+                                        {t("adminAccessDescription").split("Administrator Privileges")[0]}
+                                        <span className="font-semibold text-ink">{t("adminPrivileges")}</span>
+                                        {t("adminAccessDescription").split("Administrator Privileges")[1]}
+                                    </>
+                                ) : (
+                                    t("adminAccessDescription")
+                                )}
                             </p>
                         </div>
                     </div>

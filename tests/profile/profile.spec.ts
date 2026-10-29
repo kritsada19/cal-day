@@ -10,9 +10,9 @@ import { test, expect, type Page } from '@playwright/test';
 // ──────────────────────────────────────────────
 async function loginAndGotoProfile(page: Page) {
   await page.goto('/signin');
-  await page.getByPlaceholder('Enter your email address').fill('test@example.com');
-  await page.getByPlaceholder('Enter your password').fill('password123');
-  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.getByLabel(/Email address|ที่อยู่อีเมล/i).fill('test@example.com');
+  await page.getByLabel(/Password|รหัสผ่าน/i).fill('password123');
+  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
   await page.waitForURL('/');
   await page.goto('/profile', {
     waitUntil: 'domcontentloaded',
@@ -30,41 +30,34 @@ test.describe('Profile', () => {
     // ตรวจว่า URL ถูกต้อง
     await expect(page).toHaveURL('/profile');
 
-    // ตรวจว่า heading หลักแสดงอยู่
-    await expect(page.getByRole('heading', { name: 'Your account' })).toBeVisible({ timeout: 8000 });
+    // ตรวจว่า heading หลักแสดงอยู่ทั้งภาษาไทยและอังกฤษ
+    await expect(page.locator('h1').filter({ hasText: /Your account|บัญชีของคุณ/i })).toBeVisible({ timeout: 8000 });
   });
 
   test('แสดง section "Profile summary"', async ({ page }) => {
-    // ตรวจว่ามี label Profile summary
-    await expect(page.getByText('Profile summary')).toBeVisible({ timeout: 8000 });
+    // ตรวจว่ามี label สรุปโปรไฟล์หรือ Profile summary
+    await expect(page.getByRole('heading', { name: /Profile summary|สรุปโปรไฟล์/i })).toBeVisible({ timeout: 8000 });
   });
 
   test('มีลิงก์ Fill personal info / Edit profile', async ({ page }) => {
-    // ตรวจว่ามีลิงก์ Fill personal info หรือ Edit profile ชี้ไป /profile/form
-    // (แสดงอย่างใดอย่างหนึ่งขึ้นอยู่กับว่า user ได้กรอกข้อมูลแล้วหรือยัง)
+    // ตรวจว่ามีลิงก์ที่กำหนดไว้แบบไทยหรืออังกฤษ
+    await expect(page.locator('h1').filter({ hasText: /Your account|บัญชีของคุณ/i })).toBeVisible({ timeout: 10000 });
 
-    // รอให้หน้าโหลดเนื้อหา
-    await expect(page.getByRole('heading', { name: 'Your account' })).toBeVisible({ timeout: 10000 });
+    const profileFormLinks = page.locator('a[href="/profile/form"]');
+    const primaryProfileLink = profileFormLinks.first();
 
-    const fillLink = page.getByRole('link', { name: 'Fill personal info' });
-    const editLink = page.getByRole('link', { name: 'Edit profile' });
-
-    // วนลูปเช็คว่าอันไหน visible (เพือหลีกเลี่ยง error ตอนใช้ .or() แล้วเจอทั้งสองอัน)
-    await expect(async () => {
-      const isFillVisible = await fillLink.isVisible();
-      const isEditVisible = await editLink.isVisible();
-      expect(isFillVisible || isEditVisible).toBeTruthy();
-    }).toPass({ timeout: 10000 });
+    await expect(primaryProfileLink).toBeVisible({ timeout: 10000 });
+    await expect(primaryProfileLink).toHaveText(/Fill personal info|กรอกข้อมูลส่วนตัว|Edit profile|แก้ไขโปรไฟล์/i);
   });
 
   test('มีปุ่ม Log out ใน Quick actions', async ({ page }) => {
-    // ตรวจว่ามีปุ่ม Log out ใน section Quick actions
-    await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible({ timeout: 8000 });
+    // ตรวจว่ามีปุ่มออกจากระบบหรือ Log out ใน section Quick actions
+    await expect(page.getByRole('button', { name: /Log out|ออกจากระบบ/i })).toBeVisible({ timeout: 8000 });
   });
 
   test('กด Log out → redirect ไปหน้า home และ session หมด', async ({ page }) => {
-    // คลิก Log out
-    await page.getByRole('button', { name: 'Log out' }).click();
+    // คลิกออกจากระบบ
+    await page.getByRole('button', { name: /Log out|ออกจากระบบ/i }).click();
 
     // next-auth จะ redirect ไปหน้า / หลัง signOut({ callbackUrl: "/" })
     await page.waitForURL('/', { timeout: 8000 });
@@ -72,7 +65,7 @@ test.describe('Profile', () => {
   });
 
   test('มีลิงก์ Back to home ที่ไปหน้า /', async ({ page }) => {
-    const backLink = page.getByRole('link', { name: 'Back to home' });
+    const backLink = page.getByRole('link', { name: /Back to home|กลับไปหน้าแรก|Go to home|ไปที่หน้าแรก/i }).first();
 
     await expect(backLink).toBeVisible();
 
@@ -85,10 +78,10 @@ test.describe('Profile', () => {
   });
 
   test('แสดง PLAN และ AI REMAINING ใน account info', async ({ page }) => {
-    const accountDetails = page.getByRole('heading', { name: 'Account details' }).locator('..');
+    const accountDetails = page.getByRole('heading', { name: /Account details|รายละเอียดบัญชี/i }).locator('..');
 
-    await expect(accountDetails.getByText(/Plan/i)).toBeVisible();
-    await expect(accountDetails.getByText(/AI remaining/i)).toBeVisible();
+    await expect(accountDetails.getByText(/Plan|แผน/i)).toBeVisible();
+    await expect(accountDetails.getByText(/AI remaining|AI ที่เหลือ/i)).toBeVisible();
   });
 
 });

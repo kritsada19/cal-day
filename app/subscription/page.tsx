@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
 
 const features = [
@@ -14,6 +15,7 @@ const features = [
 ];
 
 export default function SubscriptionPage() {
+  const t = useTranslations("subscription");
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<string>("FREE");
   const [isFetchingPlan, setIsFetchingPlan] = useState(true);
@@ -77,24 +79,24 @@ export default function SubscriptionPage() {
 
       {/* Title Area */}
       <div className="relative mb-10 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">Subscription</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">{t("title")}</h1>
       </div>
 
       {/* Subscription Card Container */}
       <div className="relative w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-soft sm:p-8">
         <div className="mb-8 text-center">
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <h2 className="text-2xl font-bold tracking-tight text-ink">Pro plan</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">{t("proPlan")}</h2>
             {isPro && (
               <span className="rounded-full bg-highlight px-3 py-1 text-sm font-semibold text-ink">
-                Active
+                {t("active")}
               </span>
             )}
           </div>
-          <p className="mt-2 text-base text-muted">Master your nutrition</p>
+          <p className="mt-2 text-base text-muted">{t("subtitle")}</p>
           <p className="mt-5 flex items-baseline justify-center gap-1">
-            <span className="text-4xl font-bold tracking-tight text-ink">฿199</span>
-            <span className="text-sm text-muted">/ month</span>
+            <span className="text-4xl font-bold tracking-tight text-ink">{t("price")}</span>
+            <span className="text-sm text-muted">{t("perMonth")}</span>
           </p>
         </div>
 
@@ -118,12 +120,12 @@ export default function SubscriptionPage() {
             aria-busy={loading || isFetchingPlan}
             className="min-h-12 w-full cursor-pointer rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading || isFetchingPlan ? "Loading..." : (!session ? "Login required" : (isPro ? "Manage subscription" : "Upgrade to Pro"))}
+            {loading || isFetchingPlan ? t("loading") : (!session ? t("loginRequired") : (isPro ? t("manageSubscription") : t("upgradeToPro")))}
           </button>
 
           {!session && (
             <p className="mt-4 text-center text-sm text-muted">
-              Please log in to access premium features
+              {t("loginToAccess")}
             </p>
           )}
         </div>

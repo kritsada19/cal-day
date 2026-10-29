@@ -16,21 +16,21 @@ test.describe('Login', () => {
     // ตรวจว่า URL ถูกต้อง
     await expect(page).toHaveURL('/signin');
 
-    // ตรวจว่า input email และ password มีอยู่บนหน้า
-    await expect(page.getByPlaceholder('Enter your email address')).toBeVisible();
-    await expect(page.getByPlaceholder('Enter your password')).toBeVisible();
+    // ใช้ label เป็น selector เพื่อหลีกเลี่ยง strict mode และยอมรับทั้ง locale
+    await expect(page.getByLabel(/Email address|ที่อยู่อีเมล/i)).toBeVisible();
+    await expect(page.getByLabel(/Password|รหัสผ่าน/i)).toBeVisible();
 
-    // ตรวจว่าปุ่ม Log in มีอยู่
-    await expect(page.getByRole('button', { name: 'Log in' })).toBeVisible();
+    // ตรวจว่าปุ่มเข้าสู่ระบบมีอยู่ ทั้งในไทยและอังกฤษ
+    await expect(page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i })).toBeVisible();
   });
 
   test('login สำเร็จ → redirect ไปหน้า /', async ({ page }) => {
     // กรอก email และ password ที่ถูกต้อง (มีอยู่ใน database จาก seed)
-    await page.getByPlaceholder('Enter your email address').fill('test@example.com');
-    await page.getByPlaceholder('Enter your password').fill('password123');
+    await page.getByLabel(/Email address|ที่อยู่อีเมล/i).fill('test@example.com');
+    await page.getByLabel(/Password|รหัสผ่าน/i).fill('password123');
 
     // กดปุ่ม Login
-    await page.getByRole('button', { name: 'Log in' }).click();
+    await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
 
     // หลัง login สำเร็จ ต้อง redirect ไปหน้า root
     await expect(page).toHaveURL('/');
@@ -47,11 +47,11 @@ test.describe('Login', () => {
 
   test('login ล้มเหลว (password ผิด) → คงอยู่หน้า /signin', async ({ page }) => {
     // กรอก email ถูก แต่ password ผิด
-    await page.getByPlaceholder('Enter your email address').fill('test@example.com');
-    await page.getByPlaceholder('Enter your password').fill('wrongpassword');
+    await page.getByLabel(/Email address|ที่อยู่อีเมล/i).fill('test@example.com');
+    await page.getByLabel(/Password|รหัสผ่าน/i).fill('wrongpassword');
 
     // กดปุ่ม Login
-    await page.getByRole('button', { name: 'Log in' }).click();
+    await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
 
     // ต้องยังอยู่หน้า /signin (ไม่ redirect)
     await expect(page).toHaveURL('/signin');
@@ -59,26 +59,26 @@ test.describe('Login', () => {
 
   test('login ล้มเหลว (email ไม่มีในระบบ) → คงอยู่หน้า /signin', async ({ page }) => {
     // กรอก email ที่ไม่เคยสมัครในระบบ
-    await page.getByPlaceholder('Enter your email address').fill('notexist@example.com');
-    await page.getByPlaceholder('Enter your password').fill('somepassword');
+    await page.getByLabel(/Email address|ที่อยู่อีเมล/i).fill('notexist@example.com');
+    await page.getByLabel(/Password|รหัสผ่าน/i).fill('somepassword');
 
     // กดปุ่ม Login
-    await page.getByRole('button', { name: 'Log in' }).click();
+    await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
 
     // ต้องยังอยู่หน้า /signin
     await expect(page).toHaveURL('/signin');
   });
 
   test('มีลิงก์ไปหน้า signup', async ({ page }) => {
-    // ตรวจว่ามีลิงก์ Create an account ชี้ไป /signup
-    const link = page.getByRole('link', { name: 'Create an account' });
+    // ตรวจว่ามีลิงก์สร้างบัญชีหรือ Create an account ชี้ไป /signup
+    const link = page.getByRole('link', { name: /Create an account|สร้างบัญชี/i });
     await expect(link).toBeVisible();
     await link.click();
     await expect(page).toHaveURL('/signup');
   });
 
   test('มีลิงก์ไปหน้า forgot password', async ({ page }) => {
-    const link = page.getByRole('link', { name: 'Forgot password?' });
+    const link = page.getByRole('link', { name: /Forgot password\?|ลืมรหัสผ่าน/i });
     await expect(link).toBeVisible();
     await link.click();
     await expect(page).toHaveURL('/forgot-password');

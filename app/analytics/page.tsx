@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
 
 // Types for the Analytics API Response
@@ -39,6 +40,7 @@ const rangeButton = (active: boolean) =>
 const cardClass = "rounded-2xl border border-line bg-surface p-6 shadow-soft";
 
 export default function AnalyticsPage() {
+  const t = useTranslations("analytics");
   const [timeRange, setTimeRange] = useState<"7D" | "30D">("7D");
   const [fetching, setFetching] = useState(false);
 
@@ -121,7 +123,7 @@ export default function AnalyticsPage() {
     return (
       <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4">
         <p role="status" className="animate-pulse text-base text-muted motion-reduce:animate-none">
-          Loading analytics...
+          {t("loadingAnalytics")}
         </p>
       </div>
     );
@@ -131,13 +133,13 @@ export default function AnalyticsPage() {
     return (
       <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center shadow-soft">
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">Restricted access</h2>
-          <p className="mt-3 text-base leading-7 text-muted">Please log in to view analytics</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-ink">{t("restrictedAccess")}</h2>
+          <p className="mt-3 text-base leading-7 text-muted">{t("pleaseLogin")}</p>
           <Link
             href="/signin"
             className={`mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover ${focusRing}`}
           >
-            Sign in
+            {t("signIn")}
           </Link>
         </div>
       </div>
@@ -154,8 +156,8 @@ export default function AnalyticsPage() {
         {/* Header Section */}
         <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-ink">Analytics</h1>
-            <p className="mt-1 text-sm font-medium text-muted">Performance overview</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-ink">{t("title")}</h1>
+            <p className="mt-1 text-sm font-medium text-muted">{t("performanceOverview")}</p>
           </div>
 
           {/* Time Range Selector */}
@@ -165,14 +167,14 @@ export default function AnalyticsPage() {
               aria-pressed={timeRange === "7D"}
               className={rangeButton(timeRange === "7D")}
             >
-              7 days
+              {t("last7Days")}
             </button>
             <button
               onClick={() => setTimeRange("30D")}
               aria-pressed={timeRange === "30D"}
               className={rangeButton(timeRange === "30D")}
             >
-              30 days
+              {t("last30Days")}
             </button>
           </div>
         </div>
@@ -181,10 +183,10 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Card 1: Average Calories */}
           <div className={cardClass}>
-            <p className="mb-3 text-sm font-medium text-muted">Avg calories</p>
+            <p className="mb-3 text-sm font-medium text-muted">{t("avgCalories")}</p>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.averageCalories}</span>
-              <span className="text-sm text-muted">kcal/day</span>
+              <span className="text-sm text-muted">{t("kcalPerDay")}</span>
             </div>
 
             {/* Status Indicator */}
@@ -192,12 +194,12 @@ export default function AnalyticsPage() {
               {isUnderTarget ? (
                 <>
                   <span className="font-semibold text-primary tabular-nums">↓ {Math.abs(stats.targetCal - stats.averageCalories)} kcal</span>
-                  <span className="text-muted">Under target</span>
+                  <span className="text-muted">{t("underTarget")}</span>
                 </>
               ) : (
                 <>
                   <span className="font-semibold text-danger tabular-nums">↑ {stats.averageCalories - stats.targetCal} kcal</span>
-                  <span className="text-muted">Over target</span>
+                  <span className="text-muted">{t("overTarget")}</span>
                 </>
               )}
             </p>
@@ -205,7 +207,7 @@ export default function AnalyticsPage() {
 
           {/* Card 2: Consistency Score */}
           <div className={cardClass}>
-            <p className="mb-3 text-sm font-medium text-muted">Consistency score</p>
+            <p className="mb-3 text-sm font-medium text-muted">{t("consistencyScore")}</p>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.consistencyScore}</span>
               <span className="text-sm text-muted">%</span>
@@ -229,10 +231,10 @@ export default function AnalyticsPage() {
 
           {/* Card 3: Current Streak */}
           <div className={cardClass}>
-            <p className="mb-3 text-sm font-medium text-muted">Current streak</p>
+            <p className="mb-3 text-sm font-medium text-muted">{t("currentStreak")}</p>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{stats.currentStreak}</span>
-              <span className="text-sm text-muted">days</span>
+              <span className="text-sm text-muted">{t("days")}</span>
             </div>
 
             <div
@@ -258,13 +260,13 @@ export default function AnalyticsPage() {
           <div className={cardClass}>
             <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-ink">Calorie intake</h2>
-                <p className="mt-1 text-sm text-muted">Last {timeRange === "7D" ? "7 days" : "30 days"}</p>
+                <h2 className="text-lg font-semibold text-ink">{t("calorieIntake")}</h2>
+                <p className="mt-1 text-sm text-muted">{t("lastPeriod")} {timeRange === "7D" ? t("last7Days") : t("last30Days")}</p>
               </div>
               <div className="flex flex-wrap gap-4 text-sm text-muted">
-                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-primary"></span> Consumed</div>
-                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-danger"></span> Over target</div>
-                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-0 w-3 border-t-2 border-dashed border-secondary"></span> Target</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-primary"></span> {t("consumed")}</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-danger"></span> {t("overTargetShort")}</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-0 w-3 border-t-2 border-dashed border-secondary"></span> {t("target")}</div>
               </div>
             </div>
 
@@ -315,12 +317,12 @@ export default function AnalyticsPage() {
           <div className={cardClass}>
             <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-ink">Protein intake</h2>
-                <p className="mt-1 text-sm text-muted">Last {timeRange === "7D" ? "7 days" : "30 days"}</p>
+                <h2 className="text-lg font-semibold text-ink">{t("proteinIntake")}</h2>
+                <p className="mt-1 text-sm text-muted">{t("lastPeriod")} {timeRange === "7D" ? t("last7Days") : t("last30Days")}</p>
               </div>
               <div className="flex gap-4 text-sm text-muted">
-                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-secondary"></span> Consumed</div>
-                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-0.5 bg-ink"></span> Target</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-secondary"></span> {t("consumed")}</div>
+                <div className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-0.5 bg-ink"></span> {t("target")}</div>
               </div>
             </div>
 

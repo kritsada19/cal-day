@@ -10,9 +10,9 @@ import { test, expect, type Page } from '@playwright/test';
 // ──────────────────────────────────────────────
 async function loginAndGotoSubscription(page: Page) {
   await page.goto('/signin');
-  await page.getByPlaceholder('Enter your email address').fill('test@example.com');
-  await page.getByPlaceholder('Enter your password').fill('password123');
-  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.getByPlaceholder(/Email address|ที่อยู่อีเมล/i).fill('test@example.com');
+  await page.getByPlaceholder(/Password|รหัสผ่าน/i).fill('password123');
+  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
   await page.waitForURL('/');
   await page.goto('/subscription');
 }
@@ -38,17 +38,17 @@ test.describe('Subscription Page', () => {
     });
 
     test('แสดงราคา ฿199 / month', async ({ page }) => {
-      // ตรวจว่ามีราคาแสดงบนหน้า
-      await expect(page.getByText('฿199')).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText('/ month')).toBeVisible();
+      // ตรวจว่ามีราคาแสดงบนหน้า โดยรองรับภาษาไทยและอังกฤษ
+      await expect(page.getByText(/฿199|\$199|199/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/\/ month|\/ เดือน/i)).toBeVisible();
     });
 
     test('แสดง feature list ครบ 4 รายการ', async ({ page }) => {
-      // ตรวจว่า feature แต่ละรายการแสดงอยู่
-      await expect(page.getByText('UNLIMITED DAILY MEAL LOGGING')).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText('TRACK CALORIES & MACROS')).toBeVisible();
-      await expect(page.getByText('PERSONALIZED NUTRITION GOALS')).toBeVisible();
-      await expect(page.getByText('FULL PROGRESS CALENDAR ACCESS')).toBeVisible();
+      // ตรวจว่า feature แต่ละรายการแสดงอยู่ ทั้งภาษาไทยและอังกฤษ
+      await expect(page.getByText(/บันทึกมื้ออาหารรายวันแบบไม่จำกัด|UNLIMITED DAILY MEAL LOGGING/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/ติดตามแคลอรี่และแมกโครนิวเทรียนท์|TRACK CALORIES & MACROS/i)).toBeVisible();
+      await expect(page.getByText(/เป้าหมายโภชนาการส่วนบุคคล|PERSONALIZED NUTRITION GOALS/i)).toBeVisible();
+      await expect(page.getByText(/เข้าถึงปฏิทินความก้าวหน้าทั้งหมด|FULL PROGRESS CALENDAR ACCESS/i)).toBeVisible();
     });
 
   });

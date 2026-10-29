@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import type { NutritionTargets } from "@/lib/nutrition";
 
 type ProfileData = {
@@ -49,11 +50,12 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
   const { data: session, status } = useSession();
   const [profileData, setProfileData] = useState<ProfileApiResponse | null>(null);
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
 
-  const displayName = session?.user?.name || session?.user?.email || "Guest user";
+  const displayName = session?.user?.name || session?.user?.email || t("guestUser");
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -128,13 +130,13 @@ export default function ProfilePage() {
       <div className="relative mx-auto max-w-280">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">Your profile</p>
+            <p className="text-sm font-medium text-muted">{t("yourProfile")}</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">
-              Your account
+              {t("yourAccount")}
             </h1>
           </div>
           <Link href="/" className={tintButton}>
-            Back to home
+            {t("backToHome")}
           </Link>
         </div>
 
@@ -146,21 +148,21 @@ export default function ProfilePage() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-muted">Account status</p>
+                <p className="text-sm font-medium text-muted">{t("accountStatus")}</p>
                 <h2 className="mt-1 truncate text-2xl font-semibold tracking-tight text-ink">
-                  {status === "loading" ? "Loading profile" : displayName}
+                  {status === "loading" ? t("loadingProfile") : displayName}
                 </h2>
                 <p className="mt-1 truncate text-base text-muted">
-                  {session?.user?.email || "Log in to view your profile and manage your account."}
+                  {session?.user?.email || t("loginToView")}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   {plan && (
                     <span className="inline-flex min-h-8 items-center rounded-full bg-highlight px-3 text-sm font-semibold text-ink">
-                      {plan} plan
+                      {plan} {t("plan")}
                     </span>
                   )}
                   <Link href="/profile/form" className={tintButton}>
-                    Fill personal info
+                    {t("fillPersonalInfo")}
                   </Link>
                 </div>
               </div>
@@ -168,56 +170,56 @@ export default function ProfilePage() {
 
             <div className="mt-8 rounded-xl border border-line bg-canvas p-4 md:p-5">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-base font-semibold text-ink">Profile summary</h3>
+                <h3 className="text-base font-semibold text-ink">{t("profileSummary")}</h3>
                 <Link
                   href="/profile/form"
                   className={`rounded py-2 text-sm font-semibold text-primary underline underline-offset-4 transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
                 >
-                  Edit profile
+                  {t("editProfile")}
                 </Link>
               </div>
 
               {status !== "authenticated" ? (
-                <p className="mt-4 text-base text-muted">Please sign in to view your profile details.</p>
+                <p className="mt-4 text-base text-muted">{t("pleaseSignIn")}</p>
               ) : !hasLoadedProfile ? (
                 <div role="status" className="mt-4 space-y-3">
-                  <span className="sr-only">Loading profile data…</span>
+                  <span className="sr-only">{t("loadingProfile")}</span>
                   <div className="h-24 animate-pulse rounded-xl bg-line motion-reduce:animate-none" />
                   <div className="h-24 animate-pulse rounded-xl bg-line motion-reduce:animate-none" />
                 </div>
               ) : profile ? (
                 <div className="mt-4 grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
                   <div className={`rounded-xl border p-4 ${bmiStatus?.tone || "border-line bg-surface text-ink"}`}>
-                    <p className="text-sm text-muted">BMI</p>
+                    <p className="text-sm text-muted">{t("bmi")}</p>
                     <p className="mt-2 text-3xl font-semibold text-ink tabular-nums">{bmi ?? "—"}</p>
                     <p className="mt-2 text-base font-semibold">
-                      {bmiStatus ? `${bmiStatus.label}` : "No data"}
+                      {bmiStatus ? `${bmiStatus.label}` : t("noData")}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-line bg-surface p-4">
                     <div className="mb-4 rounded-xl border border-line bg-canvas p-3">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm text-muted">Goal</p>
+                        <p className="text-sm text-muted">{t("goal")}</p>
                         <p className="text-sm font-semibold text-primary">{nutritionTargets ? nutritionTargets.goalLabel : "—"}</p>
                       </div>
                       <p className="mt-2 text-sm leading-6 text-muted">
-                        Your nutrition plan is tailored around your profile and daily activity level.
+                        {t("goalDescription")}
                       </p>
                     </div>
                     <dl className="grid gap-4 sm:grid-cols-2">
-                      <Detail label="Gender" value={profile.gender || "—"} />
-                      <Detail label="Age" value={profile.age ? `${profile.age} years` : "—"} />
-                      <Detail label="Weight" value={profile.weight ? `${profile.weight} kg` : "—"} />
-                      <Detail label="Height" value={profile.height ? `${profile.height} cm` : "—"} />
-                      <Detail label="Exercise level" value={profile.exerciseLevel || "—"} />
-                      <Detail label="Goal" value={profile.goal || "—"} />
+                      <Detail label={t("gender")} value={profile.gender || "—"} />
+                      <Detail label={t("age")} value={profile.age ? `${profile.age} ${t("years")}` : "—"} />
+                      <Detail label={t("weight")} value={profile.weight ? `${profile.weight} ${t("kg")}` : "—"} />
+                      <Detail label={t("height")} value={profile.height ? `${profile.height} ${t("cm")}` : "—"} />
+                      <Detail label={t("exerciseLevel")} value={profile.exerciseLevel || "—"} />
+                      <Detail label={t("goal")} value={profile.goal || "—"} />
                     </dl>
                   </div>
                 </div>
               ) : (
                 <p className="mt-4 text-base text-muted">
-                  No profile data yet. Please fill in your personal information first.
+                  {t("noProfileData")}
                 </p>
               )}
             </div>
@@ -225,18 +227,18 @@ export default function ProfilePage() {
 
           <aside className="space-y-6">
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
-              <h2 className="text-lg font-semibold text-ink">Account details</h2>
+              <h2 className="text-lg font-semibold text-ink">{t("accountDetails")}</h2>
               <dl className="mt-3 divide-y divide-line text-base">
                 <div className="flex items-center justify-between gap-3 py-3">
-                  <dt className="text-muted">User ID</dt>
+                  <dt className="text-muted">{t("userId")}</dt>
                   <dd className="font-semibold text-ink tabular-nums">{session?.user?.id ?? "—"}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-3">
-                  <dt className="text-muted">Role</dt>
+                  <dt className="text-muted">{t("role")}</dt>
                   <dd className="font-semibold text-ink">{session?.user?.role || "USER"}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-3">
-                  <dt className="text-muted">Plan</dt>
+                  <dt className="text-muted">{t("plan")}</dt>
                   <dd>
                     <Link
                       href="/subscription"
@@ -247,7 +249,7 @@ export default function ProfilePage() {
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-3 pb-0">
-                  <dt className="text-muted">AI remaining</dt>
+                  <dt className="text-muted">{t("aiRemaining")}</dt>
                   <dd className="font-semibold text-ink tabular-nums">
                     {profileData?.aiRemaining !== undefined
                       ? `${profileData.aiRemaining} / ${profileData.aiLimit}`
@@ -260,27 +262,27 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
               {status === "authenticated" ? (
                 <>
-                  <h2 className="text-lg font-semibold text-ink">Quick actions</h2>
+                  <h2 className="text-lg font-semibold text-ink">{t("quickActions")}</h2>
                   <div className="mt-4 space-y-3">
                     <button
                       onClick={() => signOut({ callbackUrl: "/" })}
                       className={`${tintButton} w-full cursor-pointer`}
                     >
-                      Log out
+                      {t("logOut")}
                     </button>
                     <Link href="/" className={outlineButton}>
-                      Go to home
+                      {t("goToHome")}
                     </Link>
                   </div>
                 </>
               ) : (
                 <>
-                  <h2 className="text-lg font-semibold text-ink">Log in required</h2>
+                  <h2 className="text-lg font-semibold text-ink">{t("loginRequired")}</h2>
                   <p className="mt-3 text-base leading-7 text-muted">
-                    Please log in to view your profile and manage your account.
+                    {t("loginToViewProfile")}
                   </p>
                   <Link href="/signin" className={`mt-4 ${primaryButton}`}>
-                    Log in
+                    {t("logIn")}
                   </Link>
                 </>
               )}

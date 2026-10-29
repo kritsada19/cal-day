@@ -4,6 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -13,6 +14,7 @@ const inputClass = `w-full min-h-11 rounded-xl border border-secondary bg-surfac
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 export default function ForgetPasswordPage() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,12 +24,12 @@ export default function ForgetPasswordPage() {
     const normalizedEmail = email.trim();
 
     if (!normalizedEmail) {
-      toast.error("Please enter your email address");
+      toast.error(t("emailRequired"));
       return;
     }
 
     if (!isValidEmail(normalizedEmail)) {
-      toast.error("Please enter a valid email address");
+      toast.error(t("emailInvalid"));
       return;
     }
 
@@ -35,12 +37,12 @@ export default function ForgetPasswordPage() {
 
     try {
       const res = await axios.post("/api/auth/forgot-password", { email: normalizedEmail });
-      toast.success(res.data?.message || "If an account exists, we have sent a reset link");
+      toast.success(res.data?.message || t("sendResetLink"));
       setEmail("");
     } catch (err) {
       const message = axios.isAxiosError(err)
-        ? err.response?.data?.message || "Could not send reset email"
-        : "Unexpected error";
+        ? err.response?.data?.message || t("emailInvalid")
+        : t("signupError");
       toast.error(message);
     } finally {
       setLoading(false);
@@ -71,17 +73,17 @@ export default function ForgetPasswordPage() {
           </div>
 
           <span className="mt-4 text-xl font-bold tracking-tight text-ink">CALDAY</span>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Forget password</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">{t("forgotTitle")}</h1>
         </div>
 
         <p className="mb-6 text-center text-base leading-7 text-muted">
-          Enter your email and we will send a link to reset your password.
+          {t("forgotDescription")}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <label htmlFor="forgot-email" className="block text-sm font-medium text-ink">
-              Email address
+              {t("emailAddress")}
             </label>
             <input
               id="forgot-email"
@@ -92,11 +94,11 @@ export default function ForgetPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               onBlur={() => {
                 if (email.trim() && !isValidEmail(email)) {
-                  toast.error("Please enter a valid email address");
+                  toast.error(t("emailInvalid"));
                 }
               }}
               className={inputClass}
-              placeholder="Enter your email address"
+              placeholder={t("emailAddress")}
             />
           </div>
 
@@ -106,18 +108,18 @@ export default function ForgetPasswordPage() {
               disabled={loading}
               className={`min-h-11 w-full cursor-pointer rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
             >
-              {loading ? "Sending..." : "Send reset link"}
+              {loading ? t("resetting") : t("sendResetLink")}
             </button>
           </div>
         </form>
 
         <div className="mt-8 border-t border-line pt-6 text-center text-sm text-muted">
-          Remember your password?{" "}
+          {t("rememberPassword")} {" "}
           <Link
             href="/signin"
             className={`rounded font-semibold text-primary underline underline-offset-4 transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
           >
-            Back to log in
+            {t("backToLogin")}
           </Link>
         </div>
       </div>
