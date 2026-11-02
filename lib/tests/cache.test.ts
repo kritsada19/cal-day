@@ -1,21 +1,21 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getCache, setCache, deleteUserCache } from '@/lib/cache';
-import { redis } from '@/lib/db/redis';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { getCache, setCache, deleteUserCache } from "@/lib/cache";
+import { redis } from "@/lib/db/redis";
 
-vi.mock('@/lib/db/redis', () => ({
-    redis: {
-        get: vi.fn(),
-        set: vi.fn(),
-        keys: vi.fn(),
-        del: vi.fn(),
-    },
+vi.mock("@/lib/db/redis", () => ({
+  redis: {
+    get: vi.fn(),
+    set: vi.fn(),
+    keys: vi.fn(),
+    del: vi.fn(),
+  },
 }));
 
 /**
  * Ensure all mocks are cleared before each test to avoid cross‑test interference.
  */
 beforeEach(() => {
-    vi.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 /**
@@ -23,49 +23,61 @@ beforeEach(() => {
  * and deserialize it. We manually mock `redis.get` to return the JSON string
  * that `setCache` would have stored.
  */
-describe('cache', () => {
-    it('stores a value with setCache and retrieves it with getCache (cache hit)', async () => {
-        const key = 'test:hit';
-        const value = { foo: 'bar', count: 42 };
-        const ttl = 60;
+describe("cache", () => {
+  it("stores a value with setCache and retrieves it with getCache (cache hit)", async () => {
+    const key = "test:hit";
+    const value = { foo: "bar", count: 42 };
+    const ttl = 60;
 
-        // Set the cache – the mock will capture the call parameters.
-        await setCache(key, value, ttl);
-        expect(redis.set).toHaveBeenCalledWith(key, JSON.stringify(value), 'EX', ttl);
+    await setCache(key, value, ttl);
 
-        // Mock the next call to `redis.get` to return the JSON string we just set.
-        vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify(value));
+    // ตรวจสอบ arguments โดยไม่ fix ค่า TTL
+    expect(redis.set).toHaveBeenCalledWith(
+      key,
+      JSON.stringify(value),
+      "EX",
+      expect.any(Number),
+    );
 
-        const cached = await getCache(key);
-        expect(cached).toEqual(value);
-    });
+    // ดึง TTL ที่ส่งเข้า Redis จริง
+    const actualTtl = Number(vi.mocked(redis.set).mock.calls[0][3]);
+    
+    // TTL ต้องอยู่ระหว่าง 60-119 วินาที
+    expect(actualTtl).toBeGreaterThanOrEqual(ttl);
+    expect(actualTtl).toBeLessThan(ttl + 60);
 
-    /**
-     * When the cache does not contain the key, `redis.get` resolves to `null`
-     * and `getCache` should return `null`.
-     */
-    it('returns null on cache miss', async () => {
-        const key = 'test:miss';
-        vi.mocked(redis.get).mockResolvedValueOnce(null);
-        const cached = await getCache(key);
-        expect(cached).toBeNull();
-    });
+    vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify(value));
 
-    /**
-     * `deleteUserCache` should retrieve all keys matching the user‑specific pattern
-     * and delete them. We mock `redis.keys` to return a sample array and verify that
-     * `redis.del` receives that array.
-     */
-    it('deletes all cache entries for a specific user', async () => {
-        const userId = 123;
-        const mockKeys = [
-            `cache:user:${userId}:analytics:7`,
-            `cache:user:${userId}:profile`,
-        ];
+    const cached = await getCache(key);
+    expect(cached).toEqual(value);
+  });
 
-        vi.mocked(redis.keys).mockResolvedValueOnce(mockKeys);
-        await deleteUserCache(userId);
-        expect(redis.keys).toHaveBeenCalledWith(`cache:user:${userId}:*`);
-        expect(redis.del).toHaveBeenCalledWith(mockKeys);
-    })
+  /**
+   * When the cache does not contain the key, `redis.get` resolves to `null`
+   * and `getCache` should return `null`.
+   */
+  it("returns null on cache miss", async () => {
+    const key = "test:miss";
+    vi.mocked(redis.get).mockResolvedValueOnce(null);
+    const cached = await getCache(key);
+    expect(cached).toBeNull();
+  });
+
+  /**
+   * `deleteUserCache` should retrieve all keys matching the user‑specific pattern
+   * and delete them. We mock `redis.keys` to return a sample array and verify that
+   * `redis.del` receives that array.
+   */
+  it("deletes all cache entries for a specific user", async () => {
+    const userId = 123;
+    const mockKeys = [
+      `cache:user:${userId}:analytics:7`,
+      `cache:user:${userId}:profile`,
+    ];
+
+    vi.mocked(redis.keys).mockResolvedValueOnce(mockKeys);
+    await deleteUserCache(userId);
+    expect(redis.keys).toHaveBeenCalledWith(`cache:user:${userId}:*`);
+    expect(redis.del).toHaveBeenCalledWith(mockKeys);
+  });
 });
