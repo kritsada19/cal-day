@@ -114,7 +114,7 @@ Cookie: locale=en
 7. **เข้าใช้งานแอปพลิเคชัน:**
    เปิดเบราว์เซอร์แล้วไปที่ [http://localhost:3000](http://localhost:3000)
 
-## � Authentication Flow (กระบวนการยืนยันตัวตน)
+## 🔐 Authentication Flow (กระบวนการยืนยันตัวตน)
 
 - **สมัครสมาชิก (Sign Up):** ผู้ใช้กรอกอีเมลและรหัสผ่าน เพื่อสร้างบัญชีใหม่
 - **ส่งอีเมลยืนยัน (Verify Email):** ระบบจะสร้าง token สำหรับยืนยันอีเมล และส่งลิงก์ไปที่อีเมลของผู้ใช้
@@ -123,13 +123,30 @@ Cookie: locale=en
 - **รีเซ็ตรหัสผ่าน:** ผู้ใช้เปิด `/reset-password?token=...` เพื่อกำหนดรหัสผ่านใหม่
 - **ความปลอดภัย:** ระบบมีการจำกัดจำนวนคำขอ (rate limiting), token ที่หมดอายุอัตโนมัติ และการลบ token เก่าเมื่อใช้งานเสร็จแล้ว
 
-## �🗄️ โครงสร้างฐานข้อมูล (Database Schema)
+## 🗄️ โครงสร้างฐานข้อมูล (Database Schema)
 
 - **`User` & `Account`:** บริหารจัดการผู้ใช้และช่องทางการล็อกอิน
 - **`Profile`:** เก็บข้อมูลพื้นฐาน (น้ำหนัก, ส่วนสูง, เป้าหมาย) และเก็บค่า BMR / TDEE
 - **`Meal` & `FoodEntry`:** บันทึกข้อมูลมื้ออาหารแต่ละมื้อ และรายการย่อยในมื้อนั้นๆ พร้อมคุณค่าทางโภชนาการ
 - **`DailySummary`:** สรุปยอดรวมแคลอรีและสารอาหารประจำวัน
 - **`Subscription`:** ดูแลสถานะบัญชี Pro / Free ของผู้ใช้งาน
+
+## 🛡️ Resilience: AI Circuit Breaker
+
+CalDay มีระบบ Circuit Breaker สำหรับการเรียกใช้ Google Gemini เพื่อป้องกันความล้มเหลวแบบต่อเนื่องจาก AI Provider
+
+- หาก AI ล้มซ้ำหลายครั้งภายในช่วงเวลาเดียวกัน ระบบจะปิดวงจร (open circuit) และปฏิเสธ request ทันที
+- หลังผ่านช่วง cooldown จะเข้าสู่ half-open state เพื่อลองตรวจสอบสถานะอีกครั้งแบบจำกัด
+- ใช้ร่วมกับ provider boundary ใน `lib/services/ai.ts` และ state machine ใน `lib/resilience/circuit-breaker.ts`
+- กรณี provider ขัดข้องหรือถูก rate limit จะตอบกลับด้วย error แบบแอปพลิเคชัน เช่น `AI_PROVIDER_UNAVAILABLE` และ `AI_QUOTA_EXCEEDED`
+
+หลักการทำงาน:
+- Closed: request ปกติ
+- Open: fail fast เพื่อป้องกัน overload
+- Half-open: เปิดให้มีการ probe จำกัดเพื่อลองกู้คืน
+- Cooldown: เมื่อ circuit เปิดแล้ว รอจนกว่าจะเริ่ม recover
+
+การออกแบบนี้ช่วยให้แอปไม่ล่มตามไปด้วยเมื่อ Gemini มีปัญหา และยังให้ระบบกลับมาใช้งานได้โดยอัตโนมัติเมื่อ provider ฟื้นตัว
 
 ## 🧪 การรันเทสต์ (Testing)
 
