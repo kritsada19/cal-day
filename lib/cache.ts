@@ -12,8 +12,11 @@ export const getCache = async (key: string) => {
 }
 
 export const setCache = async (key: string, value: unknown, ttlSec: number) => {
+    // ป้องกันการเกิด cache stampede โดยการเพิ่ม jitter ให้กับ TTL
+    // สุ่มเวลาเพิ่มขึ้น 0-60 วินาที เพื่อให้ cache ของแต่ละ instance หมดอายุไม่พร้อมกัน
+    const jitter = Math.floor(Math.random() * 60);
     try {
-        await redis.set(key, JSON.stringify(value), 'EX', ttlSec);
+        await redis.set(key, JSON.stringify(value), 'EX', ttlSec + jitter);
     } catch (error) {
         logger.error({ err: error, key }, "setCache error");
         return null;
