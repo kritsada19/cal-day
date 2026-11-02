@@ -1,29 +1,42 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/lib/env";
+import { CircuitBreaker } from "@/lib/resilience/circuit-breaker";
 
 type FoodItem = {
-    name: string;
-    amount: number;
-    unit: string;
-    calories: number;
-    protein: number;
+  name: string;
+  amount: number;
+  unit: string;
+  calories: number;
+  protein: number;
 };
 
 type AiAnalysis = {
-    foods: FoodItem[];
-    estimatedCalories: number;
-    estimatedProtein: number;
-    note: string;
+  foods: FoodItem[];
+  estimatedCalories: number;
+  estimatedProtein: number;
+  note: string;
 };
 
-export async function analyzeFood(rawText: string) {
-    const genAI = new GoogleGenerativeAI(env.GOOGLE_GENERATIVE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({
-        model: "gemini-3.6-flash",
-        generationConfig: { responseMimeType: "application/json" },
-    });
+export const aiBreaker = new CircuitBreaker({
+  threshold: 5, // จำนวนครั้งที่ล้มเหลวก่อนที่จะเปิดวงจร
+  windowMs: 30_000, // หน้าต่างเวลาในการนับความล้มเหลว (30 วินาที)
+  cooldownMs: 30_000, // เวลาที่วงจรจะเปิด (30 วินาที)
+  halfOpenMaxCalls: 1, // จำนวนครั้งที่อนุญาตให้เรียกใช้งานในสถานะ half-open
+});
 
-    const prompt = `
+export async function analyzeFood(rawText: string) {
+  // ตรวจสอบว่า Circuit Breaker อนุญาตให้เรียกใช้งาน AI หรือไม่
+  if (!aiBreaker.canExecute()) {
+    throw new Error("AI_PROVIDER_UNAVAILABLE");
+  }
+
+  const genAI = new GoogleGenerativeAI(env.GOOGLE_GENERATIVE_AI_API_KEY);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-3.6-flash",
+    generationConfig: { responseMimeType: "application/json" },
+  });
+
+  const prompt = `
           SYSTEM:
           You are an expert AI nutritionist and food analyzer.
     
@@ -83,34 +96,41 @@ export async function analyzeFood(rawText: string) {
           - Respond in the same language as the user's input.
     `;
 
-    let result;
-    try {
-        result = await model.generateContent(prompt);
-    } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes("429")) {
-            throw new Error("AI_QUOTA_EXCEEDED");
-        }
-        throw error;
+  let result;
+  try {
+    result = await model.generateContent(prompt);
+  } catch (error: unknown) {
+    aiBreaker.recordFailure(); // บันทึกความล้มเหลวของการเรียกใช้งาน AI
+    if (error instanceof Error && error.message.includes("429")) {
+      throw new Error("AI_QUOTA_EXCEEDED");
     }
+    throw error;
+  }
+  aiBreaker.recordSuccess(); // บันทึกความสำเร็จของการเรียกใช้งาน AI
 
-    let aiResponse: unknown;
-    try {
-        aiResponse = JSON.parse(result.response.text());
-    } catch {
-        throw new Error("AI_INVALID_RESPONSE");
-    }
+  let aiResponse: unknown;
+  try {
+    aiResponse = JSON.parse(result.response.text());
+  } catch {
+    throw new Error("AI_INVALID_RESPONSE");
+  }
 
-    return aiResponse as AiAnalysis;
+  return aiResponse as AiAnalysis;
 }
 
 export async function analyzeFoodImage(base64Data: string, mimeType: string) {
-    const genAI = new GoogleGenerativeAI(env.GOOGLE_GENERATIVE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({
-        model: "gemini-3.6-flash",
-        generationConfig: { responseMimeType: "application/json" },
-    });
+  // ตรวจสอบว่า Circuit Breaker อนุญาตให้เรียกใช้งาน AI หรือไม่
+  if (!aiBreaker.canExecute()) {
+    throw new Error("AI_PROVIDER_UNAVAILABLE");
+  }
 
-    const prompt = `
+  const genAI = new GoogleGenerativeAI(env.GOOGLE_GENERATIVE_AI_API_KEY);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-3.6-flash",
+    generationConfig: { responseMimeType: "application/json" },
+  });
+
+  const prompt = `
           SYSTEM:
           You are an expert AI nutritionist and food analyzer.
     
@@ -164,29 +184,36 @@ export async function analyzeFoodImage(base64Data: string, mimeType: string) {
           - Respond in Thai language.
     `;
 
-    const imagePart = {
-        inlineData: {
-            data: base64Data,
-            mimeType: mimeType,
-        },
-    };
+  const imagePart = {
+    inlineData: {
+      data: base64Data,
+      mimeType: mimeType,
+    },
+  };
 
-    let result;
-    try {
-        result = await model.generateContent([prompt, imagePart]);
-    } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes("429")) {
-            throw new Error("AI_QUOTA_EXCEEDED");
-        }
-        throw error;
+  let result;
+  try {
+    result = await model.generateContent([prompt, imagePart]);
+    aiBreaker.recordSuccess();
+  } catch (error: unknown) {
+    // บันทึกความล้มเหลวของการเรียกใช้งาน AI
+    aiBreaker.recordFailure();
+
+    if (error instanceof Error && error.message.includes("429")) {
+      // ถ้าวาง recordFailure() ตรงนี้
+      // ปัญหาคือ Error ที่ไม่ใช่ 429 จะไม่ถูกบันทึกด้วย recordFailure()
+      throw new Error("AI_QUOTA_EXCEEDED");
     }
 
-    let aiResponse: unknown;
-    try {
-        aiResponse = JSON.parse(result.response.text());
-    } catch {
-        throw new Error("AI_INVALID_RESPONSE");
-    }
+    throw error;
+  }
 
-    return aiResponse as AiAnalysis;
+  let aiResponse: unknown;
+  try {
+    aiResponse = JSON.parse(result.response.text());
+  } catch {
+    throw new Error("AI_INVALID_RESPONSE");
+  }
+
+  return aiResponse as AiAnalysis;
 }

@@ -180,7 +180,9 @@
     "nextStep": "Next step",
     "nextStepText": "Add your personal details to unlock a complete daily nutrition plan and make the dashboard more meaningful.",
     "fillProfile": "Fill profile",
-    "status": "Status"
+    "status": "Status",
+    "profile": "Profile",
+    "loading": "Loading..."
   },
   "profile": {
     "yourProfile": "Your profile",
