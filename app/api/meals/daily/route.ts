@@ -22,12 +22,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  // 3) อ่านวันที่จาก URL (รูปแบบ YYYY-MM-DD)
+  // 3) อ่านวันที่จาก URL (รูปแบบ YYYY-MM-DD) และ timezone offset (นาที)
   const date = request.nextUrl.searchParams.get("date");
+  const tzOffset = parseInt(request.nextUrl.searchParams.get("timezone") ?? "0", 10);
 
   try {
     // 4) service ตรวจวันที่ + จัดการ cache + ดึงข้อมูลให้
-    const meals = await mealService.getDailyMeals(userId, date);
+    const meals = await mealService.getDailyMeals(userId, date, isNaN(tzOffset) ? 0 : tzOffset);
 
     return NextResponse.json({ meals }, { status: 200 });
   } catch (error) {

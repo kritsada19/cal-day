@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useSession } from "next-auth/react";
+import { useLocale, useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
 
 interface DailySummary {
@@ -36,6 +38,11 @@ const focusRing =
 const monthButton = `inline-flex min-h-11 items-center rounded-xl bg-primary-tint px-4 text-sm font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`;
 
 export default function MealCalendar() {
+    const { status } = useSession();
+    const locale = useLocale();
+    const t = useTranslations("mealCalendar");
+    const isAuthenticated = status === "authenticated";
+
     // สร้าง state สำหรับเก็บวันที่ปัจจุบัน และ ข้อมูลสรุปรายเดือน
     const [currentDate, setCurrentDate] = useState(new Date());
     // State สำหรับเก็บข้อมูลที่ดึงมาจาก Database (ที่เคยทำ API /api/meals ไว้)
@@ -74,7 +81,7 @@ export default function MealCalendar() {
                 setSummaries(res.data.summaries || []);
             })
             .catch((err) => logger.error({ err, year, month }, "Failed to load month summaries"));
-    }, [currentDate]);
+    }, [currentDate, isAuthenticated]);
 
     // ฟังก์ชันย้อนกลับไป 1 เดือน
     const handlePrevMonth = () => {
@@ -93,6 +100,10 @@ export default function MealCalendar() {
 
     // ฟังก์ชันนี้จะทำงานเมื่อเรากดที่ช่องวันที่บนปฏิทิน
     const handleDayClick = async (dayNumber: number) => {
+        if (!isAuthenticated) {
+            return;
+        }
+
         // 1. สร้าง Object วันที่ จากวันที่ที่เรากด
         const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNumber);
         setSelectedDate(clickedDate); // บันทึกว่าเรากำลังดูวันนี้อยู่
@@ -106,13 +117,16 @@ export default function MealCalendar() {
             const day = String(clickedDate.getDate()).padStart(2, '0');
             const formattedDate = `${year}-${month}-${day}`;
 
-            // 3. ยิง API ไปที่ /api/meals/daily ที่เราสร้างไว้ตอนแรก
-            const res = await axios.get(`/api/meals/daily?date=${formattedDate}`);
+            // 3. ยิง API ไปที่ /api/meals/daily พร้อมส่ง timezone offset ของ client ไปด้วย
+            // getTimezoneOffset() คืนค่าเป็นนาที เช่น UTC+7 = -420
+            const tzOffset = new Date().getTimezoneOffset();
+            const res = await axios.get(`/api/meals/daily?date=${formattedDate}&timezone=${tzOffset}`);
 
             // 4. เอาข้อมูลรายการอาหารมาเก็บไว้ใน State
             setDailyMeals(res.data.meals || []);
         } catch (error) {
             logger.error({ err: error }, "Failed to load daily meals");
+            setDailyMeals([]);
         } finally {
             setIsLoadingDaily(false); // ปิดโหมดโหลดข้อมูล
         }
@@ -141,7 +155,28 @@ export default function MealCalendar() {
         }
     };
 
-    const monthName = currentDate.toLocaleString("en-US", { month: "long" });
+    const monthName = currentDate.toLocaleString(locale, { month: "long" });
+    const weekDays = [
+        t("days.sun"),
+        t("days.mon"),
+        t("days.tue"),
+        t("days.wed"),
+        t("days.thu"),
+        t("days.fri"),
+        t("days.sat"),
+    ];
+    const getMealTypeLabel = (mealType: string) => {
+        const key = mealType.toLowerCase();
+        if (key in {
+            breakfast: true,
+            lunch: true,
+            dinner: true,
+            snack: true,
+        }) {
+            return t(`mealTypes.${key}`);
+        }
+        return mealType;
+    };
 
     return (
         <>
@@ -161,12 +196,12 @@ export default function MealCalendar() {
 
                     {/* Modal Card */}
                     <div className="relative z-10 mx-4 w-full max-w-sm rounded-2xl border border-line bg-surface p-6 shadow-lift sm:p-8">
-                        <p className="mb-2 text-sm font-medium text-muted">Confirm action</p>
+                        <p className="mb-2 text-sm font-medium text-muted">{t("confirmAction")}</p>
                         <h3 id="confirm-modal-title" className="mb-2 text-xl font-semibold tracking-tight text-ink">
-                            Delete this meal?
+                            {t("deleteMealTitle")}
                         </h3>
                         <p className="mb-8 text-base leading-7 text-muted">
-                            This action cannot be undone. The meal and all its food entries will be permanently removed.
+                            {t("deleteMealDescription")}
                         </p>
 
                         <div className="flex justify-end gap-3">
@@ -175,14 +210,14 @@ export default function MealCalendar() {
                                 onClick={() => setConfirmModal(null)}
                                 className={`min-h-11 cursor-pointer rounded-xl bg-primary-tint px-5 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`}
                             >
-                                Cancel
+                                {t("cancel")}
                             </button>
                             <button
                                 type="button"
                                 onClick={handleConfirmDelete}
                                 className={`min-h-11 cursor-pointer rounded-xl bg-danger px-5 text-base font-semibold text-on-primary transition-opacity duration-200 hover:opacity-90 ${focusRing}`}
                             >
-                                Delete
+                                {t("delete")}
                             </button>
                         </div>
                     </div>
@@ -190,9 +225,9 @@ export default function MealCalendar() {
             )}
             <div className="mt-10 rounded-2xl border border-line bg-surface p-4 shadow-soft sm:p-6 md:p-8">
                 <div className="mb-6">
-                    <p className="text-sm font-medium text-muted">History</p>
+                    <p className="text-sm font-medium text-muted">{t("history")}</p>
                     <h2 className="mt-1 text-2xl font-semibold tracking-tight text-ink">
-                        Daily Meals Calendar
+                        {t("title")}
                     </h2>
                 </div>
 
@@ -201,10 +236,10 @@ export default function MealCalendar() {
                     <div className="mb-4 flex items-center justify-between gap-2">
                         <button
                             onClick={handlePrevMonth}
-                            aria-label="Previous month"
+                            aria-label={t("prevMonth")}
                             className={monthButton}
                         >
-                            &larr; Prev
+                            &larr; {t("prev")}
                         </button>
 
                         <span aria-live="polite" className="text-base font-semibold text-ink">
@@ -213,10 +248,10 @@ export default function MealCalendar() {
 
                         <button
                             onClick={handleNextMonth}
-                            aria-label="Next month"
+                            aria-label={t("nextMonth")}
                             className={monthButton}
                         >
-                            Next &rarr;
+                            {t("next")} &rarr;
                         </button>
                     </div>
 
@@ -225,7 +260,7 @@ export default function MealCalendar() {
                     <div className="grid grid-cols-7 gap-1 text-center text-sm sm:gap-2">
 
                         {/* 1. หัวตาราง วันอาทิตย์ - เสาร์ */}
-                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+                        {weekDays.map(day => (
                             <div key={day} className="py-2 text-xs font-medium text-muted">
                                 {day}
                             </div>
@@ -261,7 +296,7 @@ export default function MealCalendar() {
                                     onClick={() => handleDayClick(dayNumber)}
                                     aria-pressed={isSelected}
                                     aria-current={isToday ? "date" : undefined}
-                                    aria-label={`${monthName} ${dayNumber}, ${currentDate.getFullYear()}${daySummary ? `, ${daySummary.totalCalories} kcal` : ""}`}
+                                    aria-label={`${monthName} ${dayNumber}, ${currentDate.getFullYear()}${daySummary ? `, ${daySummary.totalCalories} ${t("kcal")}` : ""}`}
                                     // -- สีตามสถานะ: เลือกอยู่ > วันนี้ > ปกติ --
                                     className={`flex min-h-16 cursor-pointer flex-col items-center justify-center rounded-xl border p-1 text-base transition-colors duration-200 ${focusRing}
                                             ${isSelected
@@ -293,7 +328,7 @@ export default function MealCalendar() {
                 {selectedDate && (
                     <div className="mt-8 border-t border-line pt-6 text-left">
                         <h3 className="mb-4 text-lg font-semibold tracking-tight text-ink">
-                            Meals on {selectedDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                            {t("mealsOn")} {selectedDate.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })}
                         </h3>
 
                         {(() => {
@@ -311,28 +346,28 @@ export default function MealCalendar() {
                                     <div className="rounded-xl border border-line bg-canvas p-4">
                                         <p className="flex items-center gap-2 text-sm font-medium text-muted">
                                             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
-                                            Total Calories
+                                            {t("totalCalories")}
                                         </p>
                                         <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
-                                            {selectedDaySummary.totalCalories} <span className="text-sm font-normal text-muted">kcal</span>
+                                            {selectedDaySummary.totalCalories} <span className="text-sm font-normal text-muted">{t("kcal")}</span>
                                         </p>
                                         {selectedDaySummary.targetCalories > 0 && (
                                             <p className="mt-1 text-sm text-muted tabular-nums">
-                                                Target: {selectedDaySummary.targetCalories} kcal
+                                                {t("target")}: {selectedDaySummary.targetCalories} {t("kcal")}
                                             </p>
                                         )}
                                     </div>
                                     <div className="rounded-xl border border-line bg-canvas p-4">
                                         <p className="flex items-center gap-2 text-sm font-medium text-muted">
                                             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-secondary" />
-                                            Total Protein
+                                            {t("totalProtein")}
                                         </p>
                                         <p className="mt-1 text-2xl font-semibold text-ink tabular-nums">
-                                            {selectedDaySummary.totalProtein} <span className="text-sm font-normal text-muted">g</span>
+                                            {selectedDaySummary.totalProtein} <span className="text-sm font-normal text-muted">{t("g")}</span>
                                         </p>
                                         {selectedDaySummary.targetProtein > 0 && (
                                             <p className="mt-1 text-sm text-muted tabular-nums">
-                                                Target: {selectedDaySummary.targetProtein} g
+                                                {t("target")}: {selectedDaySummary.targetProtein} {t("g")}
                                             </p>
                                         )}
                                     </div>
@@ -342,13 +377,13 @@ export default function MealCalendar() {
 
                         {isLoadingDaily ? (
                             <div role="status" className="space-y-3">
-                                <span className="sr-only">Loading meals...</span>
+                                <span className="sr-only">{t("loadingMeals")}</span>
                                 <div className="h-20 animate-pulse rounded-xl bg-primary-tint motion-reduce:animate-none" />
                                 <div className="h-20 animate-pulse rounded-xl bg-primary-tint motion-reduce:animate-none" />
                             </div>
                         ) : dailyMeals.length === 0 ? (
                             <p className="rounded-xl border border-dashed border-line p-6 text-center text-base text-muted">
-                                No meals recorded for this day.
+                                {t("noMeals")}
                             </p>
                         ) : (
                             <div className="space-y-4">
@@ -359,7 +394,7 @@ export default function MealCalendar() {
                                     <div key={meal.id} className="rounded-xl border border-line bg-canvas p-4">
                                         <div className="flex items-center justify-between gap-4">
                                             <p className="text-sm font-semibold capitalize text-muted">
-                                                {meal.mealType}
+                                                {getMealTypeLabel(meal.mealType)}
                                             </p>
                                             <button
                                                 type="button"
@@ -367,7 +402,7 @@ export default function MealCalendar() {
                                                 disabled={deletingMealId === meal.id}
                                                 className={`min-h-11 cursor-pointer rounded-xl px-3 text-sm font-semibold text-danger transition-colors duration-200 hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
                                             >
-                                                {deletingMealId === meal.id ? "Deleting..." : "Delete"}
+                                                {deletingMealId === meal.id ? t("deleting") : t("delete")}
                                             </button>
                                         </div>
 
@@ -376,8 +411,8 @@ export default function MealCalendar() {
                                             <div key={food.id} className="mt-2 flex flex-col gap-1 text-base text-ink sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                                                 <span>{food.foodName}</span>
                                                 <div className="flex gap-4 text-sm tabular-nums">
-                                                    <span className="font-medium text-primary">{food.calories} kcal</span>
-                                                    <span className="text-muted">{food.protein}g protein</span>
+                                                    <span className="font-medium text-primary">{food.calories} {t("kcal")}</span>
+                                                    <span className="text-muted">{food.protein}{t("g")} {t("protein")}</span>
                                                 </div>
                                             </div>
                                         ))}

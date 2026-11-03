@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 const focusRing =
@@ -17,6 +18,8 @@ const secondaryLink = `inline-flex min-h-11 items-center justify-center rounded-
 export default function ProfileFormPage() {
   const router = useRouter();
   const { status } = useSession();
+  const formT = useTranslations("profileForm");
+  const t = useTranslations();
   const [formData, setFormData] = useState({
     gender: "",
     age: "",
@@ -43,10 +46,10 @@ export default function ProfileFormPage() {
           }
         })
         .catch(() => {
-          toast.error("Unable to load your profile data");
+          toast.error(formT("loadProfileError"));
         });
     }
-  }, [status]);
+  }, [status, formT]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -62,14 +65,14 @@ export default function ProfileFormPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Unable to save your profile");
+        throw new Error(data.message || formT("saveError"));
       }
 
       // Toast stays on screen through the short redirect to the profile page.
-      toast.success(data.message || "Profile saved successfully");
+      toast.success(data.message || formT("saveSuccess"));
       setTimeout(() => router.push("/profile"), 800);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to save your profile");
+      toast.error(error instanceof Error ? error.message : formT("saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -78,7 +81,7 @@ export default function ProfileFormPage() {
   if (status === "loading") {
     return (
       <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
-        <p role="status" className="text-base text-muted">Loading...</p>
+        <p role="status" className="text-base text-muted">{formT("loading")}</p>
       </div>
     );
   }
@@ -87,11 +90,11 @@ export default function ProfileFormPage() {
     return (
       <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center shadow-soft">
-          <p className="text-sm font-medium text-muted">Access required</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Please sign in first</h1>
-          <p className="mt-3 text-base leading-7 text-muted">You need to log in before filling in your personal information.</p>
+          <p className="text-sm font-medium text-muted">{formT("accessRequired")}</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">{formT("signInRequiredTitle")}</h1>
+          <p className="mt-3 text-base leading-7 text-muted">{formT("signInRequiredDescription")}</p>
           <Link href="/signin" className={`mt-6 ${primaryButton}`}>
-            Go to sign in
+            {formT("goToSignIn")}
           </Link>
         </div>
       </div>
@@ -108,32 +111,32 @@ export default function ProfileFormPage() {
       <div className="relative mx-auto max-w-3xl rounded-2xl border border-line bg-surface p-6 shadow-soft md:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">Personal information</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">Fill your profile</h1>
+            <p className="text-sm font-medium text-muted">{formT("personalInformation")}</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">{formT("fillYourProfile")}</h1>
           </div>
           <Link href="/profile" className={secondaryLink}>
-            Back to profile
+            {formT("backToProfile")}
           </Link>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block space-y-2">
-              <span className={labelTextClass}>Gender</span>
+              <span className={labelTextClass}>{formT("gender")}</span>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                 className={`${fieldClass} cursor-pointer`}
                 required
               >
-                <option value="">Select</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
+                <option value="">{formT("select")}</option>
+                <option value="MALE">{t("genderOptions.male")}</option>
+                <option value="FEMALE">{t("genderOptions.female")}</option>
               </select>
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>Age</span>
+              <span className={labelTextClass}>{formT("age")}</span>
               <input
                 type="number"
                 min="1"
@@ -145,7 +148,7 @@ export default function ProfileFormPage() {
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>Weight (kg)</span>
+              <span className={labelTextClass}>{formT("weightKg")}</span>
               <input
                 type="number"
                 min="1"
@@ -158,7 +161,7 @@ export default function ProfileFormPage() {
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>Height (cm)</span>
+              <span className={labelTextClass}>{formT("heightCm")}</span>
               <input
                 type="number"
                 min="1"
@@ -171,34 +174,34 @@ export default function ProfileFormPage() {
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>Exercise level</span>
+              <span className={labelTextClass}>{formT("exerciseLevel")}</span>
               <select
                 value={formData.exerciseLevel}
                 onChange={(e) => setFormData({ ...formData, exerciseLevel: e.target.value })}
                 className={`${fieldClass} cursor-pointer`}
                 required
               >
-                <option value="">Select</option>
-                <option value="SEDENTARY">Sedentary</option>
-                <option value="LIGHT">Light</option>
-                <option value="MODERATE">Moderate</option>
-                <option value="ACTIVE">Active</option>
-                <option value="VERY_ACTIVE">Very Active</option>
+                <option value="">{formT("select")}</option>
+                <option value="SEDENTARY">{t("exerciseLevelOptions.sedentary")}</option>
+                <option value="LIGHT">{t("exerciseLevelOptions.light")}</option>
+                <option value="MODERATE">{t("exerciseLevelOptions.moderate")}</option>
+                <option value="ACTIVE">{t("exerciseLevelOptions.active")}</option>
+                <option value="VERY_ACTIVE">{t("exerciseLevelOptions.veryActive")}</option>
               </select>
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>Goal</span>
+              <span className={labelTextClass}>{formT("goal")}</span>
               <select
                 value={formData.goal}
                 onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
                 className={`${fieldClass} cursor-pointer`}
                 required
               >
-                <option value="">Select</option>
-                <option value="LOSE_WEIGHT">Lose Weight</option>
-                <option value="MAINTAIN_WEIGHT">Maintain Weight</option>
-                <option value="GAIN_WEIGHT">Gain Weight</option>
+                <option value="">{formT("select")}</option>
+                <option value="LOSE_WEIGHT">{t("goalOptions.loseWeight")}</option>
+                <option value="MAINTAIN_WEIGHT">{t("goalOptions.maintainWeight")}</option>
+                <option value="GAIN_WEIGHT">{t("goalOptions.gainWeight")}</option>
               </select>
             </label>
           </div>
@@ -208,7 +211,7 @@ export default function ProfileFormPage() {
             disabled={isSaving}
             className={primaryButton}
           >
-            {isSaving ? "Saving..." : "Save profile"}
+            {isSaving ? formT("saving") : formT("saveProfile")}
           </button>
         </form>
       </div>

@@ -50,13 +50,13 @@ export default function Home() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
-                href="/signup"
+                href="/meals/new"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-auto"
               >
                 {t("startTracking")}
               </Link>
               <Link
-                href="/signin"
+                href="/profile"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary-tint px-6 py-3 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-auto"
               >
                 {t("openProfile")}

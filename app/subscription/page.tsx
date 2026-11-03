@@ -4,36 +4,47 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
 
-const features = [
-  "Unlimited daily meal logging",
-  "Track calories & macros",
-  "Personalized nutrition goals",
-  "Full progress calendar access",
-];
+const features = ["feature1", "feature2", "feature3", "feature4"] as const;
 
 export default function SubscriptionPage() {
   const t = useTranslations("subscription");
+  const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<string>("FREE");
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [isFetchingPlan, setIsFetchingPlan] = useState(true);
   const { data: session } = useSession();
 
   useEffect(() => {
     if (session?.user?.id) {
       axios.get("/api/profile").then((res) => {
-        if (res.data.subscription?.plan) {
-          setPlan(res.data.subscription.plan);
+        const subscription = res.data.subscription;
+
+        if (subscription?.plan) {
+          setPlan(subscription.plan);
+        } else {
+          setPlan("FREE");
+        }
+
+        if (subscription?.endAt) {
+          setExpiresAt(subscription.endAt);
+        } else {
+          setExpiresAt(null);
         }
       }).catch((error) => {
         logger.error({ err: error }, "Failed to fetch profile");
+        setPlan("FREE");
+        setExpiresAt(null);
       }).finally(() => {
         setIsFetchingPlan(false);
       });
     } else if (session === null) {
       const timer = setTimeout(() => {
+        setPlan("FREE");
+        setExpiresAt(null);
         setIsFetchingPlan(false);
       }, 0);
       return () => clearTimeout(timer);
@@ -41,6 +52,13 @@ export default function SubscriptionPage() {
   }, [session]);
 
   const isPro = plan === "PRO";
+  const formattedExpiry = expiresAt
+    ? new Date(expiresAt).toLocaleDateString(locale, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
 
   const handleSubscribe = async () => {
     try {
@@ -98,6 +116,13 @@ export default function SubscriptionPage() {
             <span className="text-4xl font-bold tracking-tight text-ink">{t("price")}</span>
             <span className="text-sm text-muted">{t("perMonth")}</span>
           </p>
+          {isPro && (
+            <p className="mt-3 text-sm text-muted">
+              {formattedExpiry
+                ? t("expiresOn", { date: formattedExpiry })
+                : t("noExpiration")}
+            </p>
+          )}
         </div>
 
         {/* Feature List */}
@@ -107,7 +132,7 @@ export default function SubscriptionPage() {
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary">
                 <Check className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
               </span>
-              {feature}
+              {t(feature)}
             </li>
           ))}
         </ul>

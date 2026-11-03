@@ -29,10 +29,11 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const days = parseInt(searchParams.get("days") || "7", 10);
+  const locale = searchParams.get("locale") === "th" ? "th" : "en-US";
 
   try {
     const userId = Number(session.user.id);
-    const cacheKey = `cache:user:${userId}:analytics:${days}`;
+    const cacheKey = `cache:user:${userId}:analytics:${days}:${locale}`;
     const cached = await getCache(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
@@ -79,8 +80,8 @@ export async function GET(request: Request) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
 
-      // Format day name (e.g., "Mon", "Tue")
-      const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
+      // Format day name using the active locale so Thai users see Thai weekday labels.
+      const dayName = currentDate.toLocaleDateString(locale, { weekday: 'short' });
 
       // Find summary for this date
       const summaryForDate = summaries.find(

@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { toast } from "sonner";
 import { Upload, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -18,6 +19,8 @@ const secondaryLink = `inline-flex min-h-11 items-center justify-center rounded-
 export default function NewMealPage() {
   const router = useRouter();
   const { status } = useSession();
+  const t = useTranslations("newMeal");
+
   const [mealType, setMealType] = useState("BREAKFAST");
   const [mealText, setMealText] = useState("");
   const [mode, setMode] = useState<"text" | "image">("text");
@@ -83,7 +86,7 @@ export default function NewMealPage() {
         });
       } else {
         if (!imagePreview || !imageFile) {
-          toast.error("Please provide an image");
+          toast.error(t("noImageError"));
           setIsSaving(false);
           return;
         }
@@ -100,10 +103,10 @@ export default function NewMealPage() {
 
       // ไม่ต้องเช็ค response.data.ok เพราะ axios จะ throw error อัตโนมัติถ้า status ไม่ใช่ 2xx
       // Toast remains visible while the page redirects, unlike an inline success message.
-      toast.success(response.data.message || "Meal saved successfully");
+      toast.success(response.data.message || t("saveSuccess"));
       setTimeout(() => router.push("/dashboard"), 900);
     } catch (error) {
-      let errorMessage = "Unable to save your meal";
+      let errorMessage = t("saveError");
       if (axios.isAxiosError(error) && error.response) {
         errorMessage = error.response.data?.message || errorMessage;
       } else if (error instanceof Error) {
@@ -119,7 +122,7 @@ export default function NewMealPage() {
   if (status === "loading") {
     return (
       <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
-        <p role="status" className="text-base text-muted">Loading...</p>
+        <p role="status" className="text-base text-muted">{t("loading")}</p>
       </div>
     );
   }
@@ -128,11 +131,11 @@ export default function NewMealPage() {
     return (
       <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas px-4 py-10">
         <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center shadow-soft">
-          <p className="text-sm font-medium text-muted">Access required</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Please sign in first</h1>
-          <p className="mt-3 text-base leading-7 text-muted">You need to log in before adding a meal.</p>
+          <p className="text-sm font-medium text-muted">{t("accessRequired")}</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">{t("signInTitle")}</h1>
+          <p className="mt-3 text-base leading-7 text-muted">{t("signInDescription")}</p>
           <Link href="/signin" className={`mt-6 ${primaryButton}`}>
-            Go to sign in
+            {t("goToSignIn")}
           </Link>
         </div>
       </div>
@@ -149,26 +152,26 @@ export default function NewMealPage() {
       <div className="relative mx-auto max-w-3xl rounded-2xl border border-line bg-surface p-6 shadow-soft md:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">Add meal</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">Record your meal</h1>
+            <p className="text-sm font-medium text-muted">{t("pageLabel")}</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">{t("pageTitle")}</h1>
           </div>
           <Link href="/dashboard" className={secondaryLink}>
-            Back to dashboard
+            {t("backToDashboard")}
           </Link>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <label className="block space-y-2">
-            <span className="block text-sm font-medium text-ink">Meal type</span>
+            <span className="block text-sm font-medium text-ink">{t("mealTypeLabel")}</span>
             <select
               value={mealType}
               onChange={(event) => setMealType(event.target.value)}
               className={`${fieldClass} min-h-11 cursor-pointer`}
             >
-              <option value="BREAKFAST">Breakfast</option>
-              <option value="LUNCH">Lunch</option>
-              <option value="DINNER">Dinner</option>
-              <option value="SNACK">Snack</option>
+              <option value="BREAKFAST">{t("breakfast")}</option>
+              <option value="LUNCH">{t("lunch")}</option>
+              <option value="DINNER">{t("dinner")}</option>
+              <option value="SNACK">{t("snack")}</option>
             </select>
           </label>
 
@@ -179,7 +182,7 @@ export default function NewMealPage() {
               aria-pressed={mode === "text"}
               className={`min-h-11 cursor-pointer rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${mode === "text" ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"}`}
             >
-              Text
+              {t("modeText")}
             </button>
             <button
               type="button"
@@ -187,27 +190,27 @@ export default function NewMealPage() {
               aria-pressed={mode === "image"}
               className={`min-h-11 cursor-pointer rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${mode === "image" ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"}`}
             >
-              Image (AI)
+              {t("modeImage")}
             </button>
           </div>
 
           {mode === "text" ? (
             <div className="space-y-2">
               <label htmlFor="meal-text" className="block text-sm font-medium text-ink">
-                Food description
+                {t("foodDescriptionLabel")}
               </label>
               <textarea
                 id="meal-text"
                 value={mealText}
                 onChange={(event) => setMealText(event.target.value)}
                 rows={6}
-                placeholder="e.g. Rice 250g, grilled chicken 200g, fruit 1 serving"
+                placeholder={t("foodDescriptionPlaceholder")}
                 aria-describedby="meal-text-help"
                 className={fieldClass}
                 required={mode === "text"}
               />
               <p id="meal-text-help" className="text-sm text-muted">
-                Add multiple items by separating them with a comma, for example: rice, grilled chicken, orange
+                {t("foodDescriptionHelp")}
               </p>
 
               {/*
@@ -217,7 +220,7 @@ export default function NewMealPage() {
               {recentMeals.length > 0 && (
                 <div className="space-y-2 pt-2">
                   {/* Label บอกให้รู้ว่าปุ่มพวกนี้คืออะไร */}
-                  <p className="text-sm font-medium text-muted">Recent meals</p>
+                  <p className="text-sm font-medium text-muted">{t("recentMeals")}</p>
 
                   {/* Chip แต่ละอัน = เมนูล่าสุด 1 รายการ */}
                   <div className="flex flex-wrap gap-2">
@@ -248,12 +251,12 @@ export default function NewMealPage() {
 
           ) : (
             <div className="space-y-4">
-              <span className="block text-sm font-medium text-ink">Food image</span>
+              <span className="block text-sm font-medium text-ink">{t("foodImageLabel")}</span>
               {!imagePreview ? (
                 <label className="flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-secondary bg-canvas px-4 text-center transition-colors duration-200 hover:border-primary hover:bg-primary-tint focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
                   <Upload className="mb-3 h-6 w-6 text-secondary" strokeWidth={1.75} aria-hidden="true" />
-                  <p className="mb-1 text-base text-ink"><span className="font-semibold">Click to upload</span> or take a photo</p>
-                  <p className="text-sm text-muted">JPEG, PNG, WEBP</p>
+                  <p className="mb-1 text-base text-ink"><span className="font-semibold">{t("clickToUpload")}</span> {t("orTakePhoto")}</p>
+                  <p className="text-sm text-muted">{t("acceptedFormats")}</p>
                   <input type="file" className="sr-only" accept="image/*" capture="environment" onChange={handleImageChange} required={mode === "image"} />
                 </label>
               ) : (
@@ -266,12 +269,12 @@ export default function NewMealPage() {
                     className={`absolute right-3 top-3 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-surface/90 px-3 text-sm font-semibold text-ink shadow-soft transition-colors duration-200 hover:bg-surface ${focusRing}`}
                   >
                     <X className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                    Remove
+                    {t("removeImage")}
                   </button>
                 </div>
               )}
               <p className="text-sm text-muted">
-                AI will estimate portions and calories based on the image. (Take a clear photo for better accuracy)
+                {t("aiImageHelp")}
               </p>
             </div>
           )}
@@ -281,7 +284,7 @@ export default function NewMealPage() {
             disabled={isSaving}
             className={primaryButton}
           >
-            {isSaving ? "Saving..." : "Save meal"}
+            {isSaving ? t("saving") : t("saveMeal")}
           </button>
         </form>
       </div>

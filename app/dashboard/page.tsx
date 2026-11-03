@@ -10,6 +10,11 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import type { NutritionTargets } from "@/lib/nutrition";
+import {
+  formatExerciseLevelLabel,
+  formatGenderLabel,
+  formatGoalLabel,
+} from "@/lib/formatters/profile";
 import MealCalendar from "@/components/ui/MealCalender";
 
 type ProfileApiResponse = {
@@ -103,11 +108,12 @@ function MetricTile({
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
-  const t = useTranslations("dashboard");
+  const dashboardT = useTranslations("dashboard");
+  const t = useTranslations();
   const [summary, setSummary] = useState<ProfileApiResponse | null>(null);
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
 
-  const displayName = session?.user?.name || session?.user?.email || t("guestUser");
+  const displayName = session?.user?.name || session?.user?.email || dashboardT("guestUser");
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -193,17 +199,17 @@ export default function DashboardPage() {
       <div className="relative mx-auto max-w-280">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">{t("dailyDashboard")}</p>
+            <p className="text-sm font-medium text-muted">{dashboardT("dailyDashboard")}</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">
-              {t("yourNutritionOverview")}
+              {dashboardT("yourNutritionOverview")}
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link href="/meals/new" className={primaryButton}>
-              {t("addMeal")}
+              {dashboardT("addMeal")}
             </Link>
             <Link href="/profile" className={secondaryButton}>
-              {t("viewProfile")}
+              {dashboardT("viewProfile")}
             </Link>
           </div>
         </div>
@@ -216,35 +222,35 @@ export default function DashboardPage() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-muted">{t("todaysFocus")}</p>
+                <p className="text-sm font-medium text-muted">{dashboardT("todaysFocus")}</p>
                 <h2 className="mt-1 truncate text-2xl font-semibold tracking-tight text-ink">
-                  {status === "loading" ? t("loadingData") : displayName}
+                  {status === "loading" ? dashboardT("loadingData") : displayName}
                 </h2>
                 <p className="mt-2 text-base leading-7 text-muted">
-                  {t("dailyFocusText")}
+                  {dashboardT("dailyFocusText")}
                 </p>
               </div>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
               <MetricTile
-                label={t("calories")}
-                targetLabel={nutritionTargets ? `${nutritionTargets.calories} kcal` : "—"}
-                unit="kcal"
+                label={dashboardT("calories")}
+                targetLabel={nutritionTargets ? `${nutritionTargets.calories} ${dashboardT("kcal")}` : "—"}
+                unit={dashboardT("kcal")}
                 progress={dailyProgress?.calories}
                 percent={calorieProgress}
-                emptyMessage={t("completeProfileTarget")}
+                emptyMessage={dashboardT("completeProfileTarget")}
                 loading={!hasLoadedProfile}
                 barClassName="bg-primary"
                 dotClassName="bg-primary"
               />
               <MetricTile
-                label={t("protein")}
-                targetLabel={nutritionTargets ? `${nutritionTargets.protein} g` : "—"}
-                unit="g"
+                label={dashboardT("protein")}
+                targetLabel={nutritionTargets ? `${nutritionTargets.protein} ${dashboardT("g")}` : "—"}
+                unit={dashboardT("g")}
                 progress={dailyProgress?.protein}
                 percent={proteinProgress}
-                emptyMessage={t("proteinGoalReady")}
+                emptyMessage={dashboardT("proteinGoalReady")}
                 loading={!hasLoadedProfile}
                 barClassName="bg-secondary"
                 dotClassName="bg-secondary"
@@ -253,49 +259,51 @@ export default function DashboardPage() {
 
             <dl className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-xl border border-line bg-canvas p-4">
-                <dt className="text-sm text-muted">{t("goal")}</dt>
+                <dt className="text-sm text-muted">{dashboardT("goal")}</dt>
                 <dd className="mt-1 text-base font-semibold text-ink">
-                  {profile?.goal ? profile.goal : nutritionTargets?.goalLabel ?? "—"}
+                  {profile?.goal ? formatGoalLabel(profile.goal, t) : nutritionTargets?.goalLabel ?? "—"}
                 </dd>
               </div>
               <div className="rounded-xl border border-line bg-canvas p-4">
-                <dt className="text-sm text-muted">{t("bmi")}</dt>
+                <dt className="text-sm text-muted">{dashboardT("bmi")}</dt>
                 <dd className="mt-1 text-base font-semibold text-ink tabular-nums">{bmi ?? "—"}</dd>
               </div>
               <div className={`rounded-xl border p-4 ${bmiStatus?.tone || "border-line bg-canvas text-ink"}`}>
-                <dt className="text-sm text-muted">{t("status")}</dt>
+                <dt className="text-sm text-muted">{dashboardT("status")}</dt>
                 <dd className="mt-1 text-base font-semibold">
-                  {bmiStatus?.label ?? t("noData")}
+                  {bmiStatus?.label ?? dashboardT("noData")}
                 </dd>
               </div>
             </dl>
 
             <div className="mt-6 rounded-xl border border-line bg-canvas p-4 md:p-5">
-              <h3 className="text-base font-semibold text-ink">{t("personalDetails")}</h3>
+              <h3 className="text-base font-semibold text-ink">{dashboardT("personalDetails")}</h3>
               <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <dt className="text-sm text-muted">{t("gender")}</dt>
-                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.gender || "—"}</dd>
+                  <dt className="text-sm text-muted">{dashboardT("gender")}</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.gender ? formatGenderLabel(profile.gender, t) : "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">{t("age")}</dt>
-                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.age ? `${profile.age} ${t("years")}` : "—"}</dd>
+                  <dt className="text-sm text-muted">{dashboardT("age")}</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.age ? `${profile.age} ${dashboardT("years")}` : "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">{t("weight")}</dt>
-                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.weight ? `${profile.weight} ${t("kg")}` : "—"}</dd>
+                  <dt className="text-sm text-muted">{dashboardT("weight")}</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.weight ? `${profile.weight} ${dashboardT("kg")}` : "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">{t("height")}</dt>
-                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.height ? `${profile.height} ${t("cm")}` : "—"}</dd>
+                  <dt className="text-sm text-muted">{dashboardT("height")}</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.height ? `${profile.height} ${dashboardT("cm")}` : "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">{t("exerciseLevel")}</dt>
-                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.exerciseLevel || "—"}</dd>
+                  <dt className="text-sm text-muted">{dashboardT("exerciseLevel")}</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.exerciseLevel ? formatExerciseLevelLabel(profile.exerciseLevel, t) : "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted">{t("goal")}</dt>
-                  <dd className="mt-1 text-base font-semibold text-ink">{profile?.goal || nutritionTargets?.goalLabel || "—"}</dd>
+                  <dt className="text-sm text-muted">{dashboardT("goal")}</dt>
+                  <dd className="mt-1 text-base font-semibold text-ink">
+                    {profile?.goal ? formatGoalLabel(profile.goal, t) : nutritionTargets?.goalLabel ?? "—"}
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -303,32 +311,32 @@ export default function DashboardPage() {
 
           <aside className="space-y-6">
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
-              <h2 className="text-lg font-semibold text-ink">{t("quickInsights")}</h2>
+              <h2 className="text-lg font-semibold text-ink">{dashboardT("quickInsights")}</h2>
               <dl className="mt-3 divide-y divide-line text-base">
                 <div className="flex items-center justify-between py-3">
-                  <dt className="text-muted">BMR</dt>
+                  <dt className="text-muted">{dashboardT("bmr")}</dt>
                   <dd className="font-semibold text-ink tabular-nums">{nutritionTargets?.bmr ?? "—"}</dd>
                 </div>
                 <div className="flex items-center justify-between py-3">
-                  <dt className="text-muted">TDEE</dt>
+                  <dt className="text-muted">{dashboardT("tdee")}</dt>
                   <dd className="font-semibold text-ink tabular-nums">{nutritionTargets?.tdee ?? "—"}</dd>
                 </div>
                 <div className="flex items-center justify-between py-3 pb-0">
-                  <dt className="text-muted">{t("profile")}</dt>
+                  <dt className="text-muted">{dashboardT("profile")}</dt>
                   <dd className="font-semibold text-ink">
-                    {hasLoadedProfile ? (summary ? t("ready") : t("needsSetup")) : t("loading")}
+                    {hasLoadedProfile ? (summary ? dashboardT("ready") : dashboardT("needsSetup")) : dashboardT("loading")}
                   </dd>
                 </div>
               </dl>
             </div>
 
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
-              <h2 className="text-lg font-semibold text-ink">{t("nextStep")}</h2>
+              <h2 className="text-lg font-semibold text-ink">{dashboardT("nextStep")}</h2>
               <p className="mt-3 text-base leading-7 text-muted">
-                {t("nextStepText")}
+                {dashboardT("nextStepText")}
               </p>
               <Link href="/profile/form" className={`mt-5 ${primaryButton}`}>
-                {t("fillProfile")}
+                {dashboardT("fillProfile")}
               </Link>
             </div>
           </aside>

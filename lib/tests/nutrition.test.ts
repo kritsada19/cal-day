@@ -38,7 +38,7 @@ describe("calculateDailyNutritionTargets", () => {
       protein: 126,
       bmr: 1649,
       tdee: 2556,
-      goalLabel: "Lose weight",
+      goalLabel: "ลดน้ำหนัก",
     });
   });
 
@@ -61,7 +61,7 @@ describe("calculateDailyNutritionTargets", () => {
       protein: 96,
       bmr: 1314,
       tdee: 1577,
-      goalLabel: "Maintain weight",
+      goalLabel: "คงน้ำหนัก",
     });
   });
 });
@@ -71,7 +71,7 @@ describe("getBmiStatus", () => {
     const result = getBmiStatus(17.8);
 
     expect(result).toEqual({
-      label: "Underweight",
+      label: "น้ำหนักต่ำกว่าเกณฑ์",
       tone: "border-amber-400/30 bg-amber-500/10 text-amber-300",
     });
   });
@@ -80,7 +80,7 @@ describe("getBmiStatus", () => {
     const result = getBmiStatus(22.5);
 
     expect(result).toEqual({
-      label: "Healthy",
+      label: "ปกติ",
       tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
     });
   });
@@ -89,7 +89,7 @@ describe("getBmiStatus", () => {
     const result = getBmiStatus(30);
 
     expect(result).toEqual({
-      label: "Overweight",
+      label: "น้ำหนักเกิน",
       tone: "border-rose-400/30 bg-rose-500/10 text-rose-300",
     });
   });
@@ -112,7 +112,7 @@ describe("buildProfileNutritionSummary", () => {
 
     expect(result.bmi).toBe(22.9);
     expect(result.bmiStatus).toEqual({
-      label: "Healthy",
+      label: "ปกติ",
       tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
     });
     expect(result.nutritionTargets).toEqual({
@@ -120,7 +120,7 @@ describe("buildProfileNutritionSummary", () => {
       protein: 126,
       bmr: 1649,
       tdee: 2556,
-      goalLabel: "Lose weight",
+      goalLabel: "ลดน้ำหนัก",
     });
     expect(result.dailyProgress.calories).toEqual({
       consumed: 1000,

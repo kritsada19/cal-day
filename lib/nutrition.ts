@@ -61,11 +61,11 @@ export function calculateDailyNutritionTargets(profile: NutritionProfile | null 
   const protein = Math.max(80, Math.round(weight * proteinFactor));
 
   const goalLabelMap: Record<string, string> = {
-    LOSE_WEIGHT: "Lose weight",
-    MAINTAIN_WEIGHT: "Maintain weight",
-    GAIN_WEIGHT: "Gain weight",
+    LOSE_WEIGHT: "ลดน้ำหนัก",
+    MAINTAIN_WEIGHT: "คงน้ำหนัก",
+    GAIN_WEIGHT: "เพิ่มน้ำหนัก",
   };
-  const goalLabel = goalLabelMap[profile.goal ?? ""] ?? "Maintain weight";
+  const goalLabel = goalLabelMap[profile.goal ?? ""] ?? "คงน้ำหนัก";
 
   return {
     calories,
@@ -78,14 +78,14 @@ export function calculateDailyNutritionTargets(profile: NutritionProfile | null 
 
 export function getBmiStatus(bmi: number): BmiStatus {
   if (bmi < 18.5) {
-    return { label: "Underweight", tone: "border-amber-400/30 bg-amber-500/10 text-amber-300" };
+    return { label: "น้ำหนักต่ำกว่าเกณฑ์", tone: "border-amber-400/30 bg-amber-500/10 text-amber-300" };
   }
 
   if (bmi < 25) {
-    return { label: "Healthy", tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300" };
+    return { label: "ปกติ", tone: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300" };
   }
 
-  return { label: "Overweight", tone: "border-rose-400/30 bg-rose-500/10 text-rose-300" };
+  return { label: "น้ำหนักเกิน", tone: "border-rose-400/30 bg-rose-500/10 text-rose-300" };
 }
 
 export function buildProfileNutritionSummary(

@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Shield,
@@ -24,6 +24,11 @@ import {
   X,
   Mail,
 } from "lucide-react";
+import {
+  formatExerciseLevelLabel,
+  formatGenderLabel,
+  formatGoalLabel,
+} from "@/lib/formatters/profile";
 
 interface UserProfile {
   gender: string | null;
@@ -111,6 +116,8 @@ export default function AdminUserDetailPage() {
   const { data: session, status } = useSession();
   const params = useParams();
   const t = useTranslations("admin");
+  const commonT = useTranslations();
+  const locale = useLocale();
 
   const userId = params?.id ? String(params.id) : "";
 
@@ -217,6 +224,28 @@ export default function AdminUserDetailPage() {
   const totalPageCalories = foodEntries.reduce((acc, curr) => acc + (curr.calories || 0), 0);
   const totalPageProtein = foodEntries.reduce((acc, curr) => acc + (curr.protein || 0), 0);
 
+  const formatMealTypeLabel = (value?: string | null) => {
+    switch (value) {
+      case "BREAKFAST":
+        return t("breakfast");
+      case "LUNCH":
+        return t("lunch");
+      case "DINNER":
+        return t("dinner");
+      case "SNACK":
+        return t("snack");
+      default:
+        return t("notSpecified");
+    }
+  };
+
+  const formatStatusLabel = (value?: string | null) => {
+    if (!value) return t("free");
+    const normalized = value.toUpperCase();
+    if (normalized === "ACTIVE") return t("active");
+    return normalized;
+  };
+
   return (
     <div className="relative min-h-[85vh] flex-1 overflow-hidden bg-canvas px-4 py-8 text-ink selection:bg-highlight selection:text-ink md:py-12">
       <div
@@ -306,12 +335,12 @@ export default function AdminUserDetailPage() {
                     {user.role === "ADMIN" ? (
                       <span className={`${badgeBase} bg-highlight text-ink`}>
                         <Shield className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                        ADMIN
+                        {t("administrator")}
                       </span>
                     ) : (
                       <span className={`${badgeBase} border border-line text-muted`}>
                         <UserIcon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                        USER
+                        {t("user")}
                       </span>
                     )}
 
@@ -336,11 +365,11 @@ export default function AdminUserDetailPage() {
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-muted">{t("registered")}</dt>
-                  <dd className="text-ink">{new Date(user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</dd>
+                  <dd className="text-ink">{new Date(user.createdAt).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" })}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-muted">{t("subscriptionStatus")}</dt>
-                  <dd className="font-semibold uppercase text-ink">{user.subscription?.status || "ACTIVE"}</dd>
+                  <dd className="font-semibold uppercase text-ink">{formatStatusLabel(user.subscription?.status)}</dd>
                 </div>
               </dl>
             </div>
@@ -354,18 +383,18 @@ export default function AdminUserDetailPage() {
 
               {user.profile ? (
                 <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <ProfileTile label={t("gender")} value={user.profile.gender || "N/A"} />
-                  <ProfileTile label={t("age")} value={user.profile.age ? `${user.profile.age} yrs` : "N/A"} />
-                  <ProfileTile label={t("weight")} value={user.profile.weight ? `${user.profile.weight} kg` : "N/A"} />
-                  <ProfileTile label={t("height")} value={user.profile.height ? `${user.profile.height} cm` : "N/A"} />
+                  <ProfileTile label={t("gender")} value={user.profile.gender ? formatGenderLabel(user.profile.gender, commonT) : t("notSpecified")} />
+                  <ProfileTile label={t("age")} value={user.profile.age ? `${user.profile.age} ${t("age")}` : t("notSpecified")} />
+                  <ProfileTile label={t("weight")} value={user.profile.weight ? `${user.profile.weight} ${t("weight")}` : t("notSpecified")} />
+                  <ProfileTile label={t("height")} value={user.profile.height ? `${user.profile.height} ${t("height")}` : t("notSpecified")} />
 
-                  <ProfileTile label={t("bmr")} value={user.profile.bmr ? `${Math.round(user.profile.bmr)} kcal` : "N/A"} />
-                  <ProfileTile label={t("tdee")} value={user.profile.tdee ? `${Math.round(user.profile.tdee)} kcal` : "N/A"} />
-                  <ProfileTile label={t("targetCal")} value={user.profile.targetCalories ? `${Math.round(user.profile.targetCalories)} kcal` : "N/A"} />
-                  <ProfileTile label={t("targetProtein")} value={user.profile.targetProtein ? `${Math.round(user.profile.targetProtein)} g` : "N/A"} />
+                  <ProfileTile label={t("bmr")} value={user.profile.bmr ? `${Math.round(user.profile.bmr).toLocaleString(locale)} ${t("kcal")}` : t("notSpecified")} />
+                  <ProfileTile label={t("tdee")} value={user.profile.tdee ? `${Math.round(user.profile.tdee).toLocaleString(locale)} ${t("kcal")}` : t("notSpecified")} />
+                  <ProfileTile label={t("targetCal")} value={user.profile.targetCalories ? `${Math.round(user.profile.targetCalories).toLocaleString(locale)} ${t("kcal")}` : t("notSpecified")} />
+                  <ProfileTile label={t("targetProtein")} value={user.profile.targetProtein ? `${Math.round(user.profile.targetProtein).toLocaleString(locale)} ${t("g")}` : t("notSpecified")} />
 
-                  <ProfileTile label={t("exerciseLevel")} value={user.profile.exerciseLevel || "N/A"} span />
-                  <ProfileTile label={t("fitnessGoal")} value={user.profile.goal || "N/A"} span />
+                  <ProfileTile label={t("exerciseLevel")} value={user.profile.exerciseLevel ? formatExerciseLevelLabel(user.profile.exerciseLevel, commonT) : t("notSpecified")} span />
+                  <ProfileTile label={t("fitnessGoal")} value={user.profile.goal ? formatGoalLabel(user.profile.goal, commonT) : t("notSpecified")} span />
                 </dl>
               ) : (
                 <div className="rounded-xl border border-line bg-canvas p-8 text-center text-base italic text-muted">
@@ -392,7 +421,7 @@ export default function AdminUserDetailPage() {
             <div>
               <dt className="text-sm text-muted">{t("pageCalories")}</dt>
               <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-primary">
-                {Math.round(totalPageCalories).toLocaleString()} <span className="text-base font-medium text-muted">{t("kcal")}</span>
+                {Math.round(totalPageCalories).toLocaleString(locale)} <span className="text-base font-medium text-muted">{t("kcal")}</span>
               </dd>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-tint text-primary">
@@ -404,7 +433,7 @@ export default function AdminUserDetailPage() {
             <div>
               <dt className="text-sm text-muted">{t("pageProtein")}</dt>
               <dd className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">
-                {Math.round(totalPageProtein).toLocaleString()} <span className="text-base font-medium text-muted">{t("g")}</span>
+                {Math.round(totalPageProtein).toLocaleString(locale)} <span className="text-base font-medium text-muted">{t("g")}</span>
               </dd>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-highlight text-ink">
@@ -526,7 +555,7 @@ export default function AdminUserDetailPage() {
                       {/* Meal Type */}
                       <td className="p-4">
                         <span className="inline-flex min-h-7 items-center rounded-full border border-line px-3 text-sm font-semibold text-muted">
-                          {item.meal?.mealType || "N/A"}
+                          {formatMealTypeLabel(item.meal?.mealType)}
                         </span>
                       </td>
 
@@ -537,18 +566,18 @@ export default function AdminUserDetailPage() {
 
                       {/* Calories */}
                       <td className="p-4 font-semibold tabular-nums text-primary">
-                        {item.calories} kcal
+                        {item.calories} {t("kcal")}
                       </td>
 
                       {/* Protein */}
                       <td className="p-4 font-semibold tabular-nums text-ink">
-                        {item.protein} g
+                        {item.protein} {t("g")}
                       </td>
 
                       {/* Date */}
                       <td className="p-4 text-sm tabular-nums text-muted">
                         {item.meal?.createdAt
-                          ? new Date(item.meal.createdAt).toLocaleDateString("en-US", {
+                          ? new Date(item.meal.createdAt).toLocaleDateString(locale, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -627,7 +656,7 @@ export default function AdminUserDetailPage() {
                     {selectedFood.foodName}
                   </h3>
                   <p className="text-sm text-muted">
-                    ID: #{selectedFood.id} &bull; {selectedFood.meal?.mealType}
+                    ID: #{selectedFood.id} &bull; {formatMealTypeLabel(selectedFood.meal?.mealType)}
                   </p>
                 </div>
               </div>
@@ -651,7 +680,7 @@ export default function AdminUserDetailPage() {
                 <div>
                   <dt className="text-sm text-muted">{t("mealType")}</dt>
                   <dd className="mt-0.5 text-base font-semibold text-ink">
-                    {selectedFood.meal?.mealType || "N/A"}
+                    {formatMealTypeLabel(selectedFood.meal?.mealType)}
                   </dd>
                 </div>
                 <div>
@@ -684,7 +713,7 @@ export default function AdminUserDetailPage() {
                   <div>
                     {t("loggedDate")}: {" "}
                     {selectedFood.meal?.createdAt
-                      ? new Date(selectedFood.meal.createdAt).toLocaleString("en-US")
+                      ? new Date(selectedFood.meal.createdAt).toLocaleString(locale)
                       : "-"}
                   </div>
                 </div>

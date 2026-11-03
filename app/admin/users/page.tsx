@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import axios from "axios";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
     Users,
     Search,
@@ -20,6 +20,10 @@ import {
     Trash2,
     AlertTriangle,
 } from "lucide-react";
+import {
+    formatSubscriptionPlanLabel,
+    formatUserRoleLabel,
+} from "@/lib/formatters/profile";
 
 interface UserProfile {
     gender: string | null;
@@ -72,6 +76,7 @@ const badgeBase = "inline-flex min-h-7 items-center gap-1 rounded-full px-3 text
 export default function AdminUsersPage() {
     const { data: session, status } = useSession();
     const t = useTranslations("admin");
+    const locale = useLocale();
 
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [pagination, setPagination] = useState<PaginationMeta>({
@@ -320,8 +325,8 @@ export default function AdminUsersPage() {
                             className={`${fieldClass} cursor-pointer`}
                         >
                             <option value="">{t("allRoles")}</option>
-                            <option value="USER">USER</option>
-                            <option value="ADMIN">ADMIN</option>
+                            <option value="USER">{t("user")}</option>
+                            <option value="ADMIN">{t("administrator")}</option>
                         </select>
 
                         {/* Plan filter */}
@@ -335,7 +340,7 @@ export default function AdminUsersPage() {
                             className={`${fieldClass} cursor-pointer`}
                         >
                             <option value="">{t("allPlans")}</option>
-                            <option value="FREE">FREE</option>
+                            <option value="FREE">{t("free")}</option>
                             <option value="PRO">PRO</option>
                         </select>
                     </div>
@@ -430,12 +435,12 @@ export default function AdminUsersPage() {
                                                     {user.role === "ADMIN" ? (
                                                         <span className={`${badgeBase} bg-highlight text-ink`}>
                                                             <Shield className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                                                            ADMIN
+                                                            {formatUserRoleLabel(user.role, t)}
                                                         </span>
                                                     ) : (
                                                         <span className={`${badgeBase} border border-line text-muted`}>
                                                             <UserIcon className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                                                            USER
+                                                            {formatUserRoleLabel(user.role, t)}
                                                         </span>
                                                     )}
                                                 </td>
@@ -449,7 +454,7 @@ export default function AdminUsersPage() {
                                                         </span>
                                                     ) : (
                                                         <span className={`${badgeBase} border border-line text-muted`}>
-                                                            FREE
+                                                            {formatSubscriptionPlanLabel(user.subscription?.plan ?? "FREE", t)}
                                                         </span>
                                                     )}
                                                 </td>
@@ -459,19 +464,19 @@ export default function AdminUsersPage() {
                                                     {user.profile ? (
                                                         <div className="flex flex-col text-sm">
                                                             <span>
-                                                                {user.profile.gender || "-"},{" "}
+                                                                {user.profile.gender || t("notSpecified")},{" "}
                                                                 {user.profile.age
-                                                                    ? `${user.profile.age} yrs`
-                                                                    : "-"}
+                                                                    ? `${user.profile.age} ${t("age")}`
+                                                                    : t("notSpecified")}
                                                             </span>
                                                             <span className="text-sm text-muted tabular-nums">
                                                                 {user.profile.weight
-                                                                    ? `${user.profile.weight} kg`
-                                                                    : "-"}{" "}
+                                                                    ? `${user.profile.weight} ${t("weight")}`
+                                                                    : t("notSpecified")}{" "}
                                                                 /{" "}
                                                                 {user.profile.height
-                                                                    ? `${user.profile.height} cm`
-                                                                    : "-"}
+                                                                    ? `${user.profile.height} ${t("height")}`
+                                                                    : t("notSpecified")}
                                                             </span>
                                                         </div>
                                                     ) : (
@@ -483,7 +488,7 @@ export default function AdminUsersPage() {
 
                                                 {/* Registered Date */}
                                                 <td className="p-4 text-sm text-muted tabular-nums">
-                                                    {new Date(user.createdAt).toLocaleDateString("en-US", {
+                                                    {new Date(user.createdAt).toLocaleDateString(locale, {
                                                         year: "numeric",
                                                         month: "short",
                                                         day: "numeric",
@@ -604,9 +609,9 @@ export default function AdminUsersPage() {
                             <div className="mt-2 flex flex-wrap items-center gap-x-2 text-sm text-muted">
                                 <span>{t("id")}: #{userToDelete.id}</span>
                                 <span aria-hidden="true">•</span>
-                                <span>{t("roleLabel")}: {userToDelete.role}</span>
+                                <span>{t("roleLabel")}: {formatUserRoleLabel(userToDelete.role, t)}</span>
                                 <span aria-hidden="true">•</span>
-                                <span>{t("plan")}: {userToDelete.subscription?.plan || "FREE"}</span>
+                                <span>{t("plan")}: {formatSubscriptionPlanLabel(userToDelete.subscription?.plan || "FREE", t)}</span>
                             </div>
                         </div>
 
