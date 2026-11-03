@@ -25,6 +25,7 @@
     "dailyTracker": "Daily tracker",
     "budget": "Budget",
     "kcal": "kcal",
+    "g": "g",
     "days": "days",
     "percent": "%"
   },
@@ -33,7 +34,11 @@
     "title": "CALDAY",
     "subtitle": "Simple nutrition planning",
     "description": "A calm and focused space to understand your nutrition goals, keep your profile organized, and stay consistent with a simple daily routine.",
-    "tags": ["Daily goals", "Simple insights", "Clear focus"],
+    "tags": [
+      "Daily goals",
+      "Simple insights",
+      "Clear focus"
+    ],
     "startTracking": "Start tracking",
     "openProfile": "Open profile",
     "sectionTitle": "What this app does",
@@ -132,6 +137,22 @@
     "errorAction": "Go to homepage",
     "loadingVerify": "Loading..."
   },
+  "goalOptions": {
+    "loseWeight": "Lose weight",
+    "maintainWeight": "Maintain weight",
+    "gainWeight": "Gain weight"
+  },
+  "genderOptions": {
+    "male": "Male",
+    "female": "Female"
+  },
+  "exerciseLevelOptions": {
+    "sedentary": "Sedentary",
+    "light": "Light",
+    "moderate": "Moderate",
+    "active": "Active",
+    "veryActive": "Very active"
+  },
   "dashboard": {
     "dailyDashboard": "Daily dashboard",
     "yourNutritionOverview": "Your nutrition overview",
@@ -182,7 +203,72 @@
     "fillProfile": "Fill profile",
     "status": "Status",
     "profile": "Profile",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "bmr": "BMR",
+    "tdee": "TDEE",
+    "kcal": "kcal",
+    "g": "g"
+  },
+  "profileForm": {
+    "loading": "Loading...",
+    "accessRequired": "Access required",
+    "signInRequiredTitle": "Please sign in first",
+    "signInRequiredDescription": "You need to log in before filling in your personal information.",
+    "goToSignIn": "Go to sign in",
+    "personalInformation": "Personal information",
+    "fillYourProfile": "Fill your profile",
+    "backToProfile": "Back to profile",
+    "gender": "Gender",
+    "age": "Age",
+    "weightKg": "Weight (kg)",
+    "heightCm": "Height (cm)",
+    "exerciseLevel": "Exercise level",
+    "goal": "Goal",
+    "select": "Select",
+    "saving": "Saving...",
+    "saveProfile": "Save profile",
+    "loadProfileError": "Unable to load your profile data",
+    "saveError": "Unable to save your profile",
+    "saveSuccess": "Profile saved successfully"
+  },
+  "mealCalendar": {
+    "history": "History",
+    "title": "Daily Meals Calendar",
+    "confirmAction": "Confirm action",
+    "deleteMealTitle": "Delete this meal?",
+    "deleteMealDescription": "This action cannot be undone. The meal and all its food entries will be permanently removed.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "prev": "Prev",
+    "next": "Next",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "days": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "mealTypes": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
+    "protein": "Protein",
+    "mealsOn": "Meals on",
+    "totalCalories": "Total Calories",
+    "totalProtein": "Total Protein",
+    "target": "Target",
+    "kcal": "kcal",
+    "g": "g",
+    "loadingMeals": "Loading meals...",
+    "noMeals": "No meals recorded for this day.",
+    "deleting": "Deleting...",
+    "deleteError": "Unable to delete this meal. Please try again."
   },
   "profile": {
     "yourProfile": "Your profile",
@@ -236,7 +322,9 @@
     "loginRequired": "Login required",
     "manageSubscription": "Manage subscription",
     "upgradeToPro": "Upgrade to Pro",
-    "loginToAccess": "Please log in to access premium features"
+    "loginToAccess": "Please log in to access premium features",
+    "expiresOn": "Active until {date}",
+    "noExpiration": "No expiration date"
   },
   "analytics": {
     "title": "Analytics",
@@ -252,11 +340,14 @@
     "days": "days",
     "dailyCalories": "Daily calories",
     "calorieIntake": "Calorie intake",
+    "calorieBarLabel": "{day}: {calories} {unit}",
     "lastPeriod": "Last",
     "consumed": "Consumed",
     "overTargetShort": "Over target",
     "target": "Target",
     "proteinIntake": "Protein intake",
+    "proteinBarLabel": "{day}: {protein} {unit}",
+    "activeDaysLabel": "{activeCount} of the last {totalCount} days active",
     "restrictedAccess": "Restricted access",
     "pleaseLogin": "Please log in to view analytics",
     "signIn": "Sign in",
@@ -363,7 +454,9 @@
     "userId": "User ID",
     "registered": "Registered",
     "subscriptionStatus": "Subscription status",
+    "active": "Active",
     "free": "Free",
+    "bmi": "BMI",
     "bmr": "BMR",
     "tdee": "TDEE",
     "targetCal": "Target Cal",
@@ -391,7 +484,42 @@
     "pageItems": "total items",
     "allMealsLabel": "All meals",
     "closeDialog": "Close",
-    "loggedUserAndTimestamp": "Logged user & timestamp",
-    "loggedDateShort": "Logged date"
+    "loggedDateShort": "Logged date",
+    "gender": "Gender",
+    "age": "Age",
+    "weight": "Weight",
+    "height": "Height"
+  },
+  "newMeal": {
+    "loading": "Loading...",
+    "accessRequired": "Access required",
+    "signInTitle": "Please sign in first",
+    "signInDescription": "You need to log in before adding a meal.",
+    "goToSignIn": "Go to sign in",
+    "pageLabel": "Add meal",
+    "pageTitle": "Record your meal",
+    "backToDashboard": "Back to dashboard",
+    "mealTypeLabel": "Meal type",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack",
+    "modeText": "Text",
+    "modeImage": "Image (AI)",
+    "foodDescriptionLabel": "Food description",
+    "foodDescriptionPlaceholder": "e.g. Rice 250g, grilled chicken 200g, fruit 1 serving",
+    "foodDescriptionHelp": "Add multiple items by separating them with a comma, for example: rice, grilled chicken, orange",
+    "recentMeals": "Recent meals",
+    "foodImageLabel": "Food image",
+    "clickToUpload": "Click to upload",
+    "orTakePhoto": "or take a photo",
+    "acceptedFormats": "JPEG, PNG, WEBP",
+    "aiImageHelp": "AI will estimate portions and calories based on the image. (Take a clear photo for better accuracy)",
+    "removeImage": "Remove",
+    "saving": "Saving...",
+    "saveMeal": "Save meal",
+    "noImageError": "Please provide an image",
+    "saveSuccess": "Meal saved successfully",
+    "saveError": "Unable to save your meal"
   }
 }

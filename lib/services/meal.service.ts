@@ -279,11 +279,15 @@ export class MealService {
   }
 
   /**
-   * ดึงมื้ออาหารของผู้ใช้ 1 วัน (รับวันที่รูปแบบ YYYY-MM-DD)
+   * ดึงมื้ออาหารของผู้ใช้ 1 วัน (รับวันที่รูปแบบ YYYY-MM-DD และ offset ของ client เป็นนาที)
+   *
+   * tzOffsetMinutes = ผลลัพธ์ของ new Date().getTimezoneOffset() บน browser
+   * (UTC+7 จะได้ -420 เพราะ getTimezoneOffset คืนค่าเป็นลบ)
    */
   async getDailyMeals(
     userId: number,
     date: string | null,
+    tzOffsetMinutes: number = 0,
   ): Promise<MealWithFoodEntries[]> {
     if (!date) {
       throw new AppError(400, "Date is required");
@@ -294,16 +298,33 @@ export class MealService {
       throw new AppError(400, "Invalid date format");
     }
 
-    const cacheKey = `cache:user:${userId}:meals:daily:${date}`;
+    // แปลง offset จาก "นาทีของ getTimezoneOffset()" (ลบ = UTC+) เป็น ms
+    // เพื่อบวกเข้าไปใน UTC midnight ของวันนั้น ให้ได้ช่วงเวลาที่ตรงกับ local day
+    const offsetMs = tzOffsetMinutes * 60 * 1000;
+
+    // targetDate ของ new Date("2026-11-03") = 2026-11-03T00:00:00.000Z (UTC midnight)
+    // ต้องการช่วงเวลาที่ใน DB จริงคือ 2026-11-02T17:00:00Z ถึง 2026-11-03T16:59:59.999Z (สำหรับ UTC+7)
+    const localMidnightUtc = new Date(targetDate.getTime() + offsetMs);
+    const year = localMidnightUtc.getUTCFullYear();
+    const month = localMidnightUtc.getUTCMonth();
+    const day = localMidnightUtc.getUTCDate();
+
+    const startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+    const endOfDay   = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+
+    // เลื่อน range กลับไป UTC โดยหัก offset ออก
+    const startUtc = new Date(startOfDay.getTime() - offsetMs);
+    const endUtc   = new Date(endOfDay.getTime()   - offsetMs);
+
+    const cacheKey = `cache:user:${userId}:meals:daily:${date}:tz:${tzOffsetMinutes}`;
 
     const cached = await getCache(cacheKey);
     if (cached) return cached;
 
-    const { startOfDay, endOfDay } = getUtcDayRange(targetDate);
     const meals = await this.repository.getMealsByDate(
       userId,
-      startOfDay,
-      endOfDay,
+      startUtc,
+      endUtc,
     );
 
     // มื้ออาหารของวันหนึ่งแทบไม่เปลี่ยน → cache ได้นาน 1 ชั่วโมง

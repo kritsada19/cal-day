@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import axios from "axios";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
 
 // Types for the Analytics API Response
@@ -41,6 +41,8 @@ const cardClass = "rounded-2xl border border-line bg-surface p-6 shadow-soft";
 
 export default function AnalyticsPage() {
   const t = useTranslations("analytics");
+  const commonT = useTranslations("common");
+  const locale = useLocale();
   const [timeRange, setTimeRange] = useState<"7D" | "30D">("7D");
   const [fetching, setFetching] = useState(false);
 
@@ -60,7 +62,7 @@ export default function AnalyticsPage() {
     setFetching(true);
     try {
       const days = timeRange === "7D" ? 7 : 30;
-      const response = await axios.get<AnalyticsResponse>(`/api/analytics?days=${days}`);
+      const response = await axios.get<AnalyticsResponse>(`/api/analytics?days=${days}&locale=${locale}`);
       setData(response.data.weeklyData);
       setStats(response.data.stats);
     } catch (error) {
@@ -68,7 +70,7 @@ export default function AnalyticsPage() {
     } finally {
       setFetching(false);
     }
-  }, [timeRange]);
+  }, [locale, timeRange]);
 
   // โหลดข้อมูล analytics ครั้งแรก และโหลดใหม่เมื่อ timeRange เปลี่ยน
   useEffect(() => {
@@ -193,12 +195,12 @@ export default function AnalyticsPage() {
             <p className="mt-4 flex items-center gap-2 text-sm">
               {isUnderTarget ? (
                 <>
-                  <span className="font-semibold text-primary tabular-nums">↓ {Math.abs(stats.targetCal - stats.averageCalories)} kcal</span>
+                  <span className="font-semibold text-primary tabular-nums">↓ {Math.abs(stats.targetCal - stats.averageCalories)} {commonT("kcal")}</span>
                   <span className="text-muted">{t("underTarget")}</span>
                 </>
               ) : (
                 <>
-                  <span className="font-semibold text-danger tabular-nums">↑ {stats.averageCalories - stats.targetCal} kcal</span>
+                  <span className="font-semibold text-danger tabular-nums">↑ {stats.averageCalories - stats.targetCal} {commonT("kcal")}</span>
                   <span className="text-muted">{t("overTarget")}</span>
                 </>
               )}
@@ -216,7 +218,7 @@ export default function AnalyticsPage() {
             {/* Simple Progress Line */}
             <div
               role="progressbar"
-              aria-label="Consistency score"
+              aria-label={t("consistencyScore")}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={Math.round(stats.consistencyScore)}
@@ -239,7 +241,10 @@ export default function AnalyticsPage() {
 
             <div
               role="img"
-              aria-label={`${recentActive.filter(Boolean).length} of the last ${recentActive.length} days active`}
+              aria-label={t("activeDaysLabel", {
+                activeCount: recentActive.filter(Boolean).length,
+                totalCount: recentActive.length,
+              })}
               className="mt-4 flex gap-1"
             >
               {/* แสดง Streak ของ 7 วันล่าสุด */}
@@ -285,7 +290,11 @@ export default function AnalyticsPage() {
                   <div
                     key={i}
                     role="img"
-                    aria-label={`${d.day}: ${d.calories} kcal${isOver ? ", over target" : ""}`}
+                    aria-label={t("calorieBarLabel", {
+                      day: d.day,
+                      calories: d.calories,
+                      unit: commonT("kcal"),
+                    })}
                     className="group relative z-10 flex h-full flex-1 flex-col items-center justify-end"
                   >
                     {/* Bar */}
@@ -298,7 +307,7 @@ export default function AnalyticsPage() {
                         aria-hidden="true"
                         className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-line bg-surface px-2 py-1 text-xs font-medium text-ink opacity-0 shadow-lift transition-opacity group-hover:opacity-100"
                       >
-                        {d.calories} kcal
+                        {d.calories} {commonT("kcal")}
                       </div>
                     </div>
                     {/* Label (Show less labels if 30D to avoid crowding) */}
@@ -329,7 +338,7 @@ export default function AnalyticsPage() {
             {/* Chart Area */}
             <div
               role="region"
-              aria-label="Daily protein intake"
+              aria-label={t("proteinIntake")}
               tabIndex={0}
               className={`custom-scrollbar relative flex h-48 flex-col justify-between overflow-y-auto pr-2 ${focusRing}`}
             >
@@ -353,7 +362,7 @@ export default function AnalyticsPage() {
                     </div>
 
                     <span className="w-14 text-right text-sm font-medium text-ink tabular-nums">
-                      {d.protein}g
+                      {d.protein}{commonT("g")}
                     </span>
                   </div>
                 )

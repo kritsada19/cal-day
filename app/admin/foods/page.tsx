@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import axios from "axios";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Utensils,
   Search,
@@ -67,6 +67,7 @@ const pageButton = `flex h-11 w-11 cursor-pointer items-center justify-center ro
 export default function AdminFoodsPage() {
   const { data: session, status } = useSession();
   const t = useTranslations("admin");
+  const locale = useLocale();
 
   const [foodEntries, setFoodEntries] = useState<AdminFoodEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>({
@@ -86,7 +87,20 @@ export default function AdminFoodsPage() {
 
   // Selected food item for modal details
   const [selectedFood, setSelectedFood] = useState<AdminFoodEntry | null>(null);
-
+  const formatMealTypeLabel = (value?: string | null) => {
+    switch (value) {
+      case "BREAKFAST":
+        return t("breakfast");
+      case "LUNCH":
+        return t("lunch");
+      case "DINNER":
+        return t("dinner");
+      case "SNACK":
+        return t("snack");
+      default:
+        return t("notSpecified");
+    }
+  };
   const fetchFoodEntries = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -372,23 +386,23 @@ export default function AdminFoodsPage() {
                       {/* Meal Type */}
                       <td className="p-4">
                         <span className="inline-flex min-h-7 items-center rounded-full border border-line px-3 text-sm font-semibold text-muted">
-                          {item.meal?.mealType || "N/A"}
+                          {formatMealTypeLabel(item.meal?.mealType)}
                         </span>
                       </td>
 
                       {/* Amount */}
                       <td className="p-4 text-sm tabular-nums text-ink">
-                        {item.amount} {item.unit}
+                        {item.amount} {item.unit || t("notSpecified")}
                       </td>
 
                       {/* Calories */}
                       <td className="p-4 font-semibold tabular-nums text-primary">
-                        {item.calories} kcal
+                        {item.calories} {t("kcal")}
                       </td>
 
                       {/* Protein */}
                       <td className="p-4 font-semibold tabular-nums text-ink">
-                        {item.protein} g
+                        {item.protein} {t("g")}
                       </td>
 
                       {/* Logged By */}
@@ -396,7 +410,7 @@ export default function AdminFoodsPage() {
                         {item.meal?.user ? (
                           <div className="flex min-w-0 flex-col text-sm">
                             <span className="font-semibold text-ink">
-                              {item.meal.user.name || "Unnamed User"}
+                              {item.meal.user.name || t("unnamedUser")}
                             </span>
                             <span className="truncate text-sm text-muted">
                               {item.meal.user.email}
@@ -404,7 +418,7 @@ export default function AdminFoodsPage() {
                           </div>
                         ) : (
                           <span className="text-sm italic text-muted">
-                            Unknown
+                            {t("unknown")}
                           </span>
                         )}
                       </td>
@@ -412,7 +426,7 @@ export default function AdminFoodsPage() {
                       {/* Date */}
                       <td className="p-4 text-sm tabular-nums text-muted">
                         {item.meal?.createdAt
-                          ? new Date(item.meal.createdAt).toLocaleDateString("en-US", {
+                          ? new Date(item.meal.createdAt).toLocaleDateString(locale, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -516,7 +530,7 @@ export default function AdminFoodsPage() {
                 <div>
                   <dt className="text-sm text-muted">{t("mealType")}</dt>
                   <dd className="mt-0.5 text-base font-semibold text-ink">
-                    {selectedFood.meal?.mealType || "N/A"}
+                    {formatMealTypeLabel(selectedFood.meal?.mealType)}
                   </dd>
                 </div>
                 <div>
@@ -550,7 +564,7 @@ export default function AdminFoodsPage() {
                   <div>
                     {t("loggedDate")}: {" "}
                     {selectedFood.meal?.createdAt
-                      ? new Date(selectedFood.meal.createdAt).toLocaleString("en-US")
+                      ? new Date(selectedFood.meal.createdAt).toLocaleString(locale)
                       : "-"}
                   </div>
                 </div>

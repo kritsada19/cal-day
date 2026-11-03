@@ -5,6 +5,11 @@ import Link from "next/link";
 import axios from "axios";
 import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import {
+  formatExerciseLevelLabel,
+  formatGenderLabel,
+  formatGoalLabel,
+} from "@/lib/formatters/profile";
 import type { NutritionTargets } from "@/lib/nutrition";
 
 type ProfileData = {
@@ -50,12 +55,13 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProfilePage() {
-  const t = useTranslations("profile");
+  const profileT = useTranslations("profile");
+  const t = useTranslations();
   const { data: session, status } = useSession();
   const [profileData, setProfileData] = useState<ProfileApiResponse | null>(null);
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
 
-  const displayName = session?.user?.name || session?.user?.email || t("guestUser");
+  const displayName = session?.user?.name || session?.user?.email || profileT("guestUser");
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -130,13 +136,13 @@ export default function ProfilePage() {
       <div className="relative mx-auto max-w-280">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">{t("yourProfile")}</p>
+            <p className="text-sm font-medium text-muted">{profileT("yourProfile")}</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">
-              {t("yourAccount")}
+              {profileT("yourAccount")}
             </h1>
           </div>
           <Link href="/" className={tintButton}>
-            {t("backToHome")}
+            {profileT("backToHome")}
           </Link>
         </div>
 
@@ -148,21 +154,21 @@ export default function ProfilePage() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-muted">{t("accountStatus")}</p>
+                <p className="text-sm font-medium text-muted">{profileT("accountStatus")}</p>
                 <h2 className="mt-1 truncate text-2xl font-semibold tracking-tight text-ink">
-                  {status === "loading" ? t("loadingProfile") : displayName}
+                  {status === "loading" ? profileT("loadingProfile") : displayName}
                 </h2>
                 <p className="mt-1 truncate text-base text-muted">
-                  {session?.user?.email || t("loginToView")}
+                  {session?.user?.email || profileT("loginToView")}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   {plan && (
                     <span className="inline-flex min-h-8 items-center rounded-full bg-highlight px-3 text-sm font-semibold text-ink">
-                      {plan} {t("plan")}
+                      {plan} {profileT("plan")}
                     </span>
                   )}
                   <Link href="/profile/form" className={tintButton}>
-                    {t("fillPersonalInfo")}
+                    {profileT("fillPersonalInfo")}
                   </Link>
                 </div>
               </div>
@@ -170,56 +176,58 @@ export default function ProfilePage() {
 
             <div className="mt-8 rounded-xl border border-line bg-canvas p-4 md:p-5">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-base font-semibold text-ink">{t("profileSummary")}</h3>
+                <h3 className="text-base font-semibold text-ink">{profileT("profileSummary")}</h3>
                 <Link
                   href="/profile/form"
                   className={`rounded py-2 text-sm font-semibold text-primary underline underline-offset-4 transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
                 >
-                  {t("editProfile")}
+                  {profileT("editProfile")}
                 </Link>
               </div>
 
               {status !== "authenticated" ? (
-                <p className="mt-4 text-base text-muted">{t("pleaseSignIn")}</p>
+                <p className="mt-4 text-base text-muted">{profileT("pleaseSignIn")}</p>
               ) : !hasLoadedProfile ? (
                 <div role="status" className="mt-4 space-y-3">
-                  <span className="sr-only">{t("loadingProfile")}</span>
+                  <span className="sr-only">{profileT("loadingProfile")}</span>
                   <div className="h-24 animate-pulse rounded-xl bg-line motion-reduce:animate-none" />
                   <div className="h-24 animate-pulse rounded-xl bg-line motion-reduce:animate-none" />
                 </div>
               ) : profile ? (
                 <div className="mt-4 grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
                   <div className={`rounded-xl border p-4 ${bmiStatus?.tone || "border-line bg-surface text-ink"}`}>
-                    <p className="text-sm text-muted">{t("bmi")}</p>
+                    <p className="text-sm text-muted">{profileT("bmi")}</p>
                     <p className="mt-2 text-3xl font-semibold text-ink tabular-nums">{bmi ?? "—"}</p>
                     <p className="mt-2 text-base font-semibold">
-                      {bmiStatus ? `${bmiStatus.label}` : t("noData")}
+                      {bmiStatus ? `${bmiStatus.label}` : profileT("noData")}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-line bg-surface p-4">
                     <div className="mb-4 rounded-xl border border-line bg-canvas p-3">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm text-muted">{t("goal")}</p>
-                        <p className="text-sm font-semibold text-primary">{nutritionTargets ? nutritionTargets.goalLabel : "—"}</p>
+                        <p className="text-sm text-muted">{profileT("goal")}</p>
+                        <p className="text-sm font-semibold text-primary">
+                          {profile?.goal ? formatGoalLabel(profile.goal, t) : nutritionTargets?.goalLabel ?? "—"}
+                        </p>
                       </div>
                       <p className="mt-2 text-sm leading-6 text-muted">
-                        {t("goalDescription")}
+                        {profileT("goalDescription")}
                       </p>
                     </div>
                     <dl className="grid gap-4 sm:grid-cols-2">
-                      <Detail label={t("gender")} value={profile.gender || "—"} />
-                      <Detail label={t("age")} value={profile.age ? `${profile.age} ${t("years")}` : "—"} />
-                      <Detail label={t("weight")} value={profile.weight ? `${profile.weight} ${t("kg")}` : "—"} />
-                      <Detail label={t("height")} value={profile.height ? `${profile.height} ${t("cm")}` : "—"} />
-                      <Detail label={t("exerciseLevel")} value={profile.exerciseLevel || "—"} />
-                      <Detail label={t("goal")} value={profile.goal || "—"} />
+                      <Detail label={profileT("gender")} value={profile.gender ? formatGenderLabel(profile.gender, t) : "—"} />
+                      <Detail label={profileT("age")} value={profile.age ? `${profile.age} ${profileT("years")}` : "—"} />
+                      <Detail label={profileT("weight")} value={profile.weight ? `${profile.weight} ${profileT("kg")}` : "—"} />
+                      <Detail label={profileT("height")} value={profile.height ? `${profile.height} ${profileT("cm")}` : "—"} />
+                      <Detail label={profileT("exerciseLevel")} value={profile.exerciseLevel ? formatExerciseLevelLabel(profile.exerciseLevel, t) : "—"} />
+                      <Detail label={profileT("goal")} value={profile.goal ? formatGoalLabel(profile.goal, t) : "—"} />
                     </dl>
                   </div>
                 </div>
               ) : (
                 <p className="mt-4 text-base text-muted">
-                  {t("noProfileData")}
+                  {profileT("noProfileData")}
                 </p>
               )}
             </div>
@@ -227,18 +235,18 @@ export default function ProfilePage() {
 
           <aside className="space-y-6">
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
-              <h2 className="text-lg font-semibold text-ink">{t("accountDetails")}</h2>
+              <h2 className="text-lg font-semibold text-ink">{profileT("accountDetails")}</h2>
               <dl className="mt-3 divide-y divide-line text-base">
                 <div className="flex items-center justify-between gap-3 py-3">
-                  <dt className="text-muted">{t("userId")}</dt>
+                  <dt className="text-muted">{profileT("userId")}</dt>
                   <dd className="font-semibold text-ink tabular-nums">{session?.user?.id ?? "—"}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-3">
-                  <dt className="text-muted">{t("role")}</dt>
+                  <dt className="text-muted">{profileT("role")}</dt>
                   <dd className="font-semibold text-ink">{session?.user?.role || "USER"}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-3">
-                  <dt className="text-muted">{t("plan")}</dt>
+                  <dt className="text-muted">{profileT("plan")}</dt>
                   <dd>
                     <Link
                       href="/subscription"
@@ -249,7 +257,7 @@ export default function ProfilePage() {
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-3 pb-0">
-                  <dt className="text-muted">{t("aiRemaining")}</dt>
+                  <dt className="text-muted">{profileT("aiRemaining")}</dt>
                   <dd className="font-semibold text-ink tabular-nums">
                     {profileData?.aiRemaining !== undefined
                       ? `${profileData.aiRemaining} / ${profileData.aiLimit}`
@@ -262,27 +270,27 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft">
               {status === "authenticated" ? (
                 <>
-                  <h2 className="text-lg font-semibold text-ink">{t("quickActions")}</h2>
+                  <h2 className="text-lg font-semibold text-ink">{profileT("quickActions")}</h2>
                   <div className="mt-4 space-y-3">
                     <button
                       onClick={() => signOut({ callbackUrl: "/" })}
                       className={`${tintButton} w-full cursor-pointer`}
                     >
-                      {t("logOut")}
+                      {profileT("logOut")}
                     </button>
                     <Link href="/" className={outlineButton}>
-                      {t("goToHome")}
+                      {profileT("goToHome")}
                     </Link>
                   </div>
                 </>
               ) : (
                 <>
-                  <h2 className="text-lg font-semibold text-ink">{t("loginRequired")}</h2>
+                  <h2 className="text-lg font-semibold text-ink">{profileT("loginRequired")}</h2>
                   <p className="mt-3 text-base leading-7 text-muted">
-                    {t("loginToViewProfile")}
+                    {profileT("loginToViewProfile")}
                   </p>
                   <Link href="/signin" className={`mt-4 ${primaryButton}`}>
-                    {t("logIn")}
+                    {profileT("logIn")}
                   </Link>
                 </>
               )}

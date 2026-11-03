@@ -617,6 +617,26 @@ describe("API Integration Tests", () => {
     expect(body.stats.targetCal).toBe(2000);
   });
 
+  it("GET /api/analytics should use Thai weekday names when locale=th", async () => {
+    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+
+    mockPrisma.dailySummary.findMany.mockResolvedValue([]);
+    mockPrisma.profile.findUnique.mockResolvedValue({
+      id: 1,
+      userId: 7,
+      targetCalories: 2000,
+      targetProtein: 100,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const request = new NextRequest("http://localhost/api/analytics?days=7&locale=th");
+    const response = await getAnalytics(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.weeklyData[0].day).toMatch(/^[\u0E00-\u0E7F.]+$/);
+  });
+
   it("GET /api/analytics should return cached result if available", async () => {
     mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
     const cachedData = {
