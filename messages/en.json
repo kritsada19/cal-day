@@ -137,6 +137,35 @@
     "errorAction": "Go to homepage",
     "loadingVerify": "Loading..."
   },
+  "email": {
+    "brandTagline": "Small steps, healthier days.",
+    "fallbackText": "If the button doesn't work, copy and paste this link into your browser:",
+    "footer": "CalDay — Small steps, healthier days.",
+    "verification": {
+      "subject": "Verify Your Email | CalDay",
+      "preheader": "Verify your email address to activate your CalDay account.",
+      "heading": "Welcome to CalDay!",
+      "paragraphs": [
+        "Thank you for taking the first step toward a healthier lifestyle.",
+        "Please verify your email address to activate your account and start tracking your nutrition."
+      ],
+      "buttonText": "Verify My Email",
+      "footerNote": "If you didn't create a CalDay account, you can safely ignore this email.",
+      "text": "Welcome to CalDay!\n\nThank you for creating an account.\n\nPlease verify your email address using the link below:\n{{link}}\n\nIf you didn't create a CalDay account, you can safely ignore this email.\n\nCalDay — Small steps, healthier days."
+    },
+    "forgotPassword": {
+      "subject": "Reset Your Password | CalDay",
+      "preheader": "Choose a new password to regain access to your CalDay account.",
+      "heading": "Reset Your Password",
+      "paragraphs": [
+        "We received a request to reset your CalDay password.",
+        "Click the button below to choose a new password and regain access to your account."
+      ],
+      "buttonText": "Reset My Password",
+      "footerNote": "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.",
+      "text": "We received a request to reset your CalDay password.\n\nClick the link below to create a new password:\n{{link}}\n\nIf you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.\n\nCalDay — Small steps, healthier days."
+    }
+  },
   "goalOptions": {
     "loseWeight": "Lose weight",
     "maintainWeight": "Maintain weight",

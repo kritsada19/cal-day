@@ -4,7 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -14,6 +14,7 @@ const inputClass = `${inputBase} border-secondary hover:border-primary focus:bor
 
 export default function SignupPage() {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +42,7 @@ export default function SignupPage() {
         email,
         password,
         confirmPassword,
+        locale,
       });
 
       toast.success(res.data?.message || t("signupSuccess"));

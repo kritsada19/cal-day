@@ -40,6 +40,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, email, password } = validationResult.data; // ได้ Data ที่ผ่านการ Clean & Type Check แล้ว
+    const locale = typeof body === "object" && body && "locale" in body && typeof body.locale === "string"
+      ? body.locale
+      : req.headers.get("x-locale") || "en";
 
     const existingUser = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
 
@@ -90,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     const verificationLink = `${process.env.NEXTAUTH_URL}/api/auth/email-verify?token=${verificationToken}`;
 
-    await sendVerificationEmail(email, verificationLink);
+    await sendVerificationEmail(email, verificationLink, locale === "th" ? "th" : "en");
 
 
     return NextResponse.json(

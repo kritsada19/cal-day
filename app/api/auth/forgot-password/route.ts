@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
         }
 
         const email = validationResult.data.email.trim().toLowerCase();
+        const locale = typeof body === "object" && body && "locale" in body && typeof body.locale === "string"
+            ? body.locale
+            : req.headers.get("x-locale") || "en";
 
         const user = await prisma.user.findUnique({
             where: { email },
@@ -66,7 +69,7 @@ export async function POST(req: NextRequest) {
 
         const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`;
 
-        await sendForgotPasswordEmail(email, resetLink);
+        await sendForgotPasswordEmail(email, resetLink, locale === "th" ? "th" : "en");
 
         return NextResponse.json(
             { message: "If an account exists, we have sent a reset link" },
