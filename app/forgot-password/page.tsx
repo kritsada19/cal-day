@@ -4,7 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -15,6 +15,7 @@ const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.
 
 export default function ForgetPasswordPage() {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +37,10 @@ export default function ForgetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await axios.post("/api/auth/forgot-password", { email: normalizedEmail });
+      const res = await axios.post("/api/auth/forgot-password", {
+        email: normalizedEmail,
+        locale,
+      });
       toast.success(res.data?.message || t("sendResetLink"));
       setEmail("");
     } catch (err) {
