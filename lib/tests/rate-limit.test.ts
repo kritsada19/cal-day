@@ -58,18 +58,18 @@ describe("checkRateLimit", () => {
         });
     });
 
-    it("works in fail-open mode (allow through) if Redis errors", async () => {
+    it("works in fail-close mode (block) if Redis errors", async () => {
         // จำลองกรณี Redis ล่ม/เกิด Exception
         vi.mocked(redis.incr).mockRejectedValueOnce(new Error("Redis connection error"));
 
         const request = new Request("http://localhost:3000/api/profile");
         const result = await checkRateLimit(request, "profile", 10, 60);
 
-        // Fail-open: ต้องคืนค่า success: true และ remaining เท่ากับ limit
+        // Fail-close: ต้องคืนค่า success: false และ remaining เท่ากับ limit
         expect(result).toEqual({
-            success: true,
+            success: false,
             limit: 10,
-            remaining: 10,
+            remaining: 0,
         });
     });
 });

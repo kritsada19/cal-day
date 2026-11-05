@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { stripe } from "../route";
 import { env } from "@/lib/env";
@@ -7,11 +7,13 @@ import { logger } from "@/lib/logger";
 
 export async function POST() {
     try {
-        const sessionUser = await getSession();
+        const auth = await requireAuth();
 
-        if (!sessionUser?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (!auth.ok) {
+            return auth.response;
         }
+
+        const sessionUser = auth.session;
 
         const user = await prisma.subscription.findUnique({
             where: { userId: sessionUser.user.id },

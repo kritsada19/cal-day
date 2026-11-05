@@ -2,16 +2,16 @@
 // ตัวกลางระหว่าง Redis กับ Browser
 
 import { subscribeEvents } from "@/lib/realtime/subscriber";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 
 export async function GET(request: Request) {
-    const session = await getSession();
+    const auth = await requireAuth();
 
-    if (!session) {
-        return new Response("Unauthorized", {
-            status: 401,
-        });
+    if (!auth.ok) {
+        return auth.response;
     }
+
+    const session = auth.session;
 
     // SSE ต้องส่งข้อมูลเป็น bytes ให้ ReadableStream 
     const encoder = new TextEncoder();

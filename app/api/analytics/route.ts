@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
@@ -21,11 +21,13 @@ export async function GET(request: Request) {
     );
   }
 
-  const session = await getSession();
+  const auth = await requireAuth();
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!auth.ok) {
+    return auth.response;
   }
+
+  const session = auth.session;
 
   const { searchParams } = new URL(request.url);
   const days = parseInt(searchParams.get("days") || "7", 10);

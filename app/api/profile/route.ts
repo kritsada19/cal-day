@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/lib/nutrition";
 import { getUserAiQuota } from "@/lib/services/ai-quota";
@@ -24,11 +24,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const session = await getSession();
+  const auth = await requireAuth();
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!auth.ok) {
+    return auth.response;
   }
+
+  const session = auth.session;
 
   try {
 
@@ -103,11 +105,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const session = await getSession();
+  const auth = await requireAuth();
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!auth.ok) {
+    return auth.response;
   }
+
+  const session = auth.session;
 
   const body = await request.json();
   const { gender, age, weight, height, exerciseLevel, goal } = body;

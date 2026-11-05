@@ -9,6 +9,7 @@ import { redis } from "@/lib/db/redis";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/lib/env";
+import { logAuditEvent } from "@/lib/audit";
 
 declare module "next-auth" {
     interface Session {
@@ -59,6 +60,13 @@ export const authOptions: NextAuthOptions = {
                     : "";
 
                 if (!email || !password) {
+                    logAuditEvent({
+                        event: "login_failed",
+                        email,
+                        status: 400,
+                        action: "credentials_missing",
+                        details: { reason: "missing_credentials" },
+                    });
                     return null;
                 }
 
@@ -70,6 +78,13 @@ export const authOptions: NextAuthOptions = {
                     // แก้ช่องโหว่ User Enumeration ผ่าน Timing Attacks
                     // ใช้ Dummy Hash ที่มีโครงสร้างถูกต้องเพื่อให้ bcrypt เสียเวลาประมวลผลใกล้เคียงกัน
                     await bcrypt.compare(password, "$2a$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW");
+                    logAuditEvent({
+                        event: "login_failed",
+                        email,
+                        status: 401,
+                        action: "invalid_credentials",
+                        details: { reason: "user_not_found_or_no_password" },
+                    });
                     return null;
                 }
 
@@ -77,6 +92,14 @@ export const authOptions: NextAuthOptions = {
 
                 const failedLoginCount = await redis.get(failedLoginKey);
                 if (Number(failedLoginCount) >= 5) {
+                    logAuditEvent({
+                        event: "login_blocked",
+                        userId: user.id,
+                        email,
+                        status: 429,
+                        action: "rate_limited_login",
+                        details: { failedAttempts: Number(failedLoginCount) },
+                    });
                     throw new Error("Too many failed login attempts. Please try again later.")
                 }
 
@@ -87,6 +110,14 @@ export const authOptions: NextAuthOptions = {
                     if (Number(count) === 1) {
                         redis.expire(failedLoginKey, 60 * 15); // 15 minutes
                     }
+                    logAuditEvent({
+                        event: "login_failed",
+                        userId: user.id,
+                        email,
+                        status: 401,
+                        action: "password_mismatch",
+                        details: { failedAttempts: Number(count) },
+                    });
                     return null;
                 }
 
@@ -95,8 +126,23 @@ export const authOptions: NextAuthOptions = {
 
                 // เช็คว่า user ยืนยันอีเมลแล้วหรือยัง
                 if (!user.emailVerified) {
+                    logAuditEvent({
+                        event: "login_blocked",
+                        userId: user.id,
+                        email,
+                        status: 403,
+                        action: "email_not_verified",
+                    });
                     throw new Error("Please verify your email before signing in. Check your inbox for the verification link.");
                 }
+
+                logAuditEvent({
+                    event: "login_success",
+                    userId: user.id,
+                    email,
+                    status: 200,
+                    action: "credentials_auth",
+                });
 
                 return {
                     id: user.id,
