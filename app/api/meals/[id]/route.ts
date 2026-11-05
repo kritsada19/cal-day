@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 import { errorResponse } from "@/lib/http";
 import { mealService } from "@/lib/services/meal.service";
 import { publishMealEvent } from "@/lib/realtime/publisher";
@@ -16,11 +16,12 @@ export async function DELETE(
   const mealId = Number(id);
 
   // 1) ต้องล็อกอินก่อน
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const auth = await requireAuth();
+  if (!auth.ok) {
+    return auth.response;
   }
 
+  const session = auth.session;
   const userId = Number(session.user.id);
 
   try {

@@ -32,7 +32,11 @@ export async function checkRateLimit(
         };
     } catch (error) {
         logger.error({ err: error, apiName, ip }, "Rate limiting error");
-        // Fail open: allow the request through if Redis is unavailable
-        return { success: true, limit, remaining: limit };
+
+        // Fail closed: เมื่อ Redis ไม่สามารถใช้งานได้ เราไม่ควรปล่อยให้ traffic
+        // ผ่านไปโดยไม่ถูกจำกัด เพราะนี่เป็นเรื่องความปลอดภัย ไม่ใช่แค่ความทนทานระบบ
+        // หาก limiter ไม่สามารถพิสูจน์ได้ว่าคำขออยู่ในโควต้า เราควรปฏิเสธทันที
+        // การคืนค่า success = false จะทำให้ API routes ส่ง 429 อย่างเหมาะสม
+        return { success: false, limit, remaining: 0 };
     }
 }

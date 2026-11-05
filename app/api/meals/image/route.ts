@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { errorResponse, rateLimitResponse } from "@/lib/http";
 import { imageMealSchema } from "@/lib/validation/meal";
@@ -12,12 +12,12 @@ export async function POST(request: NextRequest) {
     return rateLimitResponse(rateLimit);
   }
 
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const auth = await requireAuth();
+  if (!auth.ok) {
+    return auth.response;
   }
 
-  const userId = Number(session.user.id);
+  const userId = Number(auth.session.user.id);
   const body = await request.json();
   const validation = imageMealSchema.safeParse(body);
 

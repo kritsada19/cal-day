@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit";
 import { MealType } from "@/app/generated/prisma/enums";
 import { deleteUserCache } from "@/lib/cache";
 import { Prisma } from "@/app/generated/prisma/client";
@@ -33,15 +34,13 @@ export async function GET(
     );
   }
 
-  const session = await getSession();
+  const auth = await requireAdmin();
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!auth.ok) {
+    return auth.response;
   }
 
-  if (session.user.role !== "ADMIN") {
-    return NextResponse.json({ message: "Forbidden: Admin access required" }, { status: 403 });
-  }
+  const session = auth.session;
 
   try {
     const user = await prisma.user.findUnique({
@@ -179,15 +178,13 @@ export async function DELETE(
     );
   }
 
-  const session = await getSession();
+  const auth = await requireAdmin();
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!auth.ok) {
+    return auth.response;
   }
 
-  if (session.user.role !== "ADMIN") {
-    return NextResponse.json({ message: "Forbidden: Admin access required" }, { status: 403 });
-  }
+  const session = auth.session;
 
   if (targetUserId === Number(session.user.id)) {
     return NextResponse.json(
@@ -208,6 +205,17 @@ export async function DELETE(
 
     await prisma.user.delete({
       where: { id: targetUserId },
+    });
+
+    logAuditEvent({
+      event: "admin_action",
+      userId: session.user.id,
+      status: 200,
+      action: "delete_user",
+      route: "/api/admin/users/[id]",
+      details: {
+        targetUserId,
+      },
     });
 
     await deleteUserCache(targetUserId);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { errorResponse, rateLimitResponse } from "@/lib/http";
 import { mealSchema } from "@/lib/validation/meal";
@@ -23,11 +23,12 @@ export async function POST(request: NextRequest) {
   }
 
   // 2) ต้องล็อกอินก่อน
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const auth = await requireAuth();
+  if (!auth.ok) {
+    return auth.response;
   }
 
+  const session = auth.session;
   const userId = Number(session.user.id);
 
   // 3) ตรวจรูปแบบข้อมูลที่ส่งมา (mealText / mealType / date)
@@ -81,11 +82,12 @@ export async function GET(request: NextRequest) {
   }
 
   // 2) ต้องล็อกอินก่อน
-  const session = await getSession();
-  const userId = Number(session?.user?.id);
-  if (!userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const auth = await requireAuth();
+  if (!auth.ok) {
+    return auth.response;
   }
+
+  const userId = Number(auth.session.user.id);
 
   // 3) อ่านพารามิเตอร์จาก URL
   const year = Number(request.nextUrl.searchParams.get("year"));

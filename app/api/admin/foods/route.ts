@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
@@ -22,15 +22,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const session = await getSession();
+  const auth = await requireAdmin();
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!auth.ok) {
+    return auth.response;
   }
 
-  if (session.user.role !== "ADMIN") {
-    return NextResponse.json({ message: "Forbidden: Admin access required" }, { status: 403 });
-  }
+  const session = auth.session;
 
   try {
     const { searchParams } = request.nextUrl;

@@ -1,10 +1,11 @@
 import Stripe from "stripe";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit";
 
 export const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
@@ -24,15 +25,25 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    try {
-        const sessionUser = await getSession();
+    let auth: Awaited<ReturnType<typeof requireAuth>> | null = null;
 
-        if (!sessionUser?.user?.id) {
-            return NextResponse.json(
-                { error: "Unauthorized" },
-                { status: 401 }
-            );
+    try {
+        auth = await requireAuth();
+
+        if (!auth.ok) {
+            return auth.response;
         }
+
+        const sessionUser = auth.session;
+
+        logAuditEvent({
+            event: "payment_initiated",
+            userId: sessionUser.user.id,
+            email: sessionUser.user.email ?? null,
+            status: 200,
+            action: "checkout_session_create",
+            route: "/api/checkout",
+        });
 
         const user = await prisma.subscription.findUnique({
             where: {
@@ -78,7 +89,7 @@ export async function POST(request: NextRequest) {
                     : user?.user?.email || undefined,
             });
         } catch (err) {
-            // Handle cases where the customer ID in DB doesn't exist in Stripe (often happens in test mode)
+            // จัดการกรณีที่ customer ID ในฐานข้อมูลไม่มีอยู่ใน Stripe (มักเกิดขึ้นใน test mode)
             if (
                 err instanceof Stripe.errors.StripeError &&
                 err.statusCode === 400 &&
@@ -95,17 +106,39 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        logAuditEvent({
+            event: "payment_completed",
+            userId: sessionUser.user.id,
+            email: sessionUser.user.email ?? null,
+            status: 200,
+            action: "checkout_session_created",
+            route: "/api/checkout",
+            details: {
+                sessionId: session.id,
+            },
+        });
+
         return NextResponse.json({
             url: session.url,
             status: 200,
         });
     } catch (error) {
         logger.error({ err: error }, "Checkout error");
+        logAuditEvent({
+            event: "payment_failed",
+            userId: auth?.ok ? auth.session.user.id : null,
+            status: 500,
+            action: "checkout_session_create",
+            route: "/api/checkout",
+            details: { reason: "checkout_exception" },
+        });
 
+        // อย่าเปิดเผยรายละเอียดภายในของ Stripe หรือฐานข้อมูลกลับไปให้ client
+        // รายละเอียดแบบละเอียดจะถูกเก็บไว้ที่ server log อย่างเดียว เพื่อป้องกันไม่ให้
+        // attacker ใช้ stack trace หรือ error message จาก provider ในการสืบค้นระบบ
         return NextResponse.json(
             {
-                error: "Checkout failed",
-                details: error instanceof Error ? error.message : "Unknown error",
+                error: "Checkout failed. Please try again later.",
             },
             { status: 500 }
         );
