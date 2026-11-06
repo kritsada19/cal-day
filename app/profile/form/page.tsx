@@ -1,10 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ComponentType, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import {
+  FaBullseye,
+  FaCakeCandles,
+  FaDumbbell,
+  FaRulerVertical,
+  FaVenusMars,
+  FaWeightScale,
+} from "react-icons/fa6";
 import { toast } from "sonner";
 
 const focusRing =
@@ -12,8 +20,20 @@ const focusRing =
 
 const fieldClass = `w-full min-h-11 rounded-xl border border-secondary bg-surface px-4 py-3 text-base text-ink placeholder:text-muted transition-colors duration-200 hover:border-primary focus:border-primary ${focusRing}`;
 const labelTextClass = "block text-sm font-medium text-ink";
+const inputIconClass = "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-primary/80";
 const primaryButton = `inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`;
 const secondaryLink = `inline-flex min-h-11 items-center justify-center rounded-xl bg-primary-tint px-5 py-2.5 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`;
+
+function FieldLabel({ icon: Icon, label }: { icon: ComponentType<{ className?: string }>; label: string }) {
+  return (
+    <span className={labelTextClass}>
+      <span className="inline-flex items-center gap-2">
+        <Icon className="h-4 w-4 text-primary" />
+        <span>{label}</span>
+      </span>
+    </span>
+  );
+}
 
 export default function ProfileFormPage() {
   const router = useRouter();
@@ -122,87 +142,105 @@ export default function ProfileFormPage() {
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
             <label className="block space-y-2">
-              <span className={labelTextClass}>{formT("gender")}</span>
-              <select
-                value={formData.gender}
-                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className={`${fieldClass} cursor-pointer`}
-                required
-              >
-                <option value="">{formT("select")}</option>
-                <option value="MALE">{t("genderOptions.male")}</option>
-                <option value="FEMALE">{t("genderOptions.female")}</option>
-              </select>
+              <FieldLabel icon={FaVenusMars} label={formT("gender")} />
+              <div className="relative">
+                <FaVenusMars className={inputIconClass} />
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className={`${fieldClass} cursor-pointer pl-11`}
+                  required
+                >
+                  <option value="">{formT("select")}</option>
+                  <option value="MALE">♂ {t("genderOptions.male")}</option>
+                  <option value="FEMALE">♀ {t("genderOptions.female")}</option>
+                </select>
+              </div>
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>{formT("age")}</span>
-              <input
-                type="number"
-                min="1"
-                value={formData.age}
-                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                className={fieldClass}
-                required
-              />
+              <FieldLabel icon={FaCakeCandles} label={formT("age")} />
+              <div className="relative">
+                <FaCakeCandles className={inputIconClass} />
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.age}
+                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                  className={`${fieldClass} pl-11`}
+                  required
+                />
+              </div>
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>{formT("weightKg")}</span>
-              <input
-                type="number"
-                min="1"
-                step="0.1"
-                value={formData.weight}
-                onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                className={fieldClass}
-                required
-              />
+              <FieldLabel icon={FaWeightScale} label={formT("weightKg")} />
+              <div className="relative">
+                <FaWeightScale className={inputIconClass} />
+                <input
+                  type="number"
+                  min="1"
+                  step="0.1"
+                  value={formData.weight}
+                  onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                  className={`${fieldClass} pl-11`}
+                  required
+                />
+              </div>
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>{formT("heightCm")}</span>
-              <input
-                type="number"
-                min="1"
-                step="0.1"
-                value={formData.height}
-                onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                className={fieldClass}
-                required
-              />
+              <FieldLabel icon={FaRulerVertical} label={formT("heightCm")} />
+              <div className="relative">
+                <FaRulerVertical className={inputIconClass} />
+                <input
+                  type="number"
+                  min="1"
+                  step="0.1"
+                  value={formData.height}
+                  onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                  className={`${fieldClass} pl-11`}
+                  required
+                />
+              </div>
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>{formT("exerciseLevel")}</span>
-              <select
-                value={formData.exerciseLevel}
-                onChange={(e) => setFormData({ ...formData, exerciseLevel: e.target.value })}
-                className={`${fieldClass} cursor-pointer`}
-                required
-              >
-                <option value="">{formT("select")}</option>
-                <option value="SEDENTARY">{t("exerciseLevelOptions.sedentary")}</option>
-                <option value="LIGHT">{t("exerciseLevelOptions.light")}</option>
-                <option value="MODERATE">{t("exerciseLevelOptions.moderate")}</option>
-                <option value="ACTIVE">{t("exerciseLevelOptions.active")}</option>
-                <option value="VERY_ACTIVE">{t("exerciseLevelOptions.veryActive")}</option>
-              </select>
+              <FieldLabel icon={FaDumbbell} label={formT("exerciseLevel")} />
+              <div className="relative">
+                <FaDumbbell className={inputIconClass} />
+                <select
+                  value={formData.exerciseLevel}
+                  onChange={(e) => setFormData({ ...formData, exerciseLevel: e.target.value })}
+                  className={`${fieldClass} cursor-pointer pl-11`}
+                  required
+                >
+                  <option value="">{formT("select")}</option>
+                  <option value="SEDENTARY">🪑 {t("exerciseLevelOptions.sedentary")}</option>
+                  <option value="LIGHT">🚶 {t("exerciseLevelOptions.light")}</option>
+                  <option value="MODERATE">🏃 {t("exerciseLevelOptions.moderate")}</option>
+                  <option value="ACTIVE">💪 {t("exerciseLevelOptions.active")}</option>
+                  <option value="VERY_ACTIVE">🔥 {t("exerciseLevelOptions.veryActive")}</option>
+                </select>
+              </div>
             </label>
 
             <label className="block space-y-2">
-              <span className={labelTextClass}>{formT("goal")}</span>
-              <select
-                value={formData.goal}
-                onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
-                className={`${fieldClass} cursor-pointer`}
-                required
-              >
-                <option value="">{formT("select")}</option>
-                <option value="LOSE_WEIGHT">{t("goalOptions.loseWeight")}</option>
-                <option value="MAINTAIN_WEIGHT">{t("goalOptions.maintainWeight")}</option>
-                <option value="GAIN_WEIGHT">{t("goalOptions.gainWeight")}</option>
-              </select>
+              <FieldLabel icon={FaBullseye} label={formT("goal")} />
+              <div className="relative">
+                <FaBullseye className={inputIconClass} />
+                <select
+                  value={formData.goal}
+                  onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+                  className={`${fieldClass} cursor-pointer pl-11`}
+                  required
+                >
+                  <option value="">{formT("select")}</option>
+                  <option value="LOSE_WEIGHT">🔥 {t("goalOptions.loseWeight")}</option>
+                  <option value="MAINTAIN_WEIGHT">⚖️ {t("goalOptions.maintainWeight")}</option>
+                  <option value="GAIN_WEIGHT">💪 {t("goalOptions.gainWeight")}</option>
+                </select>
+              </div>
             </label>
           </div>
 
