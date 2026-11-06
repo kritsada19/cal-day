@@ -6,13 +6,22 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Upload, X } from "lucide-react";
+import {
+  Clock3,
+  ImageUp,
+  PencilLine,
+  Sparkles,
+  Upload,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 const fieldClass = `w-full rounded-xl border border-secondary bg-surface px-4 py-3 text-base text-ink placeholder:text-muted transition-colors duration-200 hover:border-primary focus:border-primary ${focusRing}`;
+const fieldIconClass = "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-primary/80";
 const primaryButton = `inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-on-primary transition-colors duration-200 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`;
 const secondaryLink = `inline-flex min-h-11 items-center justify-center rounded-xl bg-primary-tint px-5 py-2.5 text-base font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`;
 
@@ -162,17 +171,23 @@ export default function MealFormClient() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <label className="block space-y-2">
-            <span className="block text-sm font-medium text-ink">{t("mealTypeLabel")}</span>
-            <select
-              value={mealType}
-              onChange={(event) => setMealType(event.target.value)}
-              className={`${fieldClass} min-h-11 cursor-pointer`}
-            >
-              <option value="BREAKFAST">{t("breakfast")}</option>
-              <option value="LUNCH">{t("lunch")}</option>
-              <option value="DINNER">{t("dinner")}</option>
-              <option value="SNACK">{t("snack")}</option>
-            </select>
+            <span className="flex items-center gap-2 text-sm font-medium text-ink">
+              <UtensilsCrossed className="h-4 w-4 text-primary" strokeWidth={2} />
+              {t("mealTypeLabel")}
+            </span>
+            <div className="relative">
+              <UtensilsCrossed className={`${fieldIconClass} h-4 w-4`} strokeWidth={2} />
+              <select
+                value={mealType}
+                onChange={(event) => setMealType(event.target.value)}
+                className={`${fieldClass} min-h-11 cursor-pointer pl-11`}
+              >
+                <option value="BREAKFAST">{t("breakfast")}</option>
+                <option value="LUNCH">{t("lunch")}</option>
+                <option value="DINNER">{t("dinner")}</option>
+                <option value="SNACK">{t("snack")}</option>
+              </select>
+            </div>
           </label>
 
           <div className="inline-flex rounded-xl bg-primary-tint p-1">
@@ -180,23 +195,26 @@ export default function MealFormClient() {
               type="button"
               onClick={() => setMode("text")}
               aria-pressed={mode === "text"}
-              className={`min-h-11 cursor-pointer rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${mode === "text" ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"}`}
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${mode === "text" ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"}`}
             >
+              <PencilLine className="h-4 w-4" strokeWidth={2} />
               {t("modeText")}
             </button>
             <button
               type="button"
               onClick={() => setMode("image")}
               aria-pressed={mode === "image"}
-              className={`min-h-11 cursor-pointer rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${mode === "image" ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"}`}
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-5 text-sm font-semibold transition-colors duration-200 ${focusRing} ${mode === "image" ? "bg-surface text-primary shadow-soft" : "text-muted hover:text-ink"}`}
             >
+              <ImageUp className="h-4 w-4" strokeWidth={2} />
               {t("modeImage")}
             </button>
           </div>
 
           {mode === "text" ? (
             <div className="space-y-2">
-              <label htmlFor="meal-text" className="block text-sm font-medium text-ink">
+              <label htmlFor="meal-text" className="flex items-center gap-2 text-sm font-medium text-ink">
+                <Sparkles className="h-4 w-4 text-primary" strokeWidth={2} />
                 {t("foodDescriptionLabel")}
               </label>
               <textarea
@@ -220,7 +238,10 @@ export default function MealFormClient() {
               {recentMeals.length > 0 && (
                 <div className="space-y-2 pt-2">
                   {/* Label บอกให้รู้ว่าปุ่มพวกนี้คืออะไร */}
-                  <p className="text-sm font-medium text-muted">{t("recentMeals")}</p>
+                  <p className="flex items-center gap-2 text-sm font-medium text-muted">
+                    <Clock3 className="h-4 w-4 text-primary" strokeWidth={2} />
+                    {t("recentMeals")}
+                  </p>
 
                   {/* Chip แต่ละอัน = เมนูล่าสุด 1 รายการ */}
                   <div className="flex flex-wrap gap-2">
@@ -251,7 +272,10 @@ export default function MealFormClient() {
 
           ) : (
             <div className="space-y-4">
-              <span className="block text-sm font-medium text-ink">{t("foodImageLabel")}</span>
+              <span className="flex items-center gap-2 text-sm font-medium text-ink">
+                <ImageUp className="h-4 w-4 text-primary" strokeWidth={2} />
+                {t("foodImageLabel")}
+              </span>
               {!imagePreview ? (
                 <label className="flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-secondary bg-canvas px-4 text-center transition-colors duration-200 hover:border-primary hover:bg-primary-tint focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
                   <Upload className="mb-3 h-6 w-6 text-secondary" strokeWidth={1.75} aria-hidden="true" />
