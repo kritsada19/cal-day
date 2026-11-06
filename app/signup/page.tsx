@@ -45,15 +45,13 @@ export default function SignupPage() {
         locale,
       });
 
-      toast.success(res.data?.message || t("signupSuccess"));
+      toast.success(t("signupSuccess"));
       setName("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.message || t("signupFailed")
-        : t("signupError");
+      const message = axios.isAxiosError(err) ? t("signupFailed") : t("signupError");
 
       toast.error(message);
     } finally {

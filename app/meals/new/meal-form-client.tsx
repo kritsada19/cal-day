@@ -112,14 +112,14 @@ export default function MealFormClient() {
 
       // ไม่ต้องเช็ค response.data.ok เพราะ axios จะ throw error อัตโนมัติถ้า status ไม่ใช่ 2xx
       // Toast remains visible while the page redirects, unlike an inline success message.
-      toast.success(response.data.message || t("saveSuccess"));
+      toast.success(t("saveSuccess"));
       setTimeout(() => router.push("/dashboard"), 900);
     } catch (error) {
       let errorMessage = t("saveError");
       if (axios.isAxiosError(error) && error.response) {
-        errorMessage = error.response.data?.message || errorMessage;
+        errorMessage = t("saveError");
       } else if (error instanceof Error) {
-        errorMessage = error.message;
+        errorMessage = t("saveError");
       }
 
       toast.error(errorMessage);

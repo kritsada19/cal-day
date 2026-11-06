@@ -37,16 +37,14 @@ export default function ForgetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await axios.post("/api/auth/forgot-password", {
+      await axios.post("/api/auth/forgot-password", {
         email: normalizedEmail,
         locale,
       });
-      toast.success(res.data?.message || t("sendResetLink"));
+      toast.success(t("sendResetLink"));
       setEmail("");
     } catch (err) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.message || t("emailInvalid")
-        : t("signupError");
+      const message = axios.isAxiosError(err) ? t("signupError") : t("signupError");
       toast.error(message);
     } finally {
       setLoading(false);

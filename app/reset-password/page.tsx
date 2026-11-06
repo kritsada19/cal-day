@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { passwordSchema, resetPasswordSchema } from "@/lib/validation/auth";
 
 const focusRing =
@@ -17,6 +18,7 @@ const primaryButton = `inline-flex min-h-11 w-full cursor-pointer items-center j
 function ResetPasswordContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const t = useTranslations("auth");
     const token = searchParams.get("token") || "";
 
     const [password, setPassword] = useState("");
@@ -28,24 +30,24 @@ function ResetPasswordContent() {
     const [loading, setLoading] = useState(false);
 
     const passwordChecks = [
-        { label: "At least 8 characters", valid: password.length >= 8 },
-        { label: "One uppercase letter", valid: /[A-Z]/.test(password) },
-        { label: "One lowercase letter", valid: /[a-z]/.test(password) },
-        { label: "One number", valid: /\d/.test(password) },
+        { label: t("passwordRulesAtLeast8"), valid: password.length >= 8 },
+        { label: t("passwordRulesUppercase"), valid: /[A-Z]/.test(password) },
+        { label: t("passwordRulesLowercase"), valid: /[a-z]/.test(password) },
+        { label: t("passwordRulesNumber"), valid: /\d/.test(password) },
     ];
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!token) {
-            toast.error("Invalid reset password link.");
+            toast.error(t("invalidResetLink"));
             return;
         }
 
         const validationResult = resetPasswordSchema.safeParse({ token, password, confirmPassword });
 
         if (!validationResult.success) {
-            const message = validationResult.error.issues[0]?.message || "Please check your password.";
+            const message = validationResult.error.issues[0]?.message || t("pleaseCheckPassword");
             setError(message);
             toast.error(message);
             return;
@@ -62,7 +64,7 @@ function ResetPasswordContent() {
             });
 
             if (res.status === 200 || res.status === 201) {
-                toast.success("Password reset successfully!");
+                toast.success(t("passwordResetSuccess"));
 
                 setTimeout(() => {
                     router.push("/signin");
@@ -70,21 +72,13 @@ function ResetPasswordContent() {
             }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
-                const data = err.response?.data;
-
-                const message =
-                    data &&
-                        typeof data === "object" &&
-                        "message" in data &&
-                        typeof data.message === "string"
-                        ? data.message
-                        : "Something went wrong. Please try again.";
+                const message = t("somethingWentWrong");
 
                 setError(message);
                 toast.error(message);
             } else {
-                setError("Something went wrong. Please try again.");
-                toast.error("Something went wrong. Please try again.");
+                setError(t("somethingWentWrong"));
+                toast.error(t("somethingWentWrong"));
             }
         } finally {
             setLoading(false);
@@ -115,23 +109,23 @@ function ResetPasswordContent() {
                     </div>
 
                     <span className="mt-4 text-xl font-bold tracking-tight text-ink">CALDAY</span>
-                    <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Reset password</h1>
+                    <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">{t("resetPasswordTitle")}</h1>
                 </div>
 
                 {!token ? (
                     <div className="space-y-6 text-center">
                         <p className="text-base leading-7 text-muted">
-                            This reset link is missing a token. Request a new password reset from the sign in page.
+                            {t("missingResetTokenDescription")}
                         </p>
                         <Link href="/forgot-password" className={primaryButton}>
-                            Request a new link
+                            {t("requestNewLink")}
                         </Link>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
                             <label htmlFor="reset-password" className="block text-sm font-medium text-ink">
-                                New password
+                                {t("newPassword")}
                             </label>
                             <input
                                 id="reset-password"
@@ -143,7 +137,7 @@ function ResetPasswordContent() {
                                 aria-invalid={Boolean(password) && !passwordValid}
                                 aria-describedby={password ? "reset-password-rules" : undefined}
                                 className={inputClass}
-                                placeholder="Enter a new password"
+                                placeholder={t("enterNewPassword")}
                             />
 
                             {password && (
@@ -160,7 +154,7 @@ function ResetPasswordContent() {
 
                         <div className="space-y-2">
                             <label htmlFor="reset-confirm-password" className="block text-sm font-medium text-ink">
-                                Confirm password
+                                {t("confirmPassword")}
                             </label>
                             <input
                                 id="reset-confirm-password"
@@ -176,16 +170,16 @@ function ResetPasswordContent() {
                                         ? `${inputBase} border-danger focus:border-danger`
                                         : inputClass
                                 }
-                                placeholder="Repeat your new password"
+                                placeholder={t("repeatNewPassword")}
                             />
                             {passwordMismatch && (
                                 <p id="reset-confirm-status" role="alert" className="text-sm font-medium text-danger">
-                                    Passwords do not match
+                                    {t("passwordsDoNotMatch")}
                                 </p>
                             )}
                             {confirmPassword && !passwordMismatch && (
                                 <p id="reset-confirm-status" className="text-sm font-medium text-primary">
-                                    Passwords match
+                                    {t("passwordsMatch")}
                                 </p>
                             )}
                         </div>
@@ -208,7 +202,7 @@ function ResetPasswordContent() {
                                 }
                                 className={primaryButton}
                             >
-                                {loading ? "Resetting..." : "Reset password"}
+                                {loading ? t("resetting") : t("resetPasswordButton")}
                             </button>
                         </div>
                     </form>
@@ -219,7 +213,7 @@ function ResetPasswordContent() {
                         href="/signin"
                         className={`rounded font-semibold text-primary underline underline-offset-4 transition-colors duration-200 hover:text-primary-hover ${focusRing}`}
                     >
-                        Back to log in
+                        {t("backToLogin")}
                     </Link>
                 </div>
             </div>
@@ -228,12 +222,14 @@ function ResetPasswordContent() {
 }
 
 export default function ResetPasswordPage() {
+    const t = useTranslations("auth");
+
     return (
         <Suspense
             fallback={
                 <div className="flex min-h-[85vh] flex-1 items-center justify-center bg-canvas">
                     <div role="status">
-                        <span className="sr-only">Loading...</span>
+                        <span className="sr-only">{t("loadingVerify")}</span>
                         <div
                             aria-hidden="true"
                             className="h-6 w-6 animate-spin rounded-full border-2 border-line border-t-primary motion-reduce:animate-none"

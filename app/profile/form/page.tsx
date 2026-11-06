@@ -85,14 +85,14 @@ export default function ProfileFormPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || formT("saveError"));
+        throw new Error(formT("saveError"));
       }
 
       // Toast stays on screen through the short redirect to the profile page.
-      toast.success(data.message || formT("saveSuccess"));
+      toast.success(formT("saveSuccess"));
       setTimeout(() => router.push("/profile"), 800);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : formT("saveError"));
+      toast.error(formT("saveError"));
     } finally {
       setIsSaving(false);
     }
