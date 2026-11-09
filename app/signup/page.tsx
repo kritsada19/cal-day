@@ -37,7 +37,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await axios.post("/api/auth/signup", {
+      await axios.post("/api/auth/signup", {
         name,
         email,
         password,

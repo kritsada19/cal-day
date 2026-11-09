@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import bcrypt from "bcryptjs";
 import { signupSchema } from "@/lib/validation/auth";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { sendVerificationEmail } from "@/lib/email/sendEmail";
 import crypto from "crypto";
@@ -12,7 +12,7 @@ const DUMMY_HASH_12 = "$2a$12$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 export async function POST(req: NextRequest) {
   try {
-    const rateLimit = await checkRateLimit(req, "signup", 20, 60);
+    const rateLimit = await checkRateLimitPolicy(req, "signup");
 
     if (!rateLimit.success) {
       return NextResponse.json(

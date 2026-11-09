@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import prisma from "@/lib/db/prisma";
 
 export async function GET(req: NextRequest) {
     const baseUrl = req.nextUrl.origin;
 
     try {
-        const rateLimit = await checkRateLimit(req, "verify-email", 3, 60);
+        const rateLimit = await checkRateLimitPolicy(req, "verifyEmail");
 
         if (!rateLimit.success) {
             return NextResponse.redirect(

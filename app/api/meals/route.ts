@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/access";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { errorResponse, rateLimitResponse } from "@/lib/http";
 import { mealSchema } from "@/lib/validation/meal";
 import { mealService } from "@/lib/services/meal.service";
@@ -16,8 +16,8 @@ import { publishMealEvent } from "@/lib/realtime/publisher";
  * POST /api/meals — บันทึกมื้ออาหาร 1 มื้อ
  */
 export async function POST(request: NextRequest) {
-  // 1) จำกัดจำนวนครั้งที่เรียกต่อ IP (100 ครั้ง / 60 วินาที)
-  const rateLimit = await checkRateLimit(request, "meals", 100, 60);
+  // 1) จำกัดจำนวนครั้งที่เรียกต่อ IP ตาม RATE_LIMITS.meals
+  const rateLimit = await checkRateLimitPolicy(request, "meals");
   if (!rateLimit.success) {
     return rateLimitResponse(rateLimit);
   }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   // 1) จำกัดจำนวนครั้งที่เรียกต่อ IP
-  const rateLimit = await checkRateLimit(request, "meals", 100, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "meals");
   if (!rateLimit.success) {
     return rateLimitResponse(rateLimit);
   }

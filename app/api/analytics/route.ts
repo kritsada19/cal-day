@@ -1,24 +1,16 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
+import { rateLimitResponse } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { getCache, setCache } from "@/lib/cache";
 
 export async function GET(request: Request) {
-  const rateLimit = await checkRateLimit(request, "analytics", 100, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "analytics");
 
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": rateLimit.limit.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-        },
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
   const auth = await requireAuth();

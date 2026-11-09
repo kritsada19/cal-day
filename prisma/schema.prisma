@@ -155,6 +155,9 @@ model Meal {
 
   // รายการอาหารในมื้อนี้
   foodEntries FoodEntry[]
+
+  // Composite Index
+  @@index([userId, createdAt])
 }
 
 enum MealType {
@@ -204,6 +207,9 @@ model DailySummary {
 
   // เชื่อมกับผู้ใช้
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // user 1 คน มีสรุปได้แค่ 1 record (ทำหน้าที่เป็น Composite Index ด้วยในตัว และป้องกันข้อมูลซ้ำวัน)
+  @@unique([userId, date])
 }
 
 model Subscription {

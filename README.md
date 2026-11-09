@@ -15,6 +15,7 @@ CalDay คือเว็บแอปพลิเคชันสำหรับ�
 - **AI Integration:** ใช้ Google Generative AI (Gemini) เพื่อช่วยประมวลผลข้อมูล
 - **Pro Subscriptions:** ระบบสมัครสมาชิกแบบพรีเมียมเพื่อเข้าถึงฟีเจอร์ขั้นสูง จัดการการชำระเงินและบิลลิ่งด้วย Stripe
 - **Real-time Monitoring:** มีระบบ Heartbeat Mechanism เพื่อตรวจสอบสถานะออนไลน์ของผู้ใช้แบบ Real-time ด้วย Redis (Pub/Sub)
+- **Error Monitoring & Session Replay:** ติดตั้ง Sentry เพื่อดักจับ Error และ Performance Tracing แบบ Real-time ครอบคลุมทั้งฝั่ง Client, Server (Node.js) และ Edge Runtime
 - **Multi-language UI:** รองรับการสลับภาษาไทย/อังกฤษผ่าน Navbar พร้อม fallback อัตโนมัติเป็นภาษาไทยเมื่อ locale ไม่ถูกต้องหรือไม่มีค่า
 
 ## 🌐 Internationalization (i18n)
@@ -63,6 +64,7 @@ Cookie: locale=en
 - [Google Generative AI](https://ai.google.dev/) (Gemini)
 - [Zod](https://zod.dev/) (Schema Validation)
 - [Pino](https://getpino.io/) (Logging)
+- [Sentry](https://sentry.io/) (Error Monitoring & Session Replay)
 
 **DevTools & Testing:**
 - [Docker & Docker Compose](https://www.docker.com/)
@@ -123,13 +125,18 @@ Cookie: locale=en
 - **รีเซ็ตรหัสผ่าน:** ผู้ใช้เปิด `/reset-password?token=...` เพื่อกำหนดรหัสผ่านใหม่
 - **ความปลอดภัย:** ระบบมีการจำกัดจำนวนคำขอ (rate limiting), token ที่หมดอายุอัตโนมัติ และการลบ token เก่าเมื่อใช้งานเสร็จแล้ว
 
-## 🗄️ โครงสร้างฐานข้อมูล (Database Schema)
+## 🗄️ โครงสร้างฐานข้อมูล (Database Schema) & การปรับปรุงประสิทธิภาพ
 
 - **`User` & `Account`:** บริหารจัดการผู้ใช้และช่องทางการล็อกอิน
 - **`Profile`:** เก็บข้อมูลพื้นฐาน (น้ำหนัก, ส่วนสูง, เป้าหมาย) และเก็บค่า BMR / TDEE
 - **`Meal` & `FoodEntry`:** บันทึกข้อมูลมื้ออาหารแต่ละมื้อ และรายการย่อยในมื้อนั้นๆ พร้อมคุณค่าทางโภชนาการ
 - **`DailySummary`:** สรุปยอดรวมแคลอรีและสารอาหารประจำวัน
 - **`Subscription`:** ดูแลสถานะบัญชี Pro / Free ของผู้ใช้งาน
+
+### 🚀 Database Indexing & Query Optimization
+มีการออกแบบ Database Indexing เพื่อรองรับการค้นหาและดึงข้อมูลตามผู้ใช้และช่วงเวลาได้อย่างรวดเร็ว (ป้องกัน Full Table Scan):
+- **`Meal`: `@@index([userId, createdAt])`** — Composite Index เพื่อเพิ่มประสิทธิภาพการค้นหาและกรองประวัติมื้ออาหารตามผู้ใช้และช่วงวันที่/เวลา
+- **`DailySummary`: `@@unique([userId, date])`** — Compound Unique Constraint ที่ทำหน้าที่เป็น Composite Index ในตัว ช่วยเพิ่มความเร็วในการ Query สรุปผลรายวัน พร้อมทั้งป้องกันข้อมูลซ้ำซ้อนในวันเดียวกันของผู้ใช้แต่ละคน
 
 ## 🛡️ Resilience: AI Circuit Breaker
 
@@ -151,6 +158,16 @@ CalDay มีระบบ Circuit Breaker สำหรับการเรี�
 ## ⚡ Redis Cache
 
 - ระบบ Redis cache ยังใช้ TTL jitter ใน `lib/cache.ts` เพื่อป้องกัน cache stampede: เวลา expiry ถูกสุ่มเพิ่ม 0–60 วินาที ทำให้แต่ละ instance หมดอายุไม่พร้อมกัน และลดการ refresh พร้อมกันเมื่อ cache หมดอายุ
+
+## 🚨 Error Monitoring & Observability (Sentry)
+
+โปรเจกต์นี้ติดตั้งและเชื่อมต่อระบบติดตามข้อผิดพลาดและประสิทธิภาพด้วย **[Sentry](https://sentry.io/)** แบบ Full-stack:
+
+- **Client-Side Monitoring (`instrumentation-client.ts`):** ดักจับ JavaScript Error บนเบราว์เซอร์ของผู้ใช้ พร้อมฟีเจอร์ **Session Replay** ที่บันทึกคลิปจำลองการใช้งานของผู้ใช้ก่อนเกิด Error (ตั้งค่าบันทึก 100% เมื่อเกิด Error) ช่วยให้ Debug ได้ง่ายและตรงจุด
+- **Server-Side Monitoring (`sentry.server.config.ts`):** ดักจับ Error ที่เกิดขึ้นบน Node.js Server เช่น API Routes, Server Actions และ Database Queries
+- **Edge Runtime Monitoring (`sentry.edge.config.ts`):** ดักจับ Error ในส่วน Middleware และ Edge Functions
+- **Global Error Handling (`app/global-error.tsx`):** มี Error Boundary ดักจับ Error ระดับ Root Layout และส่ง Exception ไปยัง Sentry ทันที
+- **Source Maps & Tunneling (`next.config.ts`):** ปรับแต่ง Build Plugin ให้อัปโหลด Source Maps เพื่อให้ Stack Trace แสดงชื่อไฟล์และบรรทัดใน TypeScript ตรงเป๊ะ พร้อมระบบ `/monitoring` Tunnel ป้องกันไม่ให้เบราว์เซอร์ที่มี Ad-blocker บล็อกการส่งข้อมูล Error ไปยัง Sentry
 
 ## 🧪 การรันเทสต์ (Testing)
 

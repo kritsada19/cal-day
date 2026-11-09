@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
+import { rateLimitResponse } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { Role, Plan } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth/access";
 
 export async function GET(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, "admin-users", 100, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "adminUsers");
 
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": rateLimit.limit.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-        },
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
 
   if (!auth.ok) {
     return auth.response;
