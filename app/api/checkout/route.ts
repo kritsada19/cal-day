@@ -2,7 +2,8 @@ import Stripe from "stripe";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/access";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
+import { rateLimitResponse } from "@/lib/http";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { logAuditEvent } from "@/lib/audit";
@@ -10,19 +11,10 @@ import { logAuditEvent } from "@/lib/audit";
 export const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
 export async function POST(request: NextRequest) {
-    const rateLimit = await checkRateLimit(request, "checkout", 50, 60);
+    const rateLimit = await checkRateLimitPolicy(request, "checkout");
 
     if (!rateLimit.success) {
-        return NextResponse.json(
-            { message: "Rate limit exceeded. Please try again later." },
-            {
-                status: 429,
-                headers: {
-                    "X-RateLimit-Limit": rateLimit.limit.toString(),
-                    "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-                },
-            }
-        );
+        return rateLimitResponse(rateLimit);
     }
 
     let auth: Awaited<ReturnType<typeof requireAuth>> | null = null;

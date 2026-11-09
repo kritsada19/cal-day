@@ -3,25 +3,17 @@ import { requireAuth } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/lib/nutrition";
 import { getUserAiQuota } from "@/lib/services/ai-quota";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
+import { rateLimitResponse } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, deleteUserCache } from "@/lib/cache";
 import { publishProfileUpdate } from "@/lib/realtime/publisher";
 
 export async function GET(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "profile");
 
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': rateLimit.limit.toString(),
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-        }
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
   const auth = await requireAuth();
@@ -90,19 +82,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
-  const rateLimit = await checkRateLimit(request, 'profile', 100, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "profile");
 
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': rateLimit.limit.toString(),
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-        }
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
   const auth = await requireAuth();

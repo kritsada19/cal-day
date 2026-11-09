@@ -85,10 +85,8 @@ export default function MealFormClient() {
 
       const localDateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-      let response;
-
       if (mode === "text") {
-        response = await axios.post("/api/meals", {
+        await axios.post("/api/meals", {
           mealType,
           mealText,
           date: localDateString
@@ -102,7 +100,7 @@ export default function MealFormClient() {
         const base64Data = imagePreview.split(",")[1];
         const mimeType = imageFile.type;
 
-        response = await axios.post("/api/meals/image", {
+        await axios.post("/api/meals/image", {
           mealType,
           base64Data,
           mimeType,

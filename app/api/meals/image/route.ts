@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/access";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { errorResponse, rateLimitResponse } from "@/lib/http";
 import { imageMealSchema } from "@/lib/validation/meal";
 import { mealService } from "@/lib/services/meal.service";
 import { publishMealEvent } from "@/lib/realtime/publisher";
 
 export async function POST(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, "meals-image", 20, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "mealsImage");
   if (!rateLimit.success) {
     return rateLimitResponse(rateLimit);
   }

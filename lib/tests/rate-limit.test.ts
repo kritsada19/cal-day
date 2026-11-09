@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { checkRateLimit } from "../rate-limit";
+import { checkRateLimit, checkRateLimitPolicy, RATE_LIMITS } from "../rate-limit";
 import { redis } from "../db/redis";
 
 describe("checkRateLimit", () => {
@@ -71,5 +71,41 @@ describe("checkRateLimit", () => {
             limit: 10,
             remaining: 0,
         });
+    });
+});
+
+describe("checkRateLimitPolicy", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("uses RATE_LIMITS for the named admin policy", async () => {
+        vi.mocked(redis.incr).mockResolvedValueOnce(1);
+
+        const request = new Request("http://localhost:3000/api/admin/users");
+        const result = await checkRateLimitPolicy(request, "adminUsers");
+
+        expect(redis.incr).toHaveBeenCalledWith("rate-limit:adminUsers:127.0.0.1");
+        expect(redis.expire).toHaveBeenCalledWith(
+            "rate-limit:adminUsers:127.0.0.1",
+            RATE_LIMITS.adminUsers.windowSec,
+        );
+        expect(result).toEqual({
+            success: true,
+            limit: RATE_LIMITS.adminUsers.limit,
+            remaining: RATE_LIMITS.adminUsers.limit - 1,
+        });
+    });
+
+    it("uses the longer window for forgotPassword", async () => {
+        vi.mocked(redis.incr).mockResolvedValueOnce(1);
+
+        const request = new Request("http://localhost:3000/api/auth/forgot-password");
+        await checkRateLimitPolicy(request, "forgotPassword");
+
+        expect(redis.expire).toHaveBeenCalledWith(
+            "rate-limit:forgotPassword:127.0.0.1",
+            RATE_LIMITS.forgotPassword.windowSec,
+        );
     });
 });

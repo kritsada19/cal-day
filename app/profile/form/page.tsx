@@ -82,8 +82,6 @@ export default function ProfileFormPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
         throw new Error(formT("saveError"));
       }
@@ -91,7 +89,7 @@ export default function ProfileFormPage() {
       // Toast stays on screen through the short redirect to the profile page.
       toast.success(formT("saveSuccess"));
       setTimeout(() => router.push("/profile"), 800);
-    } catch (error) {
+    } catch {
       toast.error(formT("saveError"));
     } finally {
       setIsSaving(false);

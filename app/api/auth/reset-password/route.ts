@@ -1,12 +1,12 @@
 import prisma from "@/lib/db/prisma";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import { NextResponse, NextRequest } from "next/server";
 import { resetPasswordSchema } from "@/lib/validation/auth";
 
 export async function POST(req: NextRequest) {
     try {
-        const rateLimit = await checkRateLimit(req, "reset-password", 20, 60);
+        const rateLimit = await checkRateLimitPolicy(req, "resetPassword");
 
         if (!rateLimit.success) {
             return NextResponse.json(

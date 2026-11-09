@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/access";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { errorResponse, rateLimitResponse } from "@/lib/http";
 import { mealService } from "@/lib/services/meal.service";
 
@@ -10,7 +10,7 @@ import { mealService } from "@/lib/services/meal.service";
  */
 export async function GET(request: NextRequest) {
   // 1) จำกัดจำนวนครั้งที่เรียกต่อ IP
-  const rateLimit = await checkRateLimit(request, "meals", 100, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "meals");
   if (!rateLimit.success) {
     return rateLimitResponse(rateLimit);
   }

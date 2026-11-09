@@ -14,7 +14,7 @@ import { passwordSchema } from "@/lib/validation/auth";
 import prisma from "@/lib/db/prisma";
 import { analyzeFood } from "@/lib/services/ai";
 import { checkAndComsumeAiQuota, getUserAiQuota } from "@/lib/services/ai-quota";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import type { Session } from "next-auth";
 import type { RateLimitResult } from "@/lib/rate-limit";
 
@@ -71,7 +71,7 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
-  checkRateLimit: vi.fn().mockResolvedValue({
+  checkRateLimitPolicy: vi.fn().mockResolvedValue({
     success: true,
     limit: 100,
     remaining: 99,
@@ -98,7 +98,7 @@ vi.mock("@/lib/email/sendEmail", () => ({
 
 describe("API Integration Tests", () => {
   const mockSession = vi.mocked(getSession);
-  const mockRateLimit = vi.mocked(checkRateLimit);
+  const mockRateLimit = vi.mocked(checkRateLimitPolicy);
   const mockAnalyzeFood = vi.mocked(analyzeFood);
   const mockQuotaCheck = vi.mocked(checkAndComsumeAiQuota);
   const mockGetQuota = vi.mocked(getUserAiQuota);

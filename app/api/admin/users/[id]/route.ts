@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
+import { rateLimitResponse } from "@/lib/http";
 import { logger } from "@/lib/logger";
-import { logAuditEvent } from "@/lib/audit";
+import { logAdminAction, getClientContext } from "@/lib/audit";
 import { MealType } from "@/app/generated/prisma/enums";
 import { deleteUserCache } from "@/lib/cache";
 import { Prisma } from "@/app/generated/prisma/client";
@@ -19,22 +20,13 @@ export async function GET(
     return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
   }
 
-  const rateLimit = await checkRateLimit(request, `admin-user-detail-${targetUserId}`, 100, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "adminUserDetail");
 
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": rateLimit.limit.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-        },
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
 
   if (!auth.ok) {
     return auth.response;
@@ -163,22 +155,13 @@ export async function DELETE(
     return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
   }
 
-  const rateLimit = await checkRateLimit(request, `admin-user-delete-${targetUserId}`, 20, 60);
+  const rateLimit = await checkRateLimitPolicy(request, "adminUserDelete");
 
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": rateLimit.limit.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-        },
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
 
   if (!auth.ok) {
     return auth.response;
@@ -193,10 +176,12 @@ export async function DELETE(
     );
   }
 
+  const { ip, userAgent, route } = getClientContext(request);
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: targetUserId },
-      select: { id: true },
+      select: { id: true, email: true, name: true, role: true },
     });
 
     if (!user) {
@@ -207,14 +192,23 @@ export async function DELETE(
       where: { id: targetUserId },
     });
 
-    logAuditEvent({
-      event: "admin_action",
-      userId: session.user.id,
-      status: 200,
-      action: "delete_user",
-      route: "/api/admin/users/[id]",
-      details: {
-        targetUserId,
+    logAdminAction({
+      action: "user.delete",
+      adminId: session.user.id,
+      adminEmail: session.user.email,
+      targetType: "user",
+      targetId: targetUserId,
+      route,
+      ip,
+      userAgent,
+      status: "success",
+      changes: {
+        before: {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        after: null, // ถูกลบออกจากระบบแล้ว
       },
     });
 
@@ -222,6 +216,19 @@ export async function DELETE(
 
     return NextResponse.json({ message: "User deleted successfully" }, { status: 200 });
   } catch (error) {
+    logAdminAction({
+      action: "user.delete",
+      adminId: session.user.id,
+      adminEmail: session.user.email,
+      targetType: "user",
+      targetId: targetUserId,
+      route,
+      ip,
+      userAgent,
+      status: "failed",
+      reason: error instanceof Error ? error.message : "Unknown error",
+    });
+
     logger.error({ err: error, targetUserId, adminId: session.user.id }, "Admin user DELETE error");
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }

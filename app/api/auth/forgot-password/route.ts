@@ -2,13 +2,13 @@ import prisma from "@/lib/db/prisma";
 import crypto from "crypto";
 import { NextResponse, NextRequest } from "next/server";
 import { sendForgotPasswordEmail } from "@/lib/email/sendEmail";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { forgotPasswordSchema } from "@/lib/validation/auth";
 
 export async function POST(req: NextRequest) {
     try {
-        const rateLimit = await checkRateLimit(req, "forgot-password", 20, 60);
+        const rateLimit = await checkRateLimitPolicy(req, "forgotPassword");
 
         if (!rateLimit.success) {
             return NextResponse.json(

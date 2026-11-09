@@ -76,5 +76,10 @@ export default defineConfig({
     timeout: 120 * 1000,
     stdout: "pipe",
     stderr: "pipe",
+    env: {
+      ...process.env,
+      AUTH_POST_RATE_LIMIT: "100",
+      AUTH_GET_RATE_LIMIT: "200",
+    },
   },
 });

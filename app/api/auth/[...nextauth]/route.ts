@@ -6,8 +6,9 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/db/prisma";
 import GoogleProvider from "next-auth/providers/google";
 import { redis } from "@/lib/db/redis";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimitPolicy } from "@/lib/rate-limit";
+import { NextRequest } from "next/server";
+import { rateLimitResponse } from "@/lib/http";
 import { env } from "@/lib/env";
 import { logAuditEvent } from "@/lib/audit";
 
@@ -32,9 +33,30 @@ declare module "next-auth/jwt" {
     }
 }
 
+const useSecureCookies = env.NEXTAUTH_URL.startsWith("https://");
+
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma) as Adapter,
     secret: env.NEXTAUTH_SECRET,
+    useSecureCookies,
+    session: {
+        strategy: "jwt",
+        maxAge: 60 * 60 * 24, // 24 ชั่วโมง
+        updateAge: 60 * 60, // ต่ออายุของ session ทุก 1 ชั่วโมง ถ้ายังใช้งาน
+    },
+    cookies: {
+        sessionToken: {
+            name: useSecureCookies
+                ? "__Secure-next-auth.session-token"
+                : "next-auth.session-token",
+            options: {
+                httpOnly: true, // XSS อ่าน JWT จาก document.cookie ไม่ได้
+                sameSite: "lax", // พอสำหรับ Google OAuth redirect กลับมาโดเมนเดิม ถ้าเป็น strict login Google อาจหลุด cookie
+                path: "/",
+                secure: useSecureCookies, // ส่ง cookie ผ่าน TLS เท่านั้น อย่าเปิดบน http://localhost
+            },
+        },
+    },
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -158,11 +180,6 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
 
-    session: {
-        strategy: "jwt",
-        maxAge: 60 * 60 * 24, // 24 ชั่วโมง
-    },
-
     pages: {
         signIn: "/signin",
     },
@@ -201,19 +218,11 @@ export const authOptions: NextAuthOptions = {
 const handler = NextAuth(authOptions);
 
 async function rateLimitedHandler(request: NextRequest, context: { params: Promise<{ nextauth: string[] }> }) {
-  const rateLimit = await checkRateLimit(request, "auth", 150, 60);
+  const policyName = request.method === "POST" ? "authPost" : "authGet";
+  const rateLimit = await checkRateLimitPolicy(request, policyName);
 
   if (!rateLimit.success) {
-    return NextResponse.json(
-      { message: "Rate limit exceeded. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": rateLimit.limit.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-        },
-      }
-    );
+    return rateLimitResponse(rateLimit);
   }
 
   return handler(request, context);
