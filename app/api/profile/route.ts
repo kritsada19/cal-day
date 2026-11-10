@@ -8,6 +8,7 @@ import { rateLimitResponse } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, deleteUserCache } from "@/lib/cache";
 import { publishProfileUpdate } from "@/lib/realtime/publisher";
+import { getUtcDayRange } from "@/lib/date";
 
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimitPolicy(request, "profile");
@@ -43,11 +44,7 @@ export async function GET(request: NextRequest) {
 
     const aiQuota = await getUserAiQuota(Number(session.user.id), user?.subscription?.plan);
 
-    const now = new Date();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(now);
-    endOfDay.setHours(23, 59, 59, 999);
+    const { startOfDay, endOfDay } = getUtcDayRange();
 
     const dailySummary = await prisma.dailySummary.findFirst({
       where: {
@@ -152,10 +149,7 @@ export async function POST(request: Request) {
 
     // sync target ใหม่เข้า DailySummary ของวันนี้ทันที (ถ้ามี)
     // เพื่อให้ dashboard แสดง target ที่ถูกต้องโดยไม่ต้องรอมื้อถัดไป
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    const { startOfDay: todayStart, endOfDay: todayEnd } = getUtcDayRange();
 
     await prisma.dailySummary.updateMany({
       where: {
