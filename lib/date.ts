@@ -6,7 +6,7 @@
  * ถ้าที่หนึ่งใช้เวลาท้องถิ่น อีกที่หนึ่งใช้ UTC ข้อมูลจะเหลื่อมกัน (เช่น มื้อดึก ๆ ไปโผล่อีกวัน)
  */
 
-/** ช่วงเวลาของ "หนึ่งวัน UTCบ999Z */
+/** ช่วงเวลาของ "หนึ่งวัน" แบบ UTC เช่น 2026-08-26 → 00:00:00.000Z ถึง 23:59:59.999Z */
 export function getUtcDayRange(dateInput: string | Date = new Date()) {
   // ถ้าส่งมาเป็นข้อความ (เช่น "2026-08-26") ให้แปลงเป็น Date ก่อน
   const base = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
@@ -17,9 +17,9 @@ export function getUtcDayRange(dateInput: string | Date = new Date()) {
 
   return {
     // ต้นวัน: 00:00:00.000 UTC
-    startOfDay: new Date(Date.UTC(year, month, date)),
+    startOfDay: new Date(Date.UTC(year, month, date, 0, 0, 0, 0)),
     // สิ้นวัน: 23:59:59.999 UTC
-    endOfDay: new Date(Date.UTC(year, month, date + 1)),
+    endOfDay: new Date(Date.UTC(year, month, date, 23, 59, 59, 999)),
   };
 }
 
