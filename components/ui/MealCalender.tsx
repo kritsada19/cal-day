@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
@@ -38,7 +38,7 @@ const focusRing =
 const monthButton = `inline-flex min-h-11 items-center rounded-xl bg-primary-tint px-4 text-sm font-semibold text-primary transition-colors duration-200 hover:bg-highlight hover:text-ink ${focusRing}`;
 
 export default function MealCalendar() {
-    const { status } = useSession();
+    const { data: session, status } = useSession();
     const locale = useLocale();
     const t = useTranslations("mealCalendar");
     const isAuthenticated = status === "authenticated";
@@ -68,20 +68,68 @@ export default function MealCalendar() {
     // เอาไว้บอกว่าวันที่ 1 ต้องไปเริ่มที่ช่องไหน
     const startingDay = startOfMonth.getDay();
 
-    // --- การเรียก API ---
-    // useEffect จะทำงานทุกครั้งที่ currentDate เปลี่ยนแปลง (เช่น ตอนกดเปลี่ยนเดือน)
-    useEffect(() => {
-        const year = currentDate.getFullYear();
-        // getMonth() จะได้ 0-11 เราต้องบวก 1 ให้เป็น 1-12 ก่อนส่งให้ API
-        const month = currentDate.getMonth() + 1;
+    const fetchMonthlySummaries = useCallback(async () => {
+        try {
+            const year = currentDate.getFullYear();
+            // getMonth() จะได้ 0-11 เราต้องบวก 1 ให้เป็น 1-12 ก่อนส่งให้ API
+            const month = currentDate.getMonth() + 1;
 
-        // เรียก API ดึงสรุปข้อมูลรายเดือน
-        axios.get(`/api/meals?year=${year}&month=${month}`)
-            .then((res) => {
-                setSummaries(res.data.summaries || []);
-            })
-            .catch((err) => logger.error({ err, year, month }, "Failed to load month summaries"));
-    }, [currentDate, isAuthenticated]);
+            const res = await axios.get(`/api/meals?year=${year}&month=${month}`);
+
+            setSummaries(res.data.summaries);
+
+        } catch (err) {
+            logger.error({ err }, "Failed to load month summaries")
+        }
+    }, [currentDate]);
+
+    useEffect(() => {
+        if (status !== "authenticated") {
+            return;
+        }
+
+        const fetchData = async () => {
+            await fetchMonthlySummaries();
+        };
+        fetchData();
+    }, [status, fetchMonthlySummaries]);
+
+    useEffect(() => {
+        if (status !== "authenticated") {
+            return;
+        }
+
+        // สร้างการเชื่อมต่อ SSE จาก Browser → Server
+        // เมื่อสร้างแล้ว Browser จะเชื่อมต่อไปยัง URL ที่กำหนด และรอ Server ส่ง Event มา
+        const eventSource = new EventSource("/api/events");
+
+        // เมื่อ EventSource ได้รับ message จาก Server → ให้เรียกฟังก์ชันนี้
+        // event คือ ข้อมูลที่ Browser ได้รับจาก SSE
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (String(data.userId) !== String(session?.user?.id)) {
+                return;
+            }
+
+            if (data.type === "meal.created" || data.type === "meal.deleted" || data.type === "profile.updated") {
+                fetchMonthlySummaries();
+            }
+        };
+
+        eventSource.addEventListener("heartbeat", (event) => {
+            console.log("Heartbeat received from server:", JSON.parse(event.data));
+        });
+
+        eventSource.onerror = () => {
+            console.error("SSE connection error");
+        };
+
+        return () => {
+            // ไปเรียก cancel() ที่ app/api/events/route.ts
+            eventSource.close();
+        };
+    }, [status, session?.user?.id, fetchMonthlySummaries]);
 
     // ฟังก์ชันย้อนกลับไป 1 เดือน
     const handlePrevMonth = () => {
