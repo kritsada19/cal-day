@@ -1,6 +1,11 @@
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL!, {
+  maxRetriesPerRequest: null,
+});
 
 // โหลด environment variables จาก .env / .env.local เพื่อให้ได้ค่า DATABASE_URL ตอนรันผ่าน Playwright runner
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -78,8 +83,8 @@ export async function createTestUser(
   // สร้าง Profile เพื่อให้คำนวณเป้าหมายแคลอรี/โปรตีนบน Dashboard ได้
   if (withProfile) {
     await pool.query(
-      `INSERT INTO "Profile" ("userId", gender, age, weight, height, "exerciseLevel", goal, "createdAt", "updatedAt")
-       VALUES ($1, 'MALE', 28, 75.0, 175.0, 'LIGHT', 'MAINTAIN', NOW(), NOW())`,
+      `INSERT INTO "Profile" ("userId", gender, age, weight, height, "exerciseLevel", goal, bmr, tdee, "targetCalories", "targetProtein", "updatedAt")
+       VALUES ($1, 'MALE', 28, 75.0, 175.0, 'LIGHT', 'MAINTAIN_WEIGHT', 1709.0, 2350.0, 2530.0, 120.0, NOW())`,
       [userId]
     );
   }
@@ -96,6 +101,86 @@ export async function getUserEmailVerified(email: string): Promise<Date | null> 
     [email]
   );
   return result.rows[0]?.emailVerified ?? null;
+}
+
+/**
+ * อัปเกรด Subscription ของผู้ใช้เป็น PRO สำหรับการทดสอบ
+ */
+export async function upgradeUserToPro(email: string): Promise<void> {
+  const result = await pool.query<{ userId: string }>(
+    `UPDATE "Subscription"
+     SET plan = 'PRO',
+         status = 'ACTIVE',
+         "updatedAt" = NOW()
+     WHERE "userId" = (
+       SELECT id FROM "User"
+       WHERE LOWER(email) = LOWER($1)
+       LIMIT 1
+     )
+     RETURNING "userId"`,
+    [email]
+  );
+
+  const userId = result.rows[0]?.userId;
+
+  if (!userId) {
+    throw new Error(`Subscription not found for user: ${email}`);
+  }
+
+  // ล้าง Cache ของ User
+  const keys = await redis.keys(`cache:user:${userId}:*`);
+
+  if (keys.length > 0) {
+    await redis.del(...keys);
+  }
+}
+
+/**
+ * เปลี่ยน Role ของผู้ใช้สำหรับทดสอบสิทธิ์ Admin
+ */
+export async function setUserRole(
+  email: string,
+  role: "USER" | "ADMIN"
+): Promise<void> {
+  const result = await pool.query(
+    `UPDATE "User"
+     SET role = $1, "updatedAt" = NOW()
+     WHERE LOWER(email) = LOWER($2)
+     RETURNING id`,
+    [role, email]
+  );
+
+  if (result.rowCount === 0) {
+    throw new Error(`User not found: ${email}`);
+  }
+}
+
+export async function getUserPlan(email: string): Promise<string | null> {
+  const result = await pool.query<{ plan: string }>(
+    `SELECT s.plan
+     FROM "Subscription" s
+     JOIN "User" u ON u.id = s."userId"
+     WHERE LOWER(u.email) = LOWER($1)
+     LIMIT 1`,
+    [email]
+  );
+
+  return result.rows[0]?.plan ?? null;
+}
+
+/**
+ * ดึง Role ของ User จาก Database
+ */
+export async function getUserRole(email: string): Promise<string | null> {
+  const result = await pool.query<{ role: string }>(
+    `SELECT role
+     FROM "User"
+     WHERE LOWER(email) = LOWER($1)
+     LIMIT 1`,
+    [email]
+  );
+
+  return result.rows[0]?.role ?? null;
 }
 
 /**
@@ -141,5 +226,8 @@ export async function cleanupTestUser(email: string): Promise<void> {
  * ปิด Database Connection Pool หลังจบการทดสอบ
  */
 export async function closeDbPool(): Promise<void> {
-  await pool.end();
+  await Promise.all([
+    pool.end(),
+    redis.quit(),
+  ]);
 }

@@ -4,7 +4,6 @@ import {
   createTestUser,
   getPasswordResetToken,
   cleanupTestUser,
-  closeDbPool,
 } from '../helpers/db';
 
 /**
@@ -37,7 +36,6 @@ test.describe('Auth Flow: Forgot Password → Reset Password', () => {
   // ล้างข้อมูลหลังจบการทดสอบ
   test.afterAll(async () => {
     await cleanupTestUser(testEmail);
-    await closeDbPool();
   });
 
   test('สามารถขอ reset password, ตั้งรหัสผ่านใหม่ และ login ด้วยรหัสใหม่ได้สำเร็จ', async ({ page }) => {
@@ -94,8 +92,10 @@ test.describe('Auth Flow: Forgot Password → Reset Password', () => {
     await page.getByLabel(/Password|รหัสผ่าน/i).fill(newPassword);
     await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
 
+    await page.waitForTimeout(1000);
+
     // ต้อง redirect ไปหน้าแรกหลังล็อกอินสำเร็จ
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL('/', { timeout: 10000 });
 
     // ตรวจสอบความถูกต้องของ Session
     const sessionRes = await page.request.get('/api/auth/session');

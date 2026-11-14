@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import {
   createTestUser,
   cleanupTestUser,
-  closeDbPool,
 } from '../helpers/db';
 
 /**
@@ -37,7 +36,6 @@ test.describe('Meal Flow: Create Meal → Summary Updates', () => {
   // ล้างข้อมูลหลังจบการทดสอบ
   test.afterAll(async () => {
     await cleanupTestUser(testEmail);
-    await closeDbPool();
   });
 
   test('เมื่อบันทึกอาหารสำเร็จ ตัวเลข Calories และ Protein บน Dashboard จะต้องอัปเดต', async ({ page }) => {
@@ -73,8 +71,8 @@ test.describe('Meal Flow: Create Meal → Summary Updates', () => {
     // เลือกประเภทมื้อเป็น Breakfast
     await page.locator('select').selectOption('BREAKFAST');
 
-    // กรอกรายการอาหาร (กะเพราเนื้อสับ, ข้าวสวย)
-    const mealText = 'กะเพราเนื้อสับ 1 จาน, ข้าวสวย 150 กรัม';
+    // กรอกรายการอาหาร
+    const mealText = 'กล้วยหอม (Banana)';
     await page.locator('#meal-text').fill(mealText);
 
     // ดักรอ response จาก /api/meals
@@ -89,8 +87,8 @@ test.describe('Meal Flow: Create Meal → Summary Updates', () => {
     expect(mealResponse.status()).toBe(200);
 
     const mealData = await mealResponse.json();
-    const addedCalories = Math.round(mealData.totalCalories);
-    const addedProtein = Math.round(mealData.totalProtein);
+    const addedCalories = mealData.totalCalories
+    const addedProtein = mealData.totalProtein
 
     // ตรวจสอบ Toast สำเร็จ
     const notifications = page.getByRole('region', { name: /notifications/i });
@@ -103,12 +101,12 @@ test.describe('Meal Flow: Create Meal → Summary Updates', () => {
     await page.waitForLoadState('networkidle');
 
     // ตรวจสอบว่าค่า Calories บนหน้า Dashboard อัปเดตตรงกับมื้อที่เพิ่งบันทึก
-    await expect(page.getByText(String(addedCalories))).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId('calories-consumed'))
+      .toHaveText(String(addedCalories), { timeout: 10000 });
 
     // ตรวจสอบว่าค่า Protein บนหน้า Dashboard มีการอัปเดต
-    if (addedProtein > 0) {
-      await expect(page.getByText(String(addedProtein))).toBeVisible({ timeout: 10000 });
-    }
+    await expect(page.getByTestId('protein-consumed'))
+      .toHaveText(String(addedProtein), { timeout: 10000 });
   });
 });
 

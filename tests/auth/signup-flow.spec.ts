@@ -3,7 +3,6 @@ import {
   getVerificationToken,
   getUserEmailVerified,
   cleanupTestUser,
-  closeDbPool,
 } from '../helpers/db';
 
 /**
@@ -29,7 +28,6 @@ test.describe('Auth Flow: Signup → Verify Email → Login', () => {
   // ล้างข้อมูลทดสอบใน Database หลังการทดสอบเสร็จสิ้น
   test.afterAll(async () => {
     await cleanupTestUser(testEmail);
-    await closeDbPool();
   });
 
   test('สามารถ Signup, Verify Email และ Login เข้าสู่ระบบได้สมบูรณ์', async ({ page }) => {
