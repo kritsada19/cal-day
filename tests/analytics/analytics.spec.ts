@@ -1,81 +1,281 @@
+
 import { test, expect, type Page } from '@playwright/test';
+import bcrypt from 'bcryptjs';
+import {
+  createTestUser,
+  cleanupTestUser,
+} from '../helpers/db';
 
-// ============================================================
-// 📊 Analytics
-// ทดสอบหน้า /analytics แสดงข้อมูลสถิติการกินอาหาร
-// ============================================================
+/**
+ * ============================================================================
+ * 📊 E2E Analytics Flow
+ * ============================================================================
+ * ทดสอบหน้า /analytics สำหรับแสดงข้อมูลสถิติการกินอาหาร
+ *
+ * Test Cases:
+ * 1. หน้า Analytics โหลดได้และแสดง Heading
+ * 2. แสดง Subheading PERFORMANCE OVERVIEW
+ * 3. มีปุ่ม Time Range Selector: 7 DAYS และ 30 DAYS
+ * 4. คลิก 30 DAYS แล้วปุ่มเปลี่ยนสถานะเป็น Active
+ * 5. แสดง Stat Cards: AVG CALORIES และ CONSISTENCY SCORE
+ * 6. ผู้ใช้ที่ไม่ได้ Login ต้องถูก Redirect ไปหน้า Sign in
+ *
+ * Test Data:
+ * - สร้าง Mock User จาก Timestamp เพื่อป้องกัน Email ซ้ำ
+ * - ไม่ใช้ข้อมูลจาก .env
+ * - สร้าง User พร้อม Profile ก่อนเริ่มทดสอบ
+ *
+ * Cleanup:
+ * - ลบ Test User และข้อมูลที่เกี่ยวข้องหลังจบการทดสอบ
+ * ============================================================================
+ */
 
-// ──────────────────────────────────────────────
-// Helper: ล็อกอินและไปหน้า analytics
-// ──────────────────────────────────────────────
+// ============================================================================
+// Mock Data
+// ============================================================================
+
+// ใช้ Timestamp สร้าง Email ที่ไม่ซ้ำกันในแต่ละ Test Run
+const timestamp = Date.now();
+
+const testEmail = `analytics_test_${timestamp}@example.com`;
+const testPassword = 'Password123!';
+const testName = 'Analytics Test User';
+
+// ============================================================================
+// Helper: Login และเข้าสู่หน้า Analytics
+// ============================================================================
+
 async function loginAndGotoAnalytics(page: Page) {
+
+  // ----------------------------------------------------
+  // ขั้นตอนที่ 1: เปิดหน้า Sign in
+  // ----------------------------------------------------
   await page.goto('/signin');
-  await page.getByPlaceholder(/Email address|ที่อยู่อีเมล/i).fill('test@example.com');
-  await page.getByPlaceholder(/Password|รหัสผ่าน/i).fill('password123');
-  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
 
-  await page.waitForURL('/');
+  // ----------------------------------------------------
+  // ขั้นตอนที่ 2: กรอกข้อมูล Mock User
+  // ----------------------------------------------------
+  await page.getByPlaceholder(/Email address|ที่อยู่อีเมล/i)
+    .fill(testEmail);
 
+  await page.getByPlaceholder(/Password|รหัสผ่าน/i)
+    .fill(testPassword);
+
+  // ----------------------------------------------------
+  // ขั้นตอนที่ 3: กด Login
+  // ----------------------------------------------------
+  await page.getByRole('button', {
+    name: /Log in|เข้าสู่ระบบ/i,
+  }).click();
+
+  // ตรวจสอบว่า Login สำเร็จและ Redirect ไปหน้า Home
+  await expect(page).toHaveURL('/');
+
+  // ----------------------------------------------------
+  // ขั้นตอนที่ 4: เข้าสู่หน้า Analytics
+  // ----------------------------------------------------
   await page.goto('/analytics', {
     waitUntil: 'domcontentloaded',
+    timeout: 15000,
   });
+
+  // ตรวจสอบว่าเข้าสู่หน้า Analytics สำเร็จ
+  await expect(page).toHaveURL('/analytics');
 }
+
+// ============================================================================
+// Test Suite: Analytics
+// ============================================================================
 
 test.describe('Analytics', () => {
 
+  // =========================================================================
+  // Setup: สร้าง Mock User ก่อนเริ่มทดสอบ
+  // =========================================================================
+
+  test.beforeAll(async () => {
+
+    // Hash Password ก่อนบันทึกลง Database
+    const hashedPassword = await bcrypt.hash(testPassword, 10);
+
+    // สร้าง Test User พร้อม Profile
+    await createTestUser(
+      testEmail,
+      hashedPassword,
+      testName,
+      true,
+    );
+  });
+
+  // =========================================================================
+  // Setup: Login ก่อนเริ่มแต่ละ Test
+  // =========================================================================
+
   test.beforeEach(async ({ page }) => {
+
+    // Login ด้วย Mock User และเข้าสู่หน้า Analytics
     await loginAndGotoAnalytics(page);
   });
 
+  // =========================================================================
+  // Test Case 1: ตรวจสอบหน้า Analytics
+  // =========================================================================
+
   test('หน้า analytics โหลดได้และแสดง heading', async ({ page }) => {
-    // ตรวจว่า heading แสดงอยู่ทั้งภาษาไทยและอังกฤษ
-    await expect(page.getByRole('heading', { name: /การวิเคราะห์|Analytics/i })).toBeVisible({ timeout: 8000 });
+
+    // ตรวจสอบ Heading หลักทั้งภาษาไทยและอังกฤษ
+    await expect(
+      page.getByRole('heading', {
+        name: /การวิเคราะห์|Analytics/i,
+      })
+    ).toBeVisible({ timeout: 8000 });
   });
+
+  // =========================================================================
+  // Test Case 2: ตรวจสอบ Performance Overview
+  // =========================================================================
 
   test('แสดง subheading PERFORMANCE OVERVIEW', async ({ page }) => {
-    // ตรวจว่ามี label ภาพรวมประสิทธิภาพหรือ PERFORMANCE OVERVIEW
-    await expect(page.getByText(/ภาพรวมประสิทธิภาพ|PERFORMANCE OVERVIEW/i)).toBeVisible({ timeout: 5000 });
+
+    // ตรวจสอบ Subheading ภาพรวมประสิทธิภาพ
+    await expect(
+      page.getByText(/ภาพรวมประสิทธิภาพ|PERFORMANCE OVERVIEW/i)
+    ).toBeVisible({ timeout: 8000 });
   });
+
+  // =========================================================================
+  // Test Case 3: ตรวจสอบ Time Range Selector
+  // =========================================================================
 
   test('มีปุ่ม time range selector: 7 DAYS และ 30 DAYS', async ({ page }) => {
-    // รอให้ page โหลดเสร็จ
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 1: รอให้ข้อมูล Analytics โหลดเสร็จ
+    // ----------------------------------------------------
+
     await page.waitForLoadState('networkidle');
 
-    // ตรวจว่าปุ่ม time range มีอยู่ทั้งสองปุ่ม โดยรองรับทั้งภาษาไทยและอังกฤษ
-    await expect(page.getByRole('button', { name: /7 วัน|7 DAYS/i })).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole('button', { name: /30 วัน|30 DAYS/i })).toBeVisible({ timeout: 5000 });
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 2: ตรวจสอบปุ่ม 7 DAYS
+    // ----------------------------------------------------
+
+    await expect(
+      page.getByRole('button', {
+        name: /7 วัน|7 DAYS/i,
+      })
+    ).toBeVisible({ timeout: 5000 });
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 3: ตรวจสอบปุ่ม 30 DAYS
+    // ----------------------------------------------------
+
+    await expect(
+      page.getByRole('button', {
+        name: /30 วัน|30 DAYS/i,
+      })
+    ).toBeVisible({ timeout: 5000 });
   });
 
+  // =========================================================================
+  // Test Case 4: ทดสอบการเปลี่ยน Time Range
+  // =========================================================================
+
   test('คลิก 30 DAYS → ปุ่มเปลี่ยนสถานะเป็น active', async ({ page }) => {
-    // รอให้หน้าโหลด
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 1: รอให้หน้า Analytics โหลด
+    // ----------------------------------------------------
+
     await page.waitForLoadState('networkidle');
 
-    // คลิกปุ่ม 30 วัน / 30 DAYS
-    const btn30 = page.getByRole('button', { name: /30 วัน|30 days|30 DAYS/i });
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 2: ค้นหาปุ่ม 30 DAYS
+    // ----------------------------------------------------
+
+    const btn30 = page.getByRole('button', {
+      name: /30 วัน|30 days|30 DAYS/i,
+    });
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 3: คลิกเปลี่ยน Time Range
+    // ----------------------------------------------------
+
     await btn30.click();
 
-    // ใช้ state ที่ UI จริงใช้งาน: aria-pressed
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 4: ตรวจสอบสถานะ Active
+    // ----------------------------------------------------
+
+    // aria-pressed ต้องเปลี่ยนเป็น true เมื่อปุ่ม Active
     await expect(btn30).toHaveAttribute('aria-pressed', 'true');
   });
 
+  // =========================================================================
+  // Test Case 5: ตรวจสอบ Analytics Stat Cards
+  // =========================================================================
+
   test('แสดง stat cards: AVG CALORIES, CONSISTENCY SCORE', async ({ page }) => {
-    // รอให้ fetch analytics API เสร็จ
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 1: รอให้ Analytics API โหลดข้อมูลเสร็จ
+    // ----------------------------------------------------
+
     await page.waitForLoadState('networkidle');
 
-    // ตรวจว่ามี stat cards แสดงอยู่ ทั้งภาษาไทยและอังกฤษ
-    await expect(page.getByText(/ค่าแคลอรี่เฉลี่ย|AVG CALORIES/i)).toBeVisible({ timeout: 8000 });
-    await expect(page.getByText(/คะแนนความสม่ำเสมอ|CONSISTENCY SCORE/i)).toBeVisible({ timeout: 8000 });
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 2: ตรวจสอบ AVG CALORIES
+    // ----------------------------------------------------
+
+    await expect(
+      page.getByText(/ค่าแคลอรี่เฉลี่ย|AVG CALORIES/i)
+    ).toBeVisible({ timeout: 8000 });
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 3: ตรวจสอบ CONSISTENCY SCORE
+    // ----------------------------------------------------
+
+    await expect(
+      page.getByText(/คะแนนความสม่ำเสมอ|CONSISTENCY SCORE/i)
+    ).toBeVisible({ timeout: 8000 });
   });
 
+  // =========================================================================
+  // Test Case 6: ตรวจสอบ Protected Route
+  // =========================================================================
+
   test('ผู้ใช้ที่ไม่ได้ login → redirect ไปหน้า signin', async ({ page }) => {
-    // clear cookies เพื่อจำลองสถานะ unauthenticated
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 1: Clear Cookies
+    // ----------------------------------------------------
+
+    // จำลองสถานะ Unauthenticated โดยลบ Session Cookies
     await page.context().clearCookies();
 
-    // โหลดหน้า analytics ใหม่โดยไม่ได้ login
-    await page.goto('/analytics');
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 2: เข้าหน้า Analytics อีกครั้ง
+    // ----------------------------------------------------
 
-    // analytics page แสดง RESTRICTED ACCESS เมื่อ unauthenticated
+    await page.goto('/analytics', {
+      waitUntil: 'domcontentloaded',
+    });
+
+    // ----------------------------------------------------
+    // ขั้นตอนที่ 3: ตรวจสอบการ Redirect
+    // ----------------------------------------------------
+
+    // ผู้ใช้ที่ไม่มี Session ต้องถูก Redirect ไปหน้า Sign in
     await expect(page).toHaveURL(/\/signin/);
+  });
+
+  // =========================================================================
+  // Cleanup: ลบ Mock User หลังจบการทดสอบ
+  // =========================================================================
+
+  test.afterAll(async () => {
+
+    // ลบ Test User และข้อมูลที่เกี่ยวข้องออกจาก Database
+    await cleanupTestUser(testEmail);
   });
 
 });
