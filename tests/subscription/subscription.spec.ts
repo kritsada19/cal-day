@@ -1,73 +1,178 @@
 import { test, expect, type Page } from '@playwright/test';
+import bcrypt from 'bcryptjs';
+import {
+  createTestUser,
+  cleanupTestUser,
+} from '../helpers/db';
 
-// ============================================================
-// 💳 Subscription
-// ทดสอบหน้า /subscription แสดงแผน PRO และปุ่ม upgrade
-// ============================================================
+/**
+ * ============================================================================
+ * 💳 E2E Subscription Flow: Login → FREE → Subscription → PRO
+ * ============================================================================
+ * ทดสอบ Lifecycle ของระบบ Subscription ตั้งแต่ผู้ใช้เข้าสู่ระบบ:
+ *
+ * 1. สร้าง Test User พร้อม Profile และ Subscription เริ่มต้นเป็น FREE
+ * 2. ทดสอบการเข้าหน้า /subscription โดยไม่ Login
+ * 3. เข้าสู่ระบบผ่านหน้า /signin
+ * 4. ตรวจสอบราคา Subscription ฿199 / month
+ * 5. ตรวจสอบ Feature List ทั้ง 4 รายการ
+ * 6. ทดสอบหน้า /subscription/success
+ *
+ * Cleanup:
+ * - ลบข้อมูล Test User และข้อมูลที่เกี่ยวข้องหลังจบการทดสอบ
+ * ============================================================================
+ */
 
-// ──────────────────────────────────────────────
-// Helper: ล็อกอินและไปหน้า subscription
-// ──────────────────────────────────────────────
-async function loginAndGotoSubscription(page: Page) {
-  await page.goto('/signin');
-  await page.getByPlaceholder(/Email address|ที่อยู่อีเมล/i).fill('test@example.com');
-  await page.getByPlaceholder(/Password|รหัสผ่าน/i).fill('password123');
-  await page.getByRole('button', { name: /Log in|เข้าสู่ระบบ/i }).click();
-  await page.waitForURL('/');
-  await page.goto('/subscription');
-}
+test.describe('Subscription-Flow', () => {
+  const timestamp = Date.now();
+  const testEmail = `subscription_test_${timestamp}@example.com`;
+  const testPassword = 'Password123!';
+  const testName = 'Subscription Flow User';
 
-test.describe('Subscription Page', () => {
+  // เตรียมผู้ใช้พร้อม Profile ก่อนเริ่มเทส
+  test.beforeAll(async () => {
+    const hashedPassword = await bcrypt.hash(testPassword, 10);
 
-  test('ผู้ใช้ที่ไม่ได้ login ต้อง redirect ไปหน้า login', async ({ page }) => {
-    // เข้าหน้า subscription โดยไม่ login
-    await page.goto('/subscription', {
-      waitUntil: 'domcontentloaded',
-      timeout: 15000,
-    });
-
-    // ตรวจว่า URL ถูกต้อง
-    await expect(page).toHaveURL('/signin');
-
+    await createTestUser(
+      testEmail,
+      hashedPassword,
+      testName,
+      true
+    );
   });
 
-  test.describe('Logged in user', () => {
-
-    test.beforeEach(async ({ page }) => {
-      await loginAndGotoSubscription(page);
-    });
-
-    test('แสดงราคา ฿199 / month', async ({ page }) => {
-      // ตรวจว่ามีราคาแสดงบนหน้า โดยรองรับภาษาไทยและอังกฤษ
-      await expect(page.getByText(/฿199|\$199|199/i)).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText(/\/ month|\/ เดือน/i)).toBeVisible();
-    });
-
-    test('แสดง feature list ครบ 4 รายการ', async ({ page }) => {
-      // ตรวจว่า feature แต่ละรายการแสดงอยู่ ทั้งภาษาไทยและอังกฤษ
-      await expect(page.getByText(/บันทึกมื้ออาหารรายวันแบบไม่จำกัด|UNLIMITED DAILY MEAL LOGGING/i)).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText(/ติดตามแคลอรี่และแมกโครนิวเทรียนท์|TRACK CALORIES & MACROS/i)).toBeVisible();
-      await expect(page.getByText(/เป้าหมายโภชนาการส่วนบุคคล|PERSONALIZED NUTRITION GOALS/i)).toBeVisible();
-      await expect(page.getByText(/เข้าถึงปฏิทินความก้าวหน้าทั้งหมด|FULL PROGRESS CALENDAR ACCESS/i)).toBeVisible();
-    });
-
+  // ล้างข้อมูลหลังจบการทดสอบ
+  test.afterAll(async () => {
+    await cleanupTestUser(testEmail);
   });
 
-});
+  // ----------------------------------------------------
+  // Helper: เข้าสู่ระบบและไปหน้า Subscription
+  // ----------------------------------------------------
+  async function loginAndGotoSubscription(page: Page) {
+    await page.goto('/signin');
 
-// ──────────────────────────────────────────────
-// Subscription Success Page
-// ──────────────────────────────────────────────
-test.describe('Subscription Success Page', () => {
+    await page.getByLabel(
+      /Email address|ที่อยู่อีเมล/i
+    ).fill(testEmail);
 
-  test('หน้า /subscription/success โหลดได้', async ({ page }) => {
-    // เข้าหน้า success โดยตรง (จะถูก redirect หรือแสดงหน้า success)
-    await page.goto('/subscription/success');
+    await page.getByLabel(
+      /Password|รหัสผ่าน/i
+    ).fill(testPassword);
 
-    // ตรวจว่า page โหลดได้โดยไม่ error (status 200 หรือ redirect)
-    // เช็คว่า URL ยังอยู่ในระบบ
-    const url = page.url();
-    expect(url).not.toContain('error');
+    await page.getByRole('button', {
+      name: /Log in|เข้าสู่ระบบ/i,
+    }).click();
+
+    await expect(page).toHaveURL('/');
+
+    await page.goto('/subscription');
+  }
+
+  // ----------------------------------------------------
+  // Subscription Page
+  // ----------------------------------------------------
+  test.describe('Subscription Page', () => {
+
+    test('ผู้ใช้ที่ไม่ได้ Login ต้อง Redirect ไปหน้า Login', async ({ page }) => {
+
+      // ----------------------------------------------------
+      // ขั้นตอนที่ 1: เข้าหน้า Subscription โดยไม่ Login
+      // ----------------------------------------------------
+      await page.goto('/subscription', {
+        waitUntil: 'domcontentloaded',
+        timeout: 15000,
+      });
+
+      // ----------------------------------------------------
+      // ขั้นตอนที่ 2: ตรวจสอบ Redirect
+      // ----------------------------------------------------
+      await expect(page).toHaveURL('/signin');
+    });
+
+    test.describe('Logged in user', () => {
+
+      // เข้าสู่ระบบก่อนเริ่มแต่ละ Test
+      test.beforeEach(async ({ page }) => {
+        await loginAndGotoSubscription(page);
+      });
+
+      test('แสดงราคา ฿199 / month', async ({ page }) => {
+
+        // ----------------------------------------------------
+        // ขั้นตอนที่ 1: ตรวจสอบราคา Subscription
+        // ----------------------------------------------------
+        await expect(
+          page.getByText(/฿199|\$199|199/i)
+        ).toBeVisible({ timeout: 5000 });
+
+        // ----------------------------------------------------
+        // ขั้นตอนที่ 2: ตรวจสอบระยะเวลาการสมัคร
+        // ----------------------------------------------------
+        await expect(
+          page.getByText(/\/ month|\/ เดือน/i)
+        ).toBeVisible();
+      });
+
+      test('แสดง Feature List ครบ 4 รายการ', async ({ page }) => {
+
+        // ----------------------------------------------------
+        // ขั้นตอนที่ 1: ตรวจสอบ Feature รายการที่ 1
+        // ----------------------------------------------------
+        await expect(
+          page.getByText(
+            /บันทึกมื้ออาหารรายวันแบบไม่จำกัด|UNLIMITED DAILY MEAL LOGGING/i
+          )
+        ).toBeVisible({ timeout: 5000 });
+
+        // ----------------------------------------------------
+        // ขั้นตอนที่ 2: ตรวจสอบ Feature รายการที่ 2
+        // ----------------------------------------------------
+        await expect(
+          page.getByText(
+            /ติดตามแคลอรี่และแมกโครนิวเทรียนท์|TRACK CALORIES & MACROS/i
+          )
+        ).toBeVisible();
+
+        // ----------------------------------------------------
+        // ขั้นตอนที่ 3: ตรวจสอบ Feature รายการที่ 3
+        // ----------------------------------------------------
+        await expect(
+          page.getByText(
+            /เป้าหมายโภชนาการส่วนบุคคล|PERSONALIZED NUTRITION GOALS/i
+          )
+        ).toBeVisible();
+
+        // ----------------------------------------------------
+        // ขั้นตอนที่ 4: ตรวจสอบ Feature รายการที่ 4
+        // ----------------------------------------------------
+        await expect(
+          page.getByText(
+            /เข้าถึงปฏิทินความก้าวหน้าทั้งหมด|FULL PROGRESS CALENDAR ACCESS/i
+          )
+        ).toBeVisible();
+      });
+    });
   });
 
+  // ----------------------------------------------------
+  // Subscription Success Page
+  // ----------------------------------------------------
+  test.describe('Subscription Success Page', () => {
+
+    test('หน้า /subscription/success โหลดได้', async ({ page }) => {
+
+      // ----------------------------------------------------
+      // ขั้นตอนที่ 1: เข้าหน้า Success
+      // ----------------------------------------------------
+      await page.goto('/subscription/success');
+
+      // ----------------------------------------------------
+      // ขั้นตอนที่ 2: ตรวจสอบว่าไม่มี Error Redirect
+      // ----------------------------------------------------
+      const url = page.url();
+
+      expect(url).not.toContain('error');
+    });
+  });
 });

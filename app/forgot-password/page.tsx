@@ -41,7 +41,7 @@ export default function ForgetPasswordPage() {
         email: normalizedEmail,
         locale,
       });
-      toast.success(t("sendResetLink"));
+      toast.success(t("resetLinkSent"));
       setEmail("");
     } catch (err) {
       const message = axios.isAxiosError(err) ? t("signupError") : t("signupError");

@@ -30,6 +30,9 @@ export default defineConfig({
     navigationTimeout: 30_000,
   },
 
+  // เรียกปิดการเชื่อมต่อฐานข้อมูลหลังจาก test ทั้งหมดเสร็จ
+  globalTeardown: './tests/global-teardown.ts',
+
   /* Configure projects for major browsers */
   projects: [
     {
@@ -69,6 +72,7 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
+
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",
@@ -78,8 +82,36 @@ export default defineConfig({
     stderr: "pipe",
     env: {
       ...process.env,
-      AUTH_POST_RATE_LIMIT: "100",
-      AUTH_GET_RATE_LIMIT: "200",
+
+      // Auth.js
+      AUTH_POST_RATE_LIMIT: "1000",
+      AUTH_GET_RATE_LIMIT: "2000",
+
+      // Authentication
+      SIGN_UP_RATE_LIMIT: "100",
+
+      // Password management
+      FORGOT_PASSWORD_RATE_LIMIT: "100",
+      RESET_PASSWORD_RATE_LIMIT: "100",
+      VERIFY_EMAIL_RATE_LIMIT: "100",
+
+      // Webhooks
+      WEBHOOK_UNSIGNED_RATE_LIMIT: "100",
+      WEBHOOK_RATE_LIMIT: "1000",
+
+      // Admin
+      ADMIN_USERS_RATE_LIMIT: "500",
+      ADMIN_USER_DETAIL_RATE_LIMIT: "500",
+      ADMIN_USER_DELETE_RATE_LIMIT: "100",
+      ADMIN_FOODS_RATE_LIMIT: "500",
+      ADMIN_DASHBOARD_RATE_LIMIT: "500",
+
+      // Application
+      PROFILE_RATE_LIMIT: "500",
+      MEALS_RATE_LIMIT: "1000",
+      MEALS_IMAGE_RATE_LIMIT: "100",
+      ANALYTICS_RATE_LIMIT: "500",
+      CHECKOUT_RATE_LIMIT: "200",
     },
   },
 });

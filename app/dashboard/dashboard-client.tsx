@@ -79,7 +79,14 @@ function MetricTile({
         </div>
       ) : progress ? (
         <p className="mt-3 text-ink">
-          <span className="text-3xl font-bold tabular-nums">{progress.consumed}</span>
+          <span
+            data-testid={label === "Calories"
+              ? "calories-consumed"
+              : "protein-consumed"}
+            className="text-3xl font-bold tabular-nums"
+          >
+            {progress.consumed}
+          </span>
           <span className="text-sm text-muted tabular-nums">
             {" "}
             / {progress.target} {unit}

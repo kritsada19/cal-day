@@ -163,7 +163,10 @@ export default function ProfilePage() {
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   {plan && (
-                    <span className="inline-flex min-h-8 items-center rounded-full bg-highlight px-3 text-sm font-semibold text-ink">
+                    <span
+                      data-testid="profile-plan"
+                      className="inline-flex min-h-8 items-center rounded-full bg-highlight px-3 text-sm font-semibold text-ink"
+                    >
                       {plan} {profileT("plan")}
                     </span>
                   )}

@@ -133,6 +133,7 @@
     "pleaseCheckPassword": "Please check your password.",
     "somethingWentWrong": "Something went wrong. Please try again.",
     "sendResetLink": "Send reset link",
+    "resetLinkSent": "Password reset link has been sent to your email",
     "verifyTitle": "Email verified",
     "verifySubtitle": "Your account is now active",
     "verifyDescription": "Your email has been successfully verified. You can now sign in and start tracking your nutrition with CalDay.",

@@ -8,8 +8,9 @@ export interface RateLimitResult {
 }
 
 // กำหนดขีดจำกัดการเข้าถึง API ต่างๆ ไว้ที่เดียว
+
 export const RATE_LIMITS = {
-    authGet: { 
+    authGet: {
         limit: Number.parseInt(process.env.AUTH_GET_RATE_LIMIT ?? "60", 10) || 60,
         windowSec: 60,
     },
@@ -17,25 +18,74 @@ export const RATE_LIMITS = {
         limit: Number.parseInt(process.env.AUTH_POST_RATE_LIMIT ?? "10", 10) || 10,
         windowSec: 60,
     },
-    signup: { limit: 5, windowSec: 60 },
-    forgotPassword: { limit: 3, windowSec: 60 * 15 },
-    resetPassword: { limit: 5, windowSec: 60 * 15 },
-    verifyEmail: { limit: 5, windowSec: 60 },
-    webhookUnsigned: { limit: 20, windowSec: 60 },
-    webhook: { limit: 120, windowSec: 60 },
+    signup: {
+        limit: Number.parseInt(process.env.SIGNUP_RATE_LIMIT ?? "5", 10) || 5,
+        windowSec: 60,
+    },
+    forgotPassword: {
+        limit: Number.parseInt(process.env.FORGOT_PASSWORD_RATE_LIMIT ?? "3", 10) || 3,
+        windowSec: 60 * 15,
+    },
+    resetPassword: {
+        limit: Number.parseInt(process.env.RESET_PASSWORD_RATE_LIMIT ?? "5", 10) || 5,
+        windowSec: 60 * 15,
+    },
+    verifyEmail: {
+        limit: Number.parseInt(process.env.VERIFY_EMAIL_RATE_LIMIT ?? "5", 10) || 5,
+        windowSec: 60,
+    },
+    webhookUnsigned: {
+        limit: Number.parseInt(process.env.WEBHOOK_UNSIGNED_RATE_LIMIT ?? "20", 10) || 20,
+        windowSec: 60,
+    },
+    webhook: {
+        limit: Number.parseInt(process.env.WEBHOOK_RATE_LIMIT ?? "120", 10) || 120,
+        windowSec: 60,
+    },
 
-    adminUsers: { limit: 60, windowSec: 60 },
-    adminUserDetail: { limit: 60, windowSec: 60 },
-    adminUserDelete: { limit: 10, windowSec: 60 },
-    adminFoods: { limit: 60, windowSec: 60 },
-    adminDashboard: { limit: 60, windowSec: 60 },
+    adminUsers: {
+        limit: Number.parseInt(process.env.ADMIN_USERS_RATE_LIMIT ?? "60", 10) || 60,
+        windowSec: 60,
+    },
+    adminUserDetail: {
+        limit: Number.parseInt(process.env.ADMIN_USER_DETAIL_RATE_LIMIT ?? "60", 10) || 60,
+        windowSec: 60,
+    },
+    adminUserDelete: {
+        limit: Number.parseInt(process.env.ADMIN_USER_DELETE_RATE_LIMIT ?? "10", 10) || 10,
+        windowSec: 60,
+    },
+    adminFoods: {
+        limit: Number.parseInt(process.env.ADMIN_FOODS_RATE_LIMIT ?? "60", 10) || 60,
+        windowSec: 60,
+    },
+    adminDashboard: {
+        limit: Number.parseInt(process.env.ADMIN_DASHBOARD_RATE_LIMIT ?? "60", 10) || 60,
+        windowSec: 60,
+    },
 
-    profile: { limit: 100, windowSec: 60 },
-    meals: { limit: 100, windowSec: 60 },
-    mealsImage: { limit: 20, windowSec: 60 },
-    analytics: { limit: 100, windowSec: 60 },
-    checkout: { limit: 50, windowSec: 60 },
+    profile: {
+        limit: Number.parseInt(process.env.PROFILE_RATE_LIMIT ?? "100", 10) || 100,
+        windowSec: 60,
+    },
+    meals: {
+        limit: Number.parseInt(process.env.MEALS_RATE_LIMIT ?? "100", 10) || 100,
+        windowSec: 60,
+    },
+    mealsImage: {
+        limit: Number.parseInt(process.env.MEALS_IMAGE_RATE_LIMIT ?? "20", 10) || 20,
+        windowSec: 60,
+    },
+    analytics: {
+        limit: Number.parseInt(process.env.ANALYTICS_RATE_LIMIT ?? "100", 10) || 100,
+        windowSec: 60,
+    },
+    checkout: {
+        limit: Number.parseInt(process.env.CHECKOUT_RATE_LIMIT ?? "50", 10) || 50,
+        windowSec: 60,
+    },
 } as const;
+
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMITS;
 
