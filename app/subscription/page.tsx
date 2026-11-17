@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
 
-const features = ["feature1", "feature2", "feature3", "feature4"] as const;
+const features = ["feature1", "feature2",] as const;
 
 export default function SubscriptionPage() {
   const t = useTranslations("subscription");
@@ -54,10 +54,10 @@ export default function SubscriptionPage() {
   const isPro = plan === "PRO";
   const formattedExpiry = expiresAt
     ? new Date(expiresAt).toLocaleDateString(locale, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
     : null;
 
   const handleSubscribe = async () => {
