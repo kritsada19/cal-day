@@ -97,7 +97,7 @@ export default function AnalyticsClient() {
       const data = JSON.parse(event.data);
 
       // กรองเฉพาะ event ของ user คนนี้เท่านั้น
-      if (Number(data.userId) !== session?.user?.id) return;
+      if (String(data.userId) !== String(session?.user?.id)) return;
 
       // ถ้ามีการเพิ่ม/ลบ Meal หรืออัปเดต Profile → โหลด analytics ใหม่
       if (

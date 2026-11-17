@@ -60,13 +60,13 @@ export default function SignupPage() {
         const apiMessage = err.response?.data?.message;
 
         if (status === 409) {
-          toast.error(apiMessage || t("signupEmailExists"));
+          toast.error(t("signupEmailExists"));
         } else if (status === 429) {
-          toast.error(apiMessage || t("signupRateLimited"));
+          toast.error(t("signupRateLimited"));
         } else if (status === 400) {
-          toast.error(apiMessage || t("signupFailed"));
+          toast.error(t("signupFailed"));
         } else {
-          toast.error(apiMessage || t("signupFailed"));
+          toast.error(t("signupFailed"));
         }
       } else {
         toast.error(t("signupError"));
