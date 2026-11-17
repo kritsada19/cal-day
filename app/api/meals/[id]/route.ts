@@ -9,7 +9,7 @@ import { publishMealEvent } from "@/lib/realtime/publisher";
  *  ทำให้ไม่ต้องเขียนสูตรคำนวณซ้ำแบบเดิมอีก)
  */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -23,10 +23,11 @@ export async function DELETE(
 
   const session = auth.session;
   const userId = Number(session.user.id);
+  const tzOffset = parseInt(request.nextUrl.searchParams.get("timezone") ?? "0", 10);
 
   try {
     // 2) service ตรวจว่าเป็นมื้อของผู้ใช้คนนี้จริง แล้วลบ + หักยอดออกจากสรุปรายวัน
-    await mealService.deleteMeal(mealId, userId);
+    await mealService.deleteMeal(mealId, userId, isNaN(tzOffset) ? 0 : tzOffset);
 
     // 3) ส่ง Event ไปให้ Browser ผ่าน Redis
     await publishMealEvent({

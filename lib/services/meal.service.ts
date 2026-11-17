@@ -336,8 +336,8 @@ export class MealService {
   /**
    * ลบมื้ออาหาร 1 มื้อ แล้วล้าง cache ของผู้ใช้
    */
-  async deleteMeal(mealId: number, userId: number): Promise<void> {
-    const deletedMeal = await this.repository.deleteMeal(mealId, userId);
+  async deleteMeal(mealId: number, userId: number, tzOffsetMinutes: number = 0): Promise<void> {
+    const deletedMeal = await this.repository.deleteMeal(mealId, userId, tzOffsetMinutes);
 
     if (!deletedMeal) {
       throw new AppError(404, "Meal not found or unauthorized");

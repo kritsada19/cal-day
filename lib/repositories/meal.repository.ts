@@ -269,6 +269,7 @@ export class MealRepository {
   async deleteMeal(
     mealId: number,
     userId: number,
+    tzOffsetMinutes: number = 0,
   ): Promise<MealWithFoodEntries | null> {
     // หาเฉพาะมื้อที่เป็นของผู้ใช้คนนี้ (กันคนอื่นลบมื้อของเรา)
     const meal = await prisma.meal.findFirst({
@@ -278,7 +279,12 @@ export class MealRepository {
 
     if (!meal) return null;
 
-    const { startOfDay, endOfDay } = getUtcDayRange(meal.createdAt);
+    // คำนวณวันตาม timezone ของผู้ใช้ (เช่น meal สร้างตอน 06:15 น. แต่เวลา UTC คือ 23:15 น. ของวันก่อน)
+    // tzOffsetMinutes เป็นลบสำหรับ UTC+ เช่น UTC+7 = -420
+    const offsetMs = tzOffsetMinutes * 60 * 1000;
+    const localTime = new Date(meal.createdAt.getTime() - offsetMs);
+    const localDateStr = `${localTime.getUTCFullYear()}-${String(localTime.getUTCMonth() + 1).padStart(2, '0')}-${String(localTime.getUTCDate()).padStart(2, '0')}`;
+    const { startOfDay, endOfDay } = getUtcDayRange(localDateStr);
 
     const summary = await prisma.dailySummary.findFirst({
       where: {
