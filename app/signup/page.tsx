@@ -37,7 +37,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await axios.post("/api/auth/signup", {
+      const res = await axios.post("/api/auth/signup", {
         name,
         email,
         password,
@@ -45,15 +45,32 @@ export default function SignupPage() {
         locale,
       });
 
-      toast.success(t("signupSuccess"));
-      setName("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+      if (res.status === 201) {
+        toast.success(t("signupSuccess"));
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+      } else {
+        toast.info(t("signupSuccess"));
+      }
     } catch (err) {
-      const message = axios.isAxiosError(err) ? t("signupFailed") : t("signupError");
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        const apiMessage = err.response?.data?.message;
 
-      toast.error(message);
+        if (status === 409) {
+          toast.error(apiMessage || t("signupEmailExists"));
+        } else if (status === 429) {
+          toast.error(apiMessage || t("signupRateLimited"));
+        } else if (status === 400) {
+          toast.error(apiMessage || t("signupFailed"));
+        } else {
+          toast.error(apiMessage || t("signupFailed"));
+        }
+      } else {
+        toast.error(t("signupError"));
+      }
     } finally {
       setLoading(false);
     }

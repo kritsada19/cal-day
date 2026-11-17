@@ -30,8 +30,18 @@ export default function SignInPage() {
       });
 
       if (res?.error) {
-        toast.error(t("loginError"));
+        const errorMsg = res.error;
+        if (errorMsg.includes("verify your email")) {
+          toast.error(errorMsg);
+        } else if (errorMsg.includes("Too many failed login attempts")) {
+          toast.error(errorMsg);
+        } else if (errorMsg === "CredentialsSignin") {
+          toast.error(t("loginInvalidCredentials"));
+        } else {
+          toast.error(errorMsg || t("loginError"));
+        }
       } else {
+        toast.success(t("loginSuccess"));
         router.push("/");
         router.refresh();
       }

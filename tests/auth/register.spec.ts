@@ -63,7 +63,7 @@ test.describe('Register', () => {
 
     // Sonner toast จะอยู่ใน region "Notifications" ไม่ใช่ text node ในฟอร์ม
     const notifications = page.getByRole('region', { name: /notifications/i });
-    await expect(notifications).toContainText(/สร้างผู้ใช้สำเร็จ|User created successfully|Account created successfully|สร้างบัญชีสำเร็จ/i, { timeout: 10000 });
+    await expect(notifications).toContainText(/Account created|สร้างบัญชีสำเร็จ|สร้างผู้ใช้สำเร็จ/i, { timeout: 10000 });
   });
 
   test('มีลิงก์กลับไปหน้า signin', async ({ page }) => {

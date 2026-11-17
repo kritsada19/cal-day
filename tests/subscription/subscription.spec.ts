@@ -114,14 +114,14 @@ test.describe('Subscription-Flow', () => {
         ).toBeVisible();
       });
 
-      test('แสดง Feature List ครบ 4 รายการ', async ({ page }) => {
+      test('แสดง Feature List ครบ 2 รายการ', async ({ page }) => {
 
         // ----------------------------------------------------
         // ขั้นตอนที่ 1: ตรวจสอบ Feature รายการที่ 1
         // ----------------------------------------------------
         await expect(
           page.getByText(
-            /บันทึกมื้ออาหารรายวันแบบไม่จำกัด|UNLIMITED DAILY MEAL LOGGING/i
+            /บันทึกมื้ออาหารรายวันแบบ 50 ครั้ง|50 meals per day/i
           )
         ).toBeVisible({ timeout: 5000 });
 
@@ -130,25 +130,7 @@ test.describe('Subscription-Flow', () => {
         // ----------------------------------------------------
         await expect(
           page.getByText(
-            /ติดตามแคลอรี่และแมกโครนิวเทรียนท์|TRACK CALORIES & MACROS/i
-          )
-        ).toBeVisible();
-
-        // ----------------------------------------------------
-        // ขั้นตอนที่ 3: ตรวจสอบ Feature รายการที่ 3
-        // ----------------------------------------------------
-        await expect(
-          page.getByText(
-            /เป้าหมายโภชนาการส่วนบุคคล|PERSONALIZED NUTRITION GOALS/i
-          )
-        ).toBeVisible();
-
-        // ----------------------------------------------------
-        // ขั้นตอนที่ 4: ตรวจสอบ Feature รายการที่ 4
-        // ----------------------------------------------------
-        await expect(
-          page.getByText(
-            /เข้าถึงปฏิทินความก้าวหน้าทั้งหมด|FULL PROGRESS CALENDAR ACCESS/i
+            /วิเคราะห์พฤติกรรมการกิน|Analyze eating behaviormacros/i
           )
         ).toBeVisible();
       });

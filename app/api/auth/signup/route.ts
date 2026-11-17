@@ -6,6 +6,7 @@ import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { sendVerificationEmail } from "@/lib/email/sendEmail";
 import crypto from "crypto";
+import { env } from "@/lib/env";
 
 // นี่คือ Dummy Hash ระดับ 12 Rounds (สังเกตตรง $2a$12$) เพื่อให้หน่วงเวลาเท่ากับตอนสร้าง User 
 const DUMMY_HASH_12 = "$2a$12$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -46,37 +47,52 @@ export async function POST(req: NextRequest) {
 
     const existingUser = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
 
-    if (existingUser) {
-      // ถ่วงเวลาด้วย Dummy Hash ระดับ 12 ให้เท่ากับตอนสร้างปกติ (Timing Attack Mitigation)
+    // กรณีที่ 1: บัญชีนี้เคยยืนยันอีเมลเรียบร้อยแล้ว (Verified)
+    // ไม่อนุญาตให้สมัครซ้ำ ให้ตอบ 409 เพื่อให้ไปหน้า Sign in
+    if (existingUser && existingUser.emailVerified) {
       await bcrypt.compare(password, DUMMY_HASH_12);
 
       return NextResponse.json(
-        { message: "If this account already exists, you can log in instead" },
-        { status: 200, headers: { "Cache-Control": "no-store" } }
+        { message: "An account with this email already exists. You can log in instead." },
+        { status: 409, headers: { "Cache-Control": "no-store" } }
       );
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // กรณีที่ 2: บัญชีเคยสมัครไว้แต่ "ยังไม่เคยยืนยันอีเมล" (เช่น Token หมดอายุ หรือเพิ่งมากรอกสมัครใหม่)
+    // ให้อัปเดตข้อมูล (ชื่อ + รหัสผ่านใหม่) แทนการสร้าง User ซ้ำ
+    if (existingUser && !existingUser.emailVerified) {
+      await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          name: name.trim(),
+          password: hashedPassword,
+        },
+      });
+    } else {
+      // กรณีที่ 3: ผู้ใช้ใหม่ที่ยังไม่เคยมีในระบบเลย
+      await prisma.user.create({
+        data: {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password: hashedPassword,
+
+          subscription: {
+            create: {
+              plan: "FREE",
+              status: "ACTIVE",
+            },
+          },
+        },
+      });
+    }
+
+    // ลบ Token ยืนยันอีเมลเดิมที่อาจค้างอยู่หรือหมดอายุ
     await prisma.verificationToken.deleteMany({
       where: {
         email: email.toLowerCase(),
-        type: "EMAIL_VERIFY"
-      }
-    })
-
-    await prisma.user.create({
-      data: {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        password: hashedPassword,
-
-        subscription: {
-          create: {
-            plan: "FREE",
-            status: "ACTIVE",
-          },
-        },
+        type: "EMAIL_VERIFY",
       },
     });
 
@@ -91,10 +107,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const verificationLink = `${process.env.NEXTAUTH_URL}/api/auth/email-verify?token=${verificationToken}`;
+    const verificationLink = `${env.NEXTAUTH_URL}/api/auth/email-verify?token=${verificationToken}`;
 
     await sendVerificationEmail(email, verificationLink, locale === "th" ? "th" : "en");
-
 
     return NextResponse.json(
       { message: "Account created successfully" },
