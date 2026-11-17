@@ -51,7 +51,7 @@ test.describe('Auth Flow: Signup → Verify Email → Login', () => {
 
     // ตรวจสอบ Toast แจ้งเตือนว่าสร้างบัญชีสำเร็จ
     const notifications = page.getByRole('region', { name: /notifications/i });
-    await expect(notifications).toContainText(/สำเร็จ|successfully/i, { timeout: 10000 });
+    await expect(notifications).toContainText(/Account created|สร้างบัญชีสำเร็จ|สำเร็จ/i, { timeout: 10000 });
 
     // ----------------------------------------------------
     // ขั้นตอนที่ 2: ดึง Verification Token จาก DB (ผ่าน pg helper)
