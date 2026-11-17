@@ -186,7 +186,7 @@ export default function Navbar() {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      if (Number(data.userId) !== (session?.user?.id)) {
+      if (String(data.userId) !== String(session?.user?.id)) {
         return;
       }
 
