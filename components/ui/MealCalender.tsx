@@ -193,7 +193,9 @@ export default function MealCalendar() {
         setDeleteError(null);
 
         try {
-            await axios.delete(`/api/meals/${mealId}`);
+            const tzOffset = new Date().getTimezoneOffset();
+            await axios.delete(`/api/meals/${mealId}?timezone=${tzOffset}`);
+            fetchMonthlySummaries();
             setDailyMeals((meals) => meals.filter((meal) => meal.id !== mealId));
         } catch (error) {
             logger.error({ err: error, mealId }, "Failed to delete meal");
@@ -331,9 +333,13 @@ export default function MealCalendar() {
                                 currentDate.getFullYear() === realToday.getFullYear();
 
                             // หาว่าวันนี้มีข้อมูล summary หรือไม่
+                            // หมายเหตุ: s.date ถูกบันทึกเป็น UTC Midnight (เช่น 2026-11-17T00:00:00.000Z)
+                            // จึงต้องดึงแบบ UTC เพื่อป้องกัน timezone shift ที่อาจทำให้วันที่คลาดเคลื่อน
                             const daySummary = summaries.find(s => {
                                 const summaryDate = new Date(s.date);
-                                return summaryDate.getDate() === dayNumber;
+                                return summaryDate.getUTCDate() === dayNumber &&
+                                    summaryDate.getUTCMonth() === currentDate.getMonth() &&
+                                    summaryDate.getUTCFullYear() === currentDate.getFullYear();
                             });
 
                             const isSelected = selectedDate?.getDate() === dayNumber;
@@ -382,9 +388,9 @@ export default function MealCalendar() {
                         {(() => {
                             const selectedDaySummary = summaries.find(s => {
                                 const summaryDate = new Date(s.date);
-                                return summaryDate.getDate() === selectedDate.getDate() &&
-                                    summaryDate.getMonth() === selectedDate.getMonth() &&
-                                    summaryDate.getFullYear() === selectedDate.getFullYear();
+                                return summaryDate.getUTCDate() === selectedDate.getDate() &&
+                                    summaryDate.getUTCMonth() === selectedDate.getMonth() &&
+                                    summaryDate.getUTCFullYear() === selectedDate.getFullYear();
                             });
 
                             if (!selectedDaySummary) return null;

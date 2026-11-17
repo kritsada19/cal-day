@@ -7,13 +7,35 @@
  */
 
 /** ช่วงเวลาของ "หนึ่งวัน" แบบ UTC เช่น 2026-08-26 → 00:00:00.000Z ถึง 23:59:59.999Z */
-export function getUtcDayRange(dateInput: string | Date = new Date()) {
-  // ถ้าส่งมาเป็นข้อความ (เช่น "2026-08-26") ให้แปลงเป็น Date ก่อน
-  const base = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+export function getUtcDayRange(dateInput?: string | Date) {
+  let year: number;
+  let month: number;
+  let date: number;
 
-  const year = base.getUTCFullYear();
-  const month = base.getUTCMonth();
-  const date = base.getUTCDate();
+  if (typeof dateInput === "string") {
+    // ถ้ารูปแบบเป็น YYYY-MM-DD
+    const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      year = parseInt(match[1], 10);
+      month = parseInt(match[2], 10) - 1;
+      date = parseInt(match[3], 10);
+    } else {
+      const parsed = new Date(dateInput);
+      year = parsed.getUTCFullYear();
+      month = parsed.getUTCMonth();
+      date = parsed.getUTCDate();
+    }
+  } else if (dateInput instanceof Date) {
+    year = dateInput.getUTCFullYear();
+    month = dateInput.getUTCMonth();
+    date = dateInput.getUTCDate();
+  } else {
+    // ถ้าไม่ส่ง dateInput ให้ใช้เวลาปัจจุบัน แต่คำนวณตาม Local timezone ของเครื่อง/เซิร์ฟเวอร์
+    const now = new Date();
+    year = now.getFullYear();
+    month = now.getMonth();
+    date = now.getDate();
+  }
 
   return {
     // ต้นวัน: 00:00:00.000 UTC
