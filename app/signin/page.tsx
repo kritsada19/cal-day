@@ -32,13 +32,13 @@ export default function SignInPage() {
       if (res?.error) {
         const errorMsg = res.error;
         if (errorMsg.includes("verify your email")) {
-          toast.error(errorMsg);
+          toast.error(t("loginEmailNotVerified"));
         } else if (errorMsg.includes("Too many failed login attempts")) {
-          toast.error(errorMsg);
+          toast.error(t("loginRateLimited"));
         } else if (errorMsg === "CredentialsSignin") {
           toast.error(t("loginInvalidCredentials"));
         } else {
-          toast.error(errorMsg || t("loginError"));
+          toast.error(t("loginError"));
         }
       } else {
         toast.success(t("loginSuccess"));
