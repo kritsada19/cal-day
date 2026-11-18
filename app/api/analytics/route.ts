@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/access";
+import { requirePro } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { rateLimitResponse } from "@/lib/http";
@@ -13,7 +13,8 @@ export async function GET(request: Request) {
     return rateLimitResponse(rateLimit);
   }
 
-  const auth = await requireAuth();
+  // ตรวจสอบวว่ามี session ที่ใช้งานได้และเป็น pro user หรือไม่
+  const auth = await requirePro();
 
   if (!auth.ok) {
     return auth.response;
@@ -49,8 +50,8 @@ export async function GET(request: Request) {
         },
       },
       orderBy: {
-        date: 'asc',
-      }
+        date: "asc",
+      },
     });
 
     // We also need the user's profile to know their current targets if a day is missing
@@ -75,11 +76,13 @@ export async function GET(request: Request) {
       currentDate.setDate(startDate.getDate() + i);
 
       // Format day name using the active locale so Thai users see Thai weekday labels.
-      const dayName = currentDate.toLocaleDateString(locale, { weekday: 'short' });
+      const dayName = currentDate.toLocaleDateString(locale, {
+        weekday: "short",
+      });
 
       // Find summary for this date
       const summaryForDate = summaries.find(
-        s => new Date(s.date).toDateString() === currentDate.toDateString()
+        (s) => new Date(s.date).toDateString() === currentDate.toDateString(),
       );
 
       const calories = summaryForDate?.totalCalories || 0;
@@ -106,7 +109,10 @@ export async function GET(request: Request) {
       if (isHit) {
         daysOnTarget++;
         currentStreak++;
-      } else if (calories > 0 || currentDate.toDateString() !== now.toDateString()) {
+      } else if (
+        calories > 0 ||
+        currentDate.toDateString() !== now.toDateString()
+      ) {
         // Reset streak if missed a past day or logged over
         currentStreak = 0;
       }
@@ -130,6 +136,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     logger.error({ err: error }, "Analytics GET error");
-    return NextResponse.json({ message: "Database unavailable" }, { status: 503 });
+    return NextResponse.json(
+      { message: "Database unavailable" },
+      { status: 503 },
+    );
   }
 }
