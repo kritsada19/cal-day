@@ -1,22 +1,25 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { logAdminAction, logAuditEvent, getClientContext } from "@/lib/audit";
+import prisma from "../db/prisma";
 
 export type SessionGuardResult =
   | {
-    ok: true;
-    session: NonNullable<Awaited<ReturnType<typeof getSession>>>;
-  }
+      ok: true;
+      session: NonNullable<Awaited<ReturnType<typeof getSession>>>;
+    }
   | {
-    ok: false;
-    response: NextResponse;
-  };
+      ok: false;
+      response: NextResponse;
+    };
 
 /**
  * ตรวจว่า request มี session ที่ใช้งานได้หรือไม่
  * ถ้าไม่มี ให้คืน response 401 ทันที
  */
-export async function requireAuth(request?: Request): Promise<SessionGuardResult> {
+export async function requireAuth(
+  request?: Request,
+): Promise<SessionGuardResult> {
   const session = await getSession();
   const context = request ? getClientContext(request) : undefined;
 
@@ -49,7 +52,9 @@ export async function requireAuth(request?: Request): Promise<SessionGuardResult
  * ตรวจว่า session นี้มีสิทธิ์เป็น admin หรือไม่
  * ใช้สำหรับ route ที่ต้องการ admin-only access
  */
-export async function requireAdmin(request?: Request): Promise<SessionGuardResult> {
+export async function requireAdmin(
+  request?: Request,
+): Promise<SessionGuardResult> {
   const auth = await requireAuth(request);
 
   if (!auth.ok) {
@@ -76,7 +81,7 @@ export async function requireAdmin(request?: Request): Promise<SessionGuardResul
       ok: false,
       response: NextResponse.json(
         { message: "Forbidden: Admin access required" },
-        { status: 403 }
+        { status: 403 },
       ),
     };
   }
@@ -92,6 +97,40 @@ export async function requireAdmin(request?: Request): Promise<SessionGuardResul
     userAgent: context?.userAgent,
     status: "success",
   });
+
+  return auth;
+}
+
+/**
+ * ตรวจสอบว่า session มีสิทธิ์ใช้งาน PRO หรือไม่
+ */
+export async function requirePro(
+  request?: Request,
+): Promise<SessionGuardResult> {
+  const auth = await requireAuth(request);
+
+  if (!auth.ok) {
+    return auth;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: Number(auth.session.user.id) },
+    select: {
+      subscription: {
+        select: { plan: true },
+      },
+    },
+  });
+
+  if (user?.subscription?.plan !== "PRO") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { message: "PRO subscription required" },
+        { status: 403 },
+      ),
+    };
+  }
 
   return auth;
 }

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import {
   createTestUser,
   cleanupTestUser,
+  upgradeUserToPro
 } from '../helpers/db';
 
 /**
@@ -105,6 +106,8 @@ test.describe('Analytics', () => {
       testName,
       true,
     );
+
+    await upgradeUserToPro(testEmail);
   });
 
   // =========================================================================

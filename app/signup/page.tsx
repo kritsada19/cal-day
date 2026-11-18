@@ -57,7 +57,6 @@ export default function SignupPage() {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
-        const apiMessage = err.response?.data?.message;
 
         if (status === 409) {
           toast.error(t("signupEmailExists"));

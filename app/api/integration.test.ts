@@ -2,21 +2,26 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
 import { GET as getMeals, POST as createMeal } from "@/app/api/meals/route";
 import { DELETE as deleteMeal } from "@/app/api/meals/[id]/route";
 import { GET as getDailyMeals } from "@/app/api/meals/daily/route";
-import { GET as getProfile, POST as saveProfile } from "@/app/api/profile/route";
+import {
+  GET as getProfile,
+  POST as saveProfile,
+} from "@/app/api/profile/route";
 import { GET as getAnalytics } from "@/app/api/analytics/route";
 import { POST as handleWebhook } from "@/app/api/webhook/route";
 import { POST as forgotPassword } from "@/app/api/auth/forgot-password/route";
 import { passwordSchema } from "@/lib/validation/auth";
 import prisma from "@/lib/db/prisma";
 import { analyzeFood } from "@/lib/services/ai";
-import { checkAndComsumeAiQuota, getUserAiQuota } from "@/lib/services/ai-quota";
+import {
+  checkAndComsumeAiQuota,
+  getUserAiQuota,
+} from "@/lib/services/ai-quota";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import type { Session } from "next-auth";
 import type { RateLimitResult } from "@/lib/rate-limit";
+import { requirePro, requireAuth } from "@/lib/auth/access";
 
 interface StripeMockInstance {
   webhooks: {
@@ -33,11 +38,12 @@ type MockPrisma = {
   };
 };
 
-const { mockConstructEvent, mockRetrieveSubscription, mockGetCache } = vi.hoisted(() => ({
-  mockConstructEvent: vi.fn(),
-  mockRetrieveSubscription: vi.fn(),
-  mockGetCache: vi.fn().mockResolvedValue(null),
-}));
+const { mockConstructEvent, mockRetrieveSubscription, mockGetCache } =
+  vi.hoisted(() => ({
+    mockConstructEvent: vi.fn(),
+    mockRetrieveSubscription: vi.fn(),
+    mockGetCache: vi.fn().mockResolvedValue(null),
+  }));
 
 vi.mock("@/lib/env", () => ({
   env: {
@@ -96,8 +102,14 @@ vi.mock("@/lib/email/sendEmail", () => ({
   sendForgotPasswordEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/lib/auth/access", () => ({
+  requireAuth: vi.fn(),
+  requirePro: vi.fn(),
+}));
+
 describe("API Integration Tests", () => {
-  const mockSession = vi.mocked(getSession);
+  const mockRequireAuth = vi.mocked(requireAuth);
+  const mockRequirePro = vi.mocked(requirePro);
   const mockRateLimit = vi.mocked(checkRateLimitPolicy);
   const mockAnalyzeFood = vi.mocked(analyzeFood);
   const mockQuotaCheck = vi.mocked(checkAndComsumeAiQuota);
@@ -106,36 +118,49 @@ describe("API Integration Tests", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRateLimit.mockResolvedValue({ success: true, limit: 100, remaining: 99 } as RateLimitResult);
+    mockRateLimit.mockResolvedValue({
+      success: true,
+      limit: 100,
+      remaining: 99,
+    } as RateLimitResult);
+    mockRequireAuth.mockResolvedValue({
+      ok: true,
+      session: {
+        user: {
+          id: 7,
+          email: "user@example.com",
+        },
+      },
+    } as never);
+
+    mockRequirePro.mockResolvedValue({
+      ok: true,
+      session: {
+        user: {
+          id: 7,
+          email: "user@example.com",
+        },
+      },
+    } as never);
   });
 
   it("POST /api/meals should create a meal and update daily summary", async () => {
-    // ทดสอบ flow หลักของ endpoint นี้:
-    // 1) ตรวจ session
-    // 2) validate input
-    // 3) เรียก AI วิเคราะห์อาหาร
-    // 4) ตรวจ quota
-    // 5) บันทึก Meal + FoodEntry + DailySummary
-    mockSession.mockResolvedValue({
-      user: { id: 7, email: "alice@example.com", name: "Alice" },
-    } as Session);
-
     mockAnalyzeFood.mockResolvedValue({
-      foods: [{
-        name: "Salmon rice bowl",
-        amount: 1,
-        unit: "bowl",
-        calories: 540,
-        protein: 30,
-      }],
+      foods: [
+        {
+          name: "Salmon rice bowl",
+          amount: 1,
+          unit: "bowl",
+          calories: 540,
+          protein: 30,
+        },
+      ],
       estimatedCalories: 540,
       estimatedProtein: 30,
       note: "Healthy lunch option",
     });
 
     mockQuotaCheck.mockResolvedValue(undefined);
-
-
 
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 7,
@@ -166,8 +191,9 @@ describe("API Integration Tests", () => {
       },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockPrisma.$transaction.mockImplementation(async (callback) => callback(tx as any));
+    mockPrisma.$transaction.mockImplementation(async (callback) =>
+      callback(tx as never),
+    );
 
     const request = new NextRequest("http://localhost/api/meals", {
       method: "POST",
@@ -196,9 +222,6 @@ describe("API Integration Tests", () => {
   it("GET /api/meals should return the monthly daily summary for the current user", async () => {
     // Endpoint นี้คาดหวังว่าต้อง return summaries ตามช่วงเดือนที่ผู้ใช้ส่งมา
     // เราจึง mock `dailySummary.findMany` ให้คืนค่า array อย่างเดียวแล้วเช็กว่า response ถูก produce ตามที่ expect
-    mockSession.mockResolvedValue({
-      user: { id: 7 },
-    } as Session);
 
     mockPrisma.dailySummary.findMany.mockResolvedValue([
       {
@@ -212,7 +235,9 @@ describe("API Integration Tests", () => {
       },
     ]);
 
-    const request = new NextRequest("http://localhost/api/meals?year=2026&month=8");
+    const request = new NextRequest(
+      "http://localhost/api/meals?year=2026&month=8",
+    );
     const response = await getMeals(request);
     const body = await response.json();
 
@@ -229,16 +254,21 @@ describe("API Integration Tests", () => {
     mockPrisma.user.findUnique.mockResolvedValue(null);
     mockPrisma.verificationToken.deleteMany.mockResolvedValue({ count: 0 });
 
-    const request = new NextRequest("http://localhost/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email: "missing@example.com" }),
-    });
+    const request = new NextRequest(
+      "http://localhost/api/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email: "missing@example.com" }),
+      },
+    );
 
     const response = await forgotPassword(request);
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.message).toBe("If an account exists, we have sent a reset link");
+    expect(body.message).toBe(
+      "If an account exists, we have sent a reset link",
+    );
   });
 
   it("POST /api/auth/forgot-password should also return the same generic message for registered users", async () => {
@@ -255,20 +285,26 @@ describe("API Integration Tests", () => {
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     } as never);
 
-    const request = new NextRequest("http://localhost/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email: "alice@example.com" }),
-    });
+    const request = new NextRequest(
+      "http://localhost/api/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email: "alice@example.com" }),
+      },
+    );
 
     const response = await forgotPassword(request);
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.message).toBe("If an account exists, we have sent a reset link");
+    expect(body.message).toBe(
+      "If an account exists, we have sent a reset link",
+    );
   });
 
   it("POST /api/auth/reset-password should reject stale tokens when the user no longer exists", async () => {
-    const { POST: resetPassword } = await import("@/app/api/auth/reset-password/route");
+    const { POST: resetPassword } =
+      await import("@/app/api/auth/reset-password/route");
 
     mockPrisma.verificationToken.findFirst.mockResolvedValue({
       token: "stale-token",
@@ -278,14 +314,17 @@ describe("API Integration Tests", () => {
     } as never);
     mockPrisma.user.findUnique.mockResolvedValue(null);
 
-    const request = new NextRequest("http://localhost/api/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify({
-        token: "stale-token",
-        password: "Password123",
-        confirmPassword: "Password123",
-      }),
-    });
+    const request = new NextRequest(
+      "http://localhost/api/auth/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          token: "stale-token",
+          password: "Password123",
+          confirmPassword: "Password123",
+        }),
+      },
+    );
 
     const response = await resetPassword(request);
     const body = await response.json();
@@ -302,9 +341,6 @@ describe("API Integration Tests", () => {
 
   it("GET /api/profile should return user profile information and AI usage data", async () => {
     // Profile GET มีหน้าที่รวม user profile + nutrition summary + ai quota เข้าเป็น payload เดียว
-    mockSession.mockResolvedValue({
-      user: { id: 7 },
-    } as Session);
 
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 7,
@@ -360,9 +396,6 @@ describe("API Integration Tests", () => {
   it("POST /api/profile should create or update profile with calculated nutrition targets", async () => {
     // Endpoint นี้ต้องคำนวณค่า nutrition จากข้อมูลส่วนตัวแล้ว save ลง DB
     // ถ้า profile ยังไม่มีอยู่ ให้ใช้ create ถ้ามีแล้วใช้ update
-    mockSession.mockResolvedValue({
-      user: { id: 7 },
-    } as Session);
 
     mockPrisma.profile.findUnique.mockResolvedValue(null);
     mockPrisma.dailySummary.updateMany.mockResolvedValue({ count: 1 });
@@ -412,9 +445,6 @@ describe("API Integration Tests", () => {
 
   it("POST /api/meals should return 429 and not call the AI when the AI quota is already used up", async () => {
     // โควต้า AI ถูกหักไปแล้ว → ต้องได้ 429 พร้อมข้อความจากตัวเช็คโควต้า และห้ามเรียก AI ซ้ำ
-    mockSession.mockResolvedValue({
-      user: { id: 7, email: "alice@example.com", name: "Alice" },
-    } as Session);
 
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 7,
@@ -442,26 +472,28 @@ describe("API Integration Tests", () => {
     const body = await response.json();
 
     expect(response.status).toBe(429);
-    expect(body.message).toBe("AI limit reached. Please upgrade to premium to continue.");
+    expect(body.message).toBe(
+      "AI limit reached. Please upgrade to premium to continue.",
+    );
     expect(mockAnalyzeFood).not.toHaveBeenCalled();
   });
 
   it("GET /api/meals should reject a month outside 1-12", async () => {
     // พารามิเตอร์เดือนผิด → 400 และไม่ต้องแตะฐานข้อมูลเลย
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
 
     const response = await getMeals(
       new NextRequest("http://localhost/api/meals?year=2026&month=13"),
     );
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ message: "Invalid date parameters" });
+    await expect(response.json()).resolves.toEqual({
+      message: "Invalid date parameters",
+    });
     expect(mockPrisma.dailySummary.findMany).not.toHaveBeenCalled();
   });
 
   it("GET /api/meals/daily should return the meals logged on that date", async () => {
     // เทสต์นี้มองพฤติกรรมที่ผู้ใช้เห็น: ส่งวันที่เข้าไป → ได้รายการมื้ออาหารของวันนั้นกลับมา
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
 
     mockPrisma.meal.findMany.mockResolvedValue([
       {
@@ -495,17 +527,18 @@ describe("API Integration Tests", () => {
   });
 
   it("GET /api/meals/daily should return 400 when the date is missing", async () => {
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
-
-    const response = await getDailyMeals(new NextRequest("http://localhost/api/meals/daily"));
+    const response = await getDailyMeals(
+      new NextRequest("http://localhost/api/meals/daily"),
+    );
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ message: "Date is required" });
+    await expect(response.json()).resolves.toEqual({
+      message: "Date is required",
+    });
   });
 
   it("DELETE /api/meals/:id should delete the meal and roll its calories back from the daily summary", async () => {
     // มื้อนี้มี 2 จาน จานละ 300 kcal / 20 g → ต้องหักออก 600 kcal / 40 g (ไม่ใช่ 300/20)
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
 
     mockPrisma.meal.findFirst.mockResolvedValue({
       id: 12,
@@ -542,8 +575,9 @@ describe("API Integration Tests", () => {
       meal: { delete: vi.fn().mockResolvedValue({}) },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockPrisma.$transaction.mockImplementation(async (callback) => callback(tx as any));
+    mockPrisma.$transaction.mockImplementation(async (callback) =>
+      callback(tx as never),
+    );
 
     const response = await deleteMeal(
       new NextRequest("http://localhost/api/meals/12", { method: "DELETE" }),
@@ -559,7 +593,6 @@ describe("API Integration Tests", () => {
   });
 
   it("DELETE /api/meals/:id should return 404 when the meal belongs to someone else", async () => {
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
     mockPrisma.meal.findFirst.mockResolvedValue(null);
 
     const response = await deleteMeal(
@@ -571,7 +604,7 @@ describe("API Integration Tests", () => {
   });
 
   it("DELETE /api/meals/:id should return 401 when the user is not logged in", async () => {
-    mockSession.mockResolvedValue(null);
+    mockRequireAuth.mockResolvedValue({ ok: false, response: NextResponse.json({ message: "Unauthorized" }, { status: 401 }) });
 
     const response = await deleteMeal(
       new NextRequest("http://localhost/api/meals/12", { method: "DELETE" }),
@@ -585,7 +618,10 @@ describe("API Integration Tests", () => {
   /*                             ANALYTICS ENDPOINTS                            */
   /* -------------------------------------------------------------------------- */
   it("GET /api/analytics should return weekly data and stats for logged in user", async () => {
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+    mockRequirePro.mockResolvedValue({
+      ok: true,
+      session: { user: { id: 7 } },
+    } as never);
 
     mockPrisma.dailySummary.findMany.mockResolvedValue([
       {
@@ -618,7 +654,10 @@ describe("API Integration Tests", () => {
   });
 
   it("GET /api/analytics should use Thai weekday names when locale=th", async () => {
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+    mockRequirePro.mockResolvedValue({
+      ok: true,
+      session: { user: { id: 7 } },
+    } as never);
 
     mockPrisma.dailySummary.findMany.mockResolvedValue([]);
     mockPrisma.profile.findUnique.mockResolvedValue({
@@ -629,7 +668,9 @@ describe("API Integration Tests", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
-    const request = new NextRequest("http://localhost/api/analytics?days=7&locale=th");
+    const request = new NextRequest(
+      "http://localhost/api/analytics?days=7&locale=th",
+    );
     const response = await getAnalytics(request);
     const body = await response.json();
 
@@ -638,7 +679,10 @@ describe("API Integration Tests", () => {
   });
 
   it("GET /api/analytics should return cached result if available", async () => {
-    mockSession.mockResolvedValue({ user: { id: 7 } } as Session);
+    mockRequirePro.mockResolvedValue({
+      ok: true,
+      session: { user: { id: 7 } },
+    } as never);
     const cachedData = {
       weeklyData: [{ day: "Mon", calories: 2000 }],
       stats: { averageCalories: 2000 },
@@ -654,7 +698,8 @@ describe("API Integration Tests", () => {
   });
 
   it("GET /api/analytics should return 401 when user is not logged in", async () => {
-    mockSession.mockResolvedValue(null);
+    mockRequireAuth.mockResolvedValue({ ok: false, response: NextResponse.json({ message: "Unauthorized" }, { status: 401 }) });
+    mockRequirePro.mockResolvedValue({ ok: false, response: NextResponse.json({ message: "Unauthorized" }, { status: 401 }) });
 
     const request = new NextRequest("http://localhost/api/analytics?days=7");
     const response = await getAnalytics(request);
@@ -706,13 +751,15 @@ describe("API Integration Tests", () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ received: true });
-    expect((mockPrisma as MockPrisma).subscription.update).toHaveBeenCalledWith({
-      where: { userId: 7 },
-      data: expect.objectContaining({
-        stripeCustomerId: "cus_123",
-        plan: "PRO",
-      }),
-    });
+    expect((mockPrisma as MockPrisma).subscription.update).toHaveBeenCalledWith(
+      {
+        where: { userId: 7 },
+        data: expect.objectContaining({
+          stripeCustomerId: "cus_123",
+          plan: "PRO",
+        }),
+      },
+    );
   });
 
   it("POST /api/webhook should return 400 when stripe signature is invalid", async () => {
