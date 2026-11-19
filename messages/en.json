@@ -570,6 +570,8 @@
     "saveMeal": "Save meal",
     "noImageError": "Please provide an image",
     "saveSuccess": "Meal saved successfully",
-    "saveError": "Unable to save your meal"
+    "saveError": "Unable to save your meal",
+    "proFeatureWarning": "This feature is available for PRO members only. Upgrade to PRO to unlock this feature.",
+    "saveAsFavorite": "Save and add to favorites"
   }
 }

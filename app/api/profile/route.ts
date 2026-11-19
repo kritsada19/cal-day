@@ -42,6 +42,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    const isPro = user?.subscription?.plan === "PRO";
+
     const aiQuota = await getUserAiQuota(Number(session.user.id), user?.subscription?.plan);
 
     const { startOfDay, endOfDay } = getUtcDayRange();
@@ -63,11 +65,12 @@ export async function GET(request: NextRequest) {
     );
 
 
-    await setCache(cacheKey, { ...user, ...summary, aiusage: aiQuota.usage, aiLimit: aiQuota.limit, aiRemaining: aiQuota.remaining }, 300);
+    await setCache(cacheKey, { ...user, ...summary, isPro, aiusage: aiQuota.usage, aiLimit: aiQuota.limit, aiRemaining: aiQuota.remaining }, 300);
 
     return NextResponse.json({
       ...user,
       ...summary,
+      isPro,
       aiUsage: aiQuota.usage,
       aiLimit: aiQuota.limit,
       aiRemaining: aiQuota.remaining

@@ -220,7 +220,7 @@ export type UserGroupByOutputType = {
   _max: UserMaxAggregateOutputType | null
 }
 
-type GetUserGroupByPayload<T extends UserGroupByArgs> = Prisma.PrismaPromise<
+export type GetUserGroupByPayload<T extends UserGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<UserGroupByOutputType, T['by']> &
       {
@@ -253,6 +253,7 @@ export type UserWhereInput = {
   meals?: Prisma.MealListRelationFilter
   dailySummaries?: Prisma.DailySummaryListRelationFilter
   subscription?: Prisma.XOR<Prisma.SubscriptionNullableScalarRelationFilter, Prisma.SubscriptionWhereInput> | null
+  favoriteMeals?: Prisma.FavoriteMealListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -270,6 +271,7 @@ export type UserOrderByWithRelationInput = {
   meals?: Prisma.MealOrderByRelationAggregateInput
   dailySummaries?: Prisma.DailySummaryOrderByRelationAggregateInput
   subscription?: Prisma.SubscriptionOrderByWithRelationInput
+  favoriteMeals?: Prisma.FavoriteMealOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -290,6 +292,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   meals?: Prisma.MealListRelationFilter
   dailySummaries?: Prisma.DailySummaryListRelationFilter
   subscription?: Prisma.XOR<Prisma.SubscriptionNullableScalarRelationFilter, Prisma.SubscriptionWhereInput> | null
+  favoriteMeals?: Prisma.FavoriteMealListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -338,6 +341,7 @@ export type UserCreateInput = {
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -355,6 +359,7 @@ export type UserUncheckedCreateInput = {
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryUncheckedCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionUncheckedCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -371,6 +376,7 @@ export type UserUpdateInput = {
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -388,6 +394,7 @@ export type UserUncheckedUpdateInput = {
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUncheckedUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -544,6 +551,20 @@ export type UserUpdateOneRequiredWithoutMealsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMealsInput, Prisma.UserUpdateWithoutMealsInput>, Prisma.UserUncheckedUpdateWithoutMealsInput>
 }
 
+export type UserCreateNestedOneWithoutFavoriteMealsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFavoriteMealsInput, Prisma.UserUncheckedCreateWithoutFavoriteMealsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFavoriteMealsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutFavoriteMealsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFavoriteMealsInput, Prisma.UserUncheckedCreateWithoutFavoriteMealsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFavoriteMealsInput
+  upsert?: Prisma.UserUpsertWithoutFavoriteMealsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutFavoriteMealsInput, Prisma.UserUpdateWithoutFavoriteMealsInput>, Prisma.UserUncheckedUpdateWithoutFavoriteMealsInput>
+}
+
 export type UserCreateNestedOneWithoutDailySummariesInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutDailySummariesInput, Prisma.UserUncheckedCreateWithoutDailySummariesInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutDailySummariesInput
@@ -585,6 +606,7 @@ export type UserCreateWithoutAccountsInput = {
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -601,6 +623,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryUncheckedCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionUncheckedCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -632,6 +655,7 @@ export type UserUpdateWithoutAccountsInput = {
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -648,6 +672,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUncheckedUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutProfileInput = {
@@ -663,6 +688,7 @@ export type UserCreateWithoutProfileInput = {
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutProfileInput = {
@@ -679,6 +705,7 @@ export type UserUncheckedCreateWithoutProfileInput = {
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryUncheckedCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionUncheckedCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutProfileInput = {
@@ -710,6 +737,7 @@ export type UserUpdateWithoutProfileInput = {
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutProfileInput = {
@@ -726,6 +754,7 @@ export type UserUncheckedUpdateWithoutProfileInput = {
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUncheckedUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMealsInput = {
@@ -741,6 +770,7 @@ export type UserCreateWithoutMealsInput = {
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
   dailySummaries?: Prisma.DailySummaryCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMealsInput = {
@@ -757,6 +787,7 @@ export type UserUncheckedCreateWithoutMealsInput = {
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
   dailySummaries?: Prisma.DailySummaryUncheckedCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionUncheckedCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMealsInput = {
@@ -788,6 +819,7 @@ export type UserUpdateWithoutMealsInput = {
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMealsInput = {
@@ -802,6 +834,89 @@ export type UserUncheckedUpdateWithoutMealsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  dailySummaries?: Prisma.DailySummaryUncheckedUpdateManyWithoutUserNestedInput
+  subscription?: Prisma.SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutFavoriteMealsInput = {
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.Role
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
+  meals?: Prisma.MealCreateNestedManyWithoutUserInput
+  dailySummaries?: Prisma.DailySummaryCreateNestedManyWithoutUserInput
+  subscription?: Prisma.SubscriptionCreateNestedOneWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutFavoriteMealsInput = {
+  id?: number
+  name?: string | null
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  password?: string | null
+  role?: $Enums.Role
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
+  meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
+  dailySummaries?: Prisma.DailySummaryUncheckedCreateNestedManyWithoutUserInput
+  subscription?: Prisma.SubscriptionUncheckedCreateNestedOneWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutFavoriteMealsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutFavoriteMealsInput, Prisma.UserUncheckedCreateWithoutFavoriteMealsInput>
+}
+
+export type UserUpsertWithoutFavoriteMealsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutFavoriteMealsInput, Prisma.UserUncheckedUpdateWithoutFavoriteMealsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutFavoriteMealsInput, Prisma.UserUncheckedCreateWithoutFavoriteMealsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutFavoriteMealsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutFavoriteMealsInput, Prisma.UserUncheckedUpdateWithoutFavoriteMealsInput>
+}
+
+export type UserUpdateWithoutFavoriteMealsInput = {
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
+  meals?: Prisma.MealUpdateManyWithoutUserNestedInput
+  dailySummaries?: Prisma.DailySummaryUpdateManyWithoutUserNestedInput
+  subscription?: Prisma.SubscriptionUpdateOneWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutFavoriteMealsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
+  meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUncheckedUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUncheckedUpdateOneWithoutUserNestedInput
 }
@@ -819,6 +934,7 @@ export type UserCreateWithoutDailySummariesInput = {
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDailySummariesInput = {
@@ -835,6 +951,7 @@ export type UserUncheckedCreateWithoutDailySummariesInput = {
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
   subscription?: Prisma.SubscriptionUncheckedCreateNestedOneWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDailySummariesInput = {
@@ -866,6 +983,7 @@ export type UserUpdateWithoutDailySummariesInput = {
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDailySummariesInput = {
@@ -882,6 +1000,7 @@ export type UserUncheckedUpdateWithoutDailySummariesInput = {
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
   subscription?: Prisma.SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSubscriptionInput = {
@@ -897,6 +1016,7 @@ export type UserCreateWithoutSubscriptionInput = {
   profile?: Prisma.ProfileCreateNestedOneWithoutUserInput
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryCreateNestedManyWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSubscriptionInput = {
@@ -913,6 +1033,7 @@ export type UserUncheckedCreateWithoutSubscriptionInput = {
   profile?: Prisma.ProfileUncheckedCreateNestedOneWithoutUserInput
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
   dailySummaries?: Prisma.DailySummaryUncheckedCreateNestedManyWithoutUserInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSubscriptionInput = {
@@ -944,6 +1065,7 @@ export type UserUpdateWithoutSubscriptionInput = {
   profile?: Prisma.ProfileUpdateOneWithoutUserNestedInput
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUpdateManyWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSubscriptionInput = {
@@ -960,6 +1082,7 @@ export type UserUncheckedUpdateWithoutSubscriptionInput = {
   profile?: Prisma.ProfileUncheckedUpdateOneWithoutUserNestedInput
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
   dailySummaries?: Prisma.DailySummaryUncheckedUpdateManyWithoutUserNestedInput
+  favoriteMeals?: Prisma.FavoriteMealUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -971,12 +1094,14 @@ export type UserCountOutputType = {
   accounts: number
   meals: number
   dailySummaries: number
+  favoriteMeals: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | UserCountOutputTypeCountAccountsArgs
   meals?: boolean | UserCountOutputTypeCountMealsArgs
   dailySummaries?: boolean | UserCountOutputTypeCountDailySummariesArgs
+  favoriteMeals?: boolean | UserCountOutputTypeCountFavoriteMealsArgs
 }
 
 /**
@@ -1010,6 +1135,13 @@ export type UserCountOutputTypeCountDailySummariesArgs<ExtArgs extends runtime.T
   where?: Prisma.DailySummaryWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountFavoriteMealsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FavoriteMealWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1026,6 +1158,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   meals?: boolean | Prisma.User$mealsArgs<ExtArgs>
   dailySummaries?: boolean | Prisma.User$dailySummariesArgs<ExtArgs>
   subscription?: boolean | Prisma.User$subscriptionArgs<ExtArgs>
+  favoriteMeals?: boolean | Prisma.User$favoriteMealsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1072,6 +1205,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   meals?: boolean | Prisma.User$mealsArgs<ExtArgs>
   dailySummaries?: boolean | Prisma.User$dailySummariesArgs<ExtArgs>
   subscription?: boolean | Prisma.User$subscriptionArgs<ExtArgs>
+  favoriteMeals?: boolean | Prisma.User$favoriteMealsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1085,6 +1219,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     meals: Prisma.$MealPayload<ExtArgs>[]
     dailySummaries: Prisma.$DailySummaryPayload<ExtArgs>[]
     subscription: Prisma.$SubscriptionPayload<ExtArgs> | null
+    favoriteMeals: Prisma.$FavoriteMealPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1495,6 +1630,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   meals<T extends Prisma.User$mealsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mealsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MealPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   dailySummaries<T extends Prisma.User$dailySummariesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$dailySummariesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DailySummaryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   subscription<T extends Prisma.User$subscriptionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$subscriptionArgs<ExtArgs>>): Prisma.Prisma__SubscriptionClient<runtime.Types.Result.GetResult<Prisma.$SubscriptionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  favoriteMeals<T extends Prisma.User$favoriteMealsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$favoriteMealsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FavoriteMealPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1729,6 +1865,11 @@ export type UserFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Skip the first `n` Users.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Users.
+   */
   distinct?: Prisma.UserScalarFieldEnum | Prisma.UserScalarFieldEnum[]
 }
 
@@ -2028,6 +2169,30 @@ export type User$subscriptionArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   include?: Prisma.SubscriptionInclude<ExtArgs> | null
   where?: Prisma.SubscriptionWhereInput
+}
+
+/**
+ * User.favoriteMeals
+ */
+export type User$favoriteMealsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FavoriteMeal
+   */
+  select?: Prisma.FavoriteMealSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FavoriteMeal
+   */
+  omit?: Prisma.FavoriteMealOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FavoriteMealInclude<ExtArgs> | null
+  where?: Prisma.FavoriteMealWhereInput
+  orderBy?: Prisma.FavoriteMealOrderByWithRelationInput | Prisma.FavoriteMealOrderByWithRelationInput[]
+  cursor?: Prisma.FavoriteMealWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FavoriteMealScalarFieldEnum | Prisma.FavoriteMealScalarFieldEnum[]
 }
 
 /**

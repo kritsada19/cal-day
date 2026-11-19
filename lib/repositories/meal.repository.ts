@@ -23,7 +23,9 @@ export type DailySummary = DailySummaryModel;
 export type FoodEntry = FoodEntryModel;
 
 /** มื้ออาหารพร้อมรายการอาหารข้างใน (ใช้เป็นชนิดข้อมูลส่งกลับของ query) */
-export type MealWithFoodEntries = MealGetPayload<{ include: { foodEntries: true } }>;
+export type MealWithFoodEntries = MealGetPayload<{
+  include: { foodEntries: true };
+}>;
 
 /** รายการอาหาร 1 อย่างที่ดึงจาก DB มาใช้ "เทียบชื่อ" กับที่ผู้ใช้พิมพ์ */
 export type ExistingFood = Pick<
@@ -51,6 +53,9 @@ export type CreateMealWithEntriesInput = {
   /** ยอดรวมของมื้อนี้ที่ service คำนวณมาแล้ว */
   totalCalories: number;
   totalProtein: number;
+
+  /** ถ้าผู้ใช้เลือกให้บันทึกเป็นรายการโปรดด้วย ให้ส่ง isFav = true มาด้วย */
+  isFav?: boolean;
 };
 
 /** ปัดทศนิยมให้เหลือ 1 ตำแหน่ง (ค่าแคลอรี/โปรตีนใช้ทศนิยม 1 ตำแหน่งทั้งระบบ) */
@@ -122,6 +127,32 @@ export class MealRepository {
             calories: food.calories || 0,
             protein: food.protein || 0,
           })),
+        });
+      }
+
+      if (input.isFav) {
+        await tx.favoriteMeal.createMany({
+          data:
+            input.foodEntries.length > 0
+              ? input.foodEntries.map((food) => ({
+                  userId: input.userId,
+                  name: food.foodName,
+                  amount: food.amount || 1,
+                  unit: food.unit || "serving",
+                  calories: food.calories || 0,
+                  protein: food.protein || 0,
+                }))
+              : [
+                  {
+                    userId: input.userId,
+                    name: input.fallbackFoodName,
+                    amount: 1,
+                    unit: "text",
+                    calories: input.fallbackCalories,
+                    protein: input.fallbackProtein,
+                  },
+                ],
+          skipDuplicates: true,
         });
       }
 
@@ -283,7 +314,7 @@ export class MealRepository {
     // tzOffsetMinutes เป็นลบสำหรับ UTC+ เช่น UTC+7 = -420
     const offsetMs = tzOffsetMinutes * 60 * 1000;
     const localTime = new Date(meal.createdAt.getTime() - offsetMs);
-    const localDateStr = `${localTime.getUTCFullYear()}-${String(localTime.getUTCMonth() + 1).padStart(2, '0')}-${String(localTime.getUTCDate()).padStart(2, '0')}`;
+    const localDateStr = `${localTime.getUTCFullYear()}-${String(localTime.getUTCMonth() + 1).padStart(2, "0")}-${String(localTime.getUTCDate()).padStart(2, "0")}`;
     const { startOfDay, endOfDay } = getUtcDayRange(localDateStr);
 
     const summary = await prisma.dailySummary.findFirst({

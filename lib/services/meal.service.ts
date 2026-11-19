@@ -98,7 +98,7 @@ export class MealService {
    * รับ repository เข้ามาทาง constructor (มีค่าเริ่มต้นเป็น instance จริง)
    * ทำให้ตอนเทสต์สลับเป็นตัวปลอมได้ง่าย โดยไม่ต้องแก้โค้ดข้างใน
    */
-  constructor(private readonly repository: MealRepository = mealRepository) { }
+  constructor(private readonly repository: MealRepository = mealRepository) {}
 
   /**
    * สร้างมื้ออาหาร 1 มื้อ: แยกเมนู → เทียบกับ DB → ให้ AI วิเคราะห์ส่วนที่ไม่รู้ →
@@ -123,6 +123,11 @@ export class MealService {
       throw new AppError(404, "User not found");
     }
 
+    // ถ้าผู้ใช้เลือกให้บันทึกเป็นรายการโปรด แต่ไม่ได้สมัคร Pro → ห้ามบันทึก
+    if (input.isFav && user.subscription?.plan !== "PRO") {
+      throw new AppError(403, "Pro subscription required");
+    }
+
     // 4) หักและตรวจโควต้า AI ของวันนี้
     const quotaExceeded = await checkAndComsumeAiQuota(
       userId,
@@ -133,7 +138,10 @@ export class MealService {
       // checkAndComsumeAiQuota เป็นโค้ดเดิมที่คืน NextResponse เมื่อโควต้าหมด
       // เราอ่าน message/status ออกมาแล้วโยนเป็น AppError เพื่อไม่ให้ service ผูกกับ HTTP
       const body = (await quotaExceeded.json()) as { message?: string };
-      throw new AppError(quotaExceeded.status, body.message ?? "AI limit reached");
+      throw new AppError(
+        quotaExceeded.status,
+        body.message ?? "AI limit reached",
+      );
     }
 
     // 5) เทียบเมนูกับอาหารที่เคยบันทึกไว้ใน DB
@@ -171,12 +179,12 @@ export class MealService {
     const totalCalories =
       foodEntries.length > 0
         ? foodEntries.reduce((sum, food) => sum + food.calories, 0)
-        : aiAnalysis?.estimatedCalories ?? 0;
+        : (aiAnalysis?.estimatedCalories ?? 0);
 
     const totalProtein =
       foodEntries.length > 0
         ? foodEntries.reduce((sum, food) => sum + food.protein, 0)
-        : aiAnalysis?.estimatedProtein ?? 0;
+        : (aiAnalysis?.estimatedProtein ?? 0);
 
     // 9) บันทึกลงฐานข้อมูล (repository จัดการ transaction ให้)
     const mealId = await this.repository.createMealWithEntries({
@@ -190,6 +198,7 @@ export class MealService {
       fallbackProtein: aiAnalysis?.estimatedProtein ?? 0,
       totalCalories,
       totalProtein,
+      isFav: input.isFav,
     });
 
     // 10) ข้อมูลสรุปเปลี่ยนแล้ว → ล้าง cache ของผู้ใช้คนนี้
@@ -202,36 +211,53 @@ export class MealService {
     userId: number,
     input: ImageMealInput,
   ): Promise<CreateMealResult> {
-    const { startOfDay, endOfDay } = getUtcDayRange(input.date ? new Date(input.date) : new Date());
-    
+    const { startOfDay, endOfDay } = getUtcDayRange(
+      input.date ? new Date(input.date) : new Date(),
+    );
+
     const user = await this.repository.findUserWithSubscription(userId);
     if (!user) {
       throw new AppError(404, "User not found");
     }
 
-    const quotaExceeded = await checkAndComsumeAiQuota(userId, user.subscription?.plan);
+    // ถ้าผู้ใช้เลือกให้บันทึกเป็นรายการโปรด แต่ไม่ได้สมัคร Pro → ห้ามบันทึก
+    if (input.isFav && user.subscription?.plan !== "PRO") {
+      throw new AppError(403, "Pro subscription required");
+    }
+
+    const quotaExceeded = await checkAndComsumeAiQuota(
+      userId,
+      user.subscription?.plan,
+    );
     if (quotaExceeded) {
       const body = (await quotaExceeded.json()) as { message?: string };
-      throw new AppError(quotaExceeded.status, body.message ?? "AI limit reached");
+      throw new AppError(
+        quotaExceeded.status,
+        body.message ?? "AI limit reached",
+      );
     }
 
     const aiAnalysis = await analyzeFoodImage(input.base64Data, input.mimeType);
 
-    const foodEntries: NewFoodEntry[] = (aiAnalysis.foods ?? []).map((food) => ({
-      foodName: food.name,
-      amount: food.amount || 1,
-      unit: food.unit || "serving",
-      calories: food.calories || 0,
-      protein: food.protein || 0,
-    }));
+    const foodEntries: NewFoodEntry[] = (aiAnalysis.foods ?? []).map(
+      (food) => ({
+        foodName: food.name,
+        amount: food.amount || 1,
+        unit: food.unit || "serving",
+        calories: food.calories || 0,
+        protein: food.protein || 0,
+      }),
+    );
 
-    const totalCalories = foodEntries.length > 0 
-      ? foodEntries.reduce((sum, food) => sum + food.calories, 0)
-      : aiAnalysis.estimatedCalories ?? 0;
-      
-    const totalProtein = foodEntries.length > 0
-      ? foodEntries.reduce((sum, food) => sum + food.protein, 0)
-      : aiAnalysis.estimatedProtein ?? 0;
+    const totalCalories =
+      foodEntries.length > 0
+        ? foodEntries.reduce((sum, food) => sum + food.calories, 0)
+        : (aiAnalysis.estimatedCalories ?? 0);
+
+    const totalProtein =
+      foodEntries.length > 0
+        ? foodEntries.reduce((sum, food) => sum + food.protein, 0)
+        : (aiAnalysis.estimatedProtein ?? 0);
 
     const mealId = await this.repository.createMealWithEntries({
       userId,
@@ -244,13 +270,13 @@ export class MealService {
       fallbackProtein: aiAnalysis.estimatedProtein ?? 0,
       totalCalories,
       totalProtein,
+      isFav: input.isFav,
     });
 
     await deleteUserCache(userId);
 
     return { mealId, aiAnalysis, totalCalories, totalProtein };
   }
-
 
   /**
    * ดึงสรุปรายวันทั้งเดือน (ใช้ cache 60 วินาที เพื่อลดการยิง DB ถี่ ๆ)
@@ -261,7 +287,12 @@ export class MealService {
     month: number,
   ): Promise<DailySummary[]> {
     // ตรวจค่าที่ส่งมาก่อน เพื่อไม่ให้ cache ตอบคำขอที่พารามิเตอร์ผิด
-    if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    if (
+      !Number.isInteger(year) ||
+      !Number.isInteger(month) ||
+      month < 1 ||
+      month > 12
+    ) {
       throw new AppError(400, "Invalid date parameters");
     }
 
@@ -271,7 +302,11 @@ export class MealService {
     if (cached) return cached;
 
     const { start, end } = getUtcMonthRange(year, month);
-    const summaries = await this.repository.getDailySummaries(userId, start, end);
+    const summaries = await this.repository.getDailySummaries(
+      userId,
+      start,
+      end,
+    );
 
     await setCache(cacheKey, summaries, 60);
 
@@ -310,11 +345,11 @@ export class MealService {
     const day = localMidnightUtc.getUTCDate();
 
     const startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
-    const endOfDay   = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+    const endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
 
     // เลื่อน range กลับไป UTC โดยหัก offset ออก
     const startUtc = new Date(startOfDay.getTime() - offsetMs);
-    const endUtc   = new Date(endOfDay.getTime()   - offsetMs);
+    const endUtc = new Date(endOfDay.getTime() - offsetMs);
 
     const cacheKey = `cache:user:${userId}:meals:daily:${date}:tz:${tzOffsetMinutes}`;
 
@@ -336,8 +371,16 @@ export class MealService {
   /**
    * ลบมื้ออาหาร 1 มื้อ แล้วล้าง cache ของผู้ใช้
    */
-  async deleteMeal(mealId: number, userId: number, tzOffsetMinutes: number = 0): Promise<void> {
-    const deletedMeal = await this.repository.deleteMeal(mealId, userId, tzOffsetMinutes);
+  async deleteMeal(
+    mealId: number,
+    userId: number,
+    tzOffsetMinutes: number = 0,
+  ): Promise<void> {
+    const deletedMeal = await this.repository.deleteMeal(
+      mealId,
+      userId,
+      tzOffsetMinutes,
+    );
 
     if (!deletedMeal) {
       throw new AppError(404, "Meal not found or unauthorized");

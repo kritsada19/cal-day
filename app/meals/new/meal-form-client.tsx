@@ -8,6 +8,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import {
   Clock3,
+  Heart,
   ImageUp,
   PencilLine,
   Sparkles,
@@ -36,6 +37,7 @@ export default function MealFormClient() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPro, setIsPro] = useState(false);
 
   /**
    * State เก็บชื่ออาหาร 3 รายการล่าสุดของ user
@@ -57,6 +59,15 @@ export default function MealFormClient() {
       .catch(() => {
         // ไม่แสดง error — shortcut เป็นแค่ฟีเจอร์เสริม ถ้าดึงไม่ได้ก็ซ่อนไปเฉย ๆ
       });
+
+    axios
+      .get<{ isPro: boolean }>("/api/profile")
+      .then((res) => {
+        setIsPro(res.data.isPro);
+      })
+      .catch(() => {
+        setIsPro(false);
+      });
   }, [status]); // re-run ถ้า auth status เปลี่ยน (เช่น ล็อกอินสำเร็จหลัง mount)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +87,10 @@ export default function MealFormClient() {
     setImagePreview(null);
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>,
+    isFav: boolean = false
+  ) => {
     event.preventDefault();
     setIsSaving(true);
 
@@ -89,7 +103,8 @@ export default function MealFormClient() {
         await axios.post("/api/meals", {
           mealType,
           mealText,
-          date: localDateString
+          date: localDateString,
+          isFav
         });
       } else {
         if (!imagePreview || !imageFile) {
@@ -104,7 +119,8 @@ export default function MealFormClient() {
           mealType,
           base64Data,
           mimeType,
-          date: localDateString
+          date: localDateString,
+          isFav
         });
       }
 
@@ -307,6 +323,25 @@ export default function MealFormClient() {
             className={primaryButton}
           >
             {isSaving ? t("saving") : t("saveMeal")}
+          </button>
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={(event) => {
+              if (!isPro) {
+                toast.warning(t("proFeatureWarning"));
+                return;
+              }
+
+              handleSubmit(event, true);
+            }}
+            className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${isPro
+              ? "cursor-pointer border-primary bg-primary-tint text-primary hover:bg-highlight"
+              : "cursor-pointer border-secondary bg-canvas text-muted hover:bg-primary-tint"
+              }`}
+          >
+            <Heart className="h-4 w-4" />
+            {t("saveAsFavorite")}
           </button>
         </form>
       </div>
