@@ -48,6 +48,11 @@ export type Meal = Prisma.MealModel
  */
 export type FoodEntry = Prisma.FoodEntryModel
 /**
+ * Model FavoriteMeal
+ * 
+ */
+export type FavoriteMeal = Prisma.FavoriteMealModel
+/**
  * Model DailySummary
  * 
  */

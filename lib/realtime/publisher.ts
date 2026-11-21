@@ -23,3 +23,14 @@ export async function publishProfileUpdate(
         })
     );
 }
+
+export async function publishFavoriteEvent(event: {
+    type: "favorite.updated" | "favorite.deleted" | "favorite.created";
+    userId: string;
+    favoriteId?: number;
+}) {
+    await redis.publish(
+        "favorite-events",
+        JSON.stringify(event)
+    );
+}

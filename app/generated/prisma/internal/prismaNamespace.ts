@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.4.1
- * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.4.1",
-  engine: "55ae170b1ced7fc6ed07a15f110549408c501bb3"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 /**
@@ -390,6 +390,7 @@ export const ModelName = {
   Profile: 'Profile',
   Meal: 'Meal',
   FoodEntry: 'FoodEntry',
+  FavoriteMeal: 'FavoriteMeal',
   DailySummary: 'DailySummary',
   Subscription: 'Subscription'
 } as const
@@ -407,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "verificationToken" | "profile" | "meal" | "foodEntry" | "dailySummary" | "subscription"
+    modelProps: "user" | "account" | "verificationToken" | "profile" | "meal" | "foodEntry" | "favoriteMeal" | "dailySummary" | "subscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -855,6 +856,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FavoriteMeal: {
+      payload: Prisma.$FavoriteMealPayload<ExtArgs>
+      fields: Prisma.FavoriteMealFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FavoriteMealFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FavoriteMealFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>
+        }
+        findFirst: {
+          args: Prisma.FavoriteMealFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FavoriteMealFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>
+        }
+        findMany: {
+          args: Prisma.FavoriteMealFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>[]
+        }
+        create: {
+          args: Prisma.FavoriteMealCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>
+        }
+        createMany: {
+          args: Prisma.FavoriteMealCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FavoriteMealCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>[]
+        }
+        delete: {
+          args: Prisma.FavoriteMealDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>
+        }
+        update: {
+          args: Prisma.FavoriteMealUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>
+        }
+        deleteMany: {
+          args: Prisma.FavoriteMealDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FavoriteMealUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FavoriteMealUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>[]
+        }
+        upsert: {
+          args: Prisma.FavoriteMealUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FavoriteMealPayload>
+        }
+        aggregate: {
+          args: Prisma.FavoriteMealAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFavoriteMeal>
+        }
+        groupBy: {
+          args: Prisma.FavoriteMealGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FavoriteMealGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FavoriteMealCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FavoriteMealCountAggregateOutputType> | number
+        }
+      }
+    }
     DailySummary: {
       payload: Prisma.$DailySummaryPayload<ExtArgs>
       fields: Prisma.DailySummaryFieldRefs
@@ -1126,6 +1201,21 @@ export const FoodEntryScalarFieldEnum = {
 } as const
 
 export type FoodEntryScalarFieldEnum = (typeof FoodEntryScalarFieldEnum)[keyof typeof FoodEntryScalarFieldEnum]
+
+
+export const FavoriteMealScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  amount: 'amount',
+  unit: 'unit',
+  calories: 'calories',
+  protein: 'protein',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FavoriteMealScalarFieldEnum = (typeof FavoriteMealScalarFieldEnum)[keyof typeof FavoriteMealScalarFieldEnum]
 
 
 export const DailySummaryScalarFieldEnum = {
@@ -1446,6 +1536,21 @@ export type PrismaClientOptions = ({
    * ```
    */
   comments?: runtime.SqlCommenterPlugin[]
+  /**
+   * Optional maximum size for the query plan cache. If not provided, a default size will be used.
+   * A value of `0` can be used to disable the cache entirely. A higher cache size can improve
+   * performance for applications that execute a large number of unique queries, while a smaller
+   * cache size can reduce memory usage.
+   * 
+   * @example
+   * ```
+   * const prisma = new PrismaClient({
+   *   adapter,
+   *   queryPlanCacheMaxSize: 100,
+   * })
+   * ```
+   */
+  queryPlanCacheMaxSize?: number
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
@@ -1454,6 +1559,7 @@ export type GlobalOmitConfig = {
   profile?: Prisma.ProfileOmit
   meal?: Prisma.MealOmit
   foodEntry?: Prisma.FoodEntryOmit
+  favoriteMeal?: Prisma.FavoriteMealOmit
   dailySummary?: Prisma.DailySummaryOmit
   subscription?: Prisma.SubscriptionOmit
 }

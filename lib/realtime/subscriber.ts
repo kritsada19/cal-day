@@ -17,11 +17,17 @@ export async function subscribeEvents(
 
     await sub.subscribe(
         "meal-events",
-        "profile-events"
+        "profile-events",
+        "favorite-events"
     );
 
     const listener = (channel: string, message: string) => {
-        if (channel !== "meal-events" && channel !== "profile-events") return;
+        if (
+            channel !== "meal-events" &&
+            channel !== "profile-events" &&
+            channel !== "favorite-events"
+        )
+            return;
 
         const event = JSON.parse(message);
 

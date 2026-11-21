@@ -57,6 +57,7 @@ export const ModelName = {
   Profile: 'Profile',
   Meal: 'Meal',
   FoodEntry: 'FoodEntry',
+  FavoriteMeal: 'FavoriteMeal',
   DailySummary: 'DailySummary',
   Subscription: 'Subscription'
 } as const
@@ -161,6 +162,21 @@ export const FoodEntryScalarFieldEnum = {
 } as const
 
 export type FoodEntryScalarFieldEnum = (typeof FoodEntryScalarFieldEnum)[keyof typeof FoodEntryScalarFieldEnum]
+
+
+export const FavoriteMealScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  amount: 'amount',
+  unit: 'unit',
+  calories: 'calories',
+  protein: 'protein',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FavoriteMealScalarFieldEnum = (typeof FavoriteMealScalarFieldEnum)[keyof typeof FavoriteMealScalarFieldEnum]
 
 
 export const DailySummaryScalarFieldEnum = {
