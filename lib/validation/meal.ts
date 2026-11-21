@@ -18,3 +18,18 @@ export const imageMealSchema = z.object({
 });
 
 export type ImageMealInput = z.infer<typeof imageMealSchema>;
+
+export const favoriteMealCreateSchema = z.object({
+    favoriteId: z.number().int().positive(),
+    mealType: z.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK"]),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format").optional(),
+});
+
+export type FavoriteMealCreateInput = z.infer<typeof favoriteMealCreateSchema>;
+
+export const favoriteMealUpdateSchema = z.object({
+    amount: z.number().positive("Amount must be greater than 0"),
+    unit: z.string().trim().min(1, "Unit is required"),
+});
+
+export type FavoriteMealUpdateInput = z.infer<typeof favoriteMealUpdateSchema>;

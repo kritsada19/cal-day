@@ -178,9 +178,29 @@ export default function MealFormClient() {
             <p className="text-sm font-medium text-muted">{t("pageLabel")}</p>
             <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">{t("pageTitle")}</h1>
           </div>
-          <Link href="/dashboard" className={secondaryLink}>
-            {t("backToDashboard")}
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (!isPro) {
+                  toast.warning(t("proFeatureWarning"));
+                  return;
+                }
+                router.push("/meals/favorites");
+              }}
+              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-base font-semibold transition-colors ${focusRing} ${
+                isPro
+                  ? "cursor-pointer border-transparent bg-primary-tint text-primary hover:bg-highlight hover:text-ink"
+                  : "cursor-pointer border-secondary bg-canvas text-muted hover:bg-primary-tint"
+              }`}
+            >
+              <Heart className="h-4 w-4" />
+              {t("viewFavorites")}
+            </button>
+            <Link href="/dashboard" className={secondaryLink}>
+              {t("backToDashboard")}
+            </Link>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">

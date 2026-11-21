@@ -4,6 +4,10 @@ import { AppError } from "./errors";
 import { deleteUserCache, getCache, setCache } from "@/lib/cache";
 import { getUtcDayRange, getUtcMonthRange } from "@/lib/date";
 import {
+  favoriteRepository,
+  type FavoriteRepository,
+} from "@/lib/repositories/favorite.repository";
+import {
   mealRepository,
   type DailySummary,
   type ExistingFood,
@@ -12,6 +16,8 @@ import {
   type NewFoodEntry,
 } from "@/lib/repositories/meal.repository";
 import type { MealInput, ImageMealInput } from "@/lib/validation/meal";
+import type { MealType } from "@/app/generated/prisma/enums";
+import { userRepository, type UserRepository } from "@/lib/repositories/user.repository";
 
 /**
  * ชั้น Service = "เชฟ" ของร้านอาหาร
@@ -98,7 +104,12 @@ export class MealService {
    * รับ repository เข้ามาทาง constructor (มีค่าเริ่มต้นเป็น instance จริง)
    * ทำให้ตอนเทสต์สลับเป็นตัวปลอมได้ง่าย โดยไม่ต้องแก้โค้ดข้างใน
    */
-  constructor(private readonly repository: MealRepository = mealRepository) {}
+  constructor(
+    private readonly repository: MealRepository = mealRepository,
+    private readonly favRepository: FavoriteRepository = favoriteRepository,
+    private readonly userRepo: UserRepository = userRepository,
+
+  ) { }
 
   /**
    * สร้างมื้ออาหาร 1 มื้อ: แยกเมนู → เทียบกับ DB → ให้ AI วิเคราะห์ส่วนที่ไม่รู้ →
@@ -118,7 +129,7 @@ export class MealService {
     const { startOfDay, endOfDay } = getUtcDayRange(input.date ?? new Date());
 
     // 3) ผู้ใช้ต้องมีอยู่จริง และต้องรู้แพ็กเกจเพื่อคิดโควต้า AI
-    const user = await this.repository.findUserWithSubscription(userId);
+    const user = await this.userRepo.findUserById(userId);
     if (!user) {
       throw new AppError(404, "User not found");
     }
@@ -207,6 +218,91 @@ export class MealService {
     return { mealId, aiAnalysis, totalCalories, totalProtein };
   }
 
+  /**
+   * สร้างมื้ออาหารจากรายการโปรด (FavoriteMeal):
+   * ตรวจสอบสิทธิ์ PRO → ตรวจสอบว่าเป็นเจ้าของ Favorite จริงไหม →
+   * บันทึกมื้ออาหารผ่าน repository → ล้าง cache
+   */
+  async createMealFromFavorite(
+    userId: number,
+    input: {
+      favoriteId: number;
+      mealType: MealType;
+      date?: string;
+    },
+  ): Promise<{ mealId: number; totalCalories: number; totalProtein: number }> {
+    // 1) ผู้ใช้ต้องมีอยู่จริง และต้องเป็นแผน PRO
+    const user = await this.userRepo.findUserById(userId);
+    if (!user) {
+      throw new AppError(404, "User not found");
+    }
+
+    if (user.subscription?.plan !== "PRO") {
+      throw new AppError(403, "Pro subscription required");
+    }
+
+    // 2) หักและตรวจโควต้า AI ของวันนี้
+    const quotaExceeded = await checkAndComsumeAiQuota(
+      userId,
+      user.subscription?.plan,
+    );
+
+    if (quotaExceeded) {
+      const body = (await quotaExceeded.json()) as { message?: string };
+      throw new AppError(
+        quotaExceeded.status,
+        body.message ?? "AI limit reached",
+      );
+    }
+
+    // 3) หา FavoriteMeal และตรวจว่าเป็นเจ้าของจริงไหม
+    const favorite = await this.favRepository.findById(input.favoriteId);
+    if (!favorite) {
+      throw new AppError(404, "Favorite meal not found");
+    }
+
+    if (favorite.userId !== user.id) {
+      throw new AppError(403, "Forbidden: You do not own this favorite meal");
+    }
+
+    // 3) คำนวณช่วงวันที่จะบันทึก
+    const { startOfDay, endOfDay } = getUtcDayRange(
+      input.date ? new Date(input.date) : new Date(),
+    );
+
+    const foodEntries: NewFoodEntry[] = [
+      {
+        foodName: favorite.name,
+        amount: favorite.amount,
+        unit: favorite.unit,
+        calories: favorite.calories,
+        protein: favorite.protein,
+      },
+    ];
+
+    const totalCalories = favorite.calories;
+    const totalProtein = favorite.protein;
+
+    // 4) บันทึกผ่าน repository โดยตรง (ไม่ผ่าน AI)
+    const mealId = await this.repository.createMealWithEntries({
+      userId: user.id,
+      mealType: input.mealType,
+      startOfDay,
+      endOfDay,
+      foodEntries,
+      fallbackFoodName: favorite.name,
+      fallbackCalories: totalCalories,
+      fallbackProtein: totalProtein,
+      totalCalories,
+      totalProtein,
+    });
+
+    // 5) ข้อมูลเปลี่ยน → ล้าง cache
+    await deleteUserCache(userId);
+
+    return { mealId, totalCalories, totalProtein };
+  }
+
   async createMealFromImage(
     userId: number,
     input: ImageMealInput,
@@ -215,7 +311,7 @@ export class MealService {
       input.date ? new Date(input.date) : new Date(),
     );
 
-    const user = await this.repository.findUserWithSubscription(userId);
+    const user = await this.userRepo.findUserById(userId);
     if (!user) {
       throw new AppError(404, "User not found");
     }

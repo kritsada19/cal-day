@@ -79,16 +79,6 @@ export class MealRepository {
   }
 
   /**
-   * ดึงผู้ใช้พร้อมแพ็กเกจ (FREE / PRO) — ใช้ตัดสินโควต้า AI ของวันนี้
-   */
-  async findUserWithSubscription(userId: number) {
-    return prisma.user.findUnique({
-      where: { id: userId },
-      include: { subscription: true },
-    });
-  }
-
-  /**
    * บันทึกมื้ออาหาร + รายการอาหาร + อัปเดตสรุปรายวัน
    * ทั้งหมดอยู่ใน transaction เดียว ถ้าขั้นตอนใดพัง ข้อมูลจะไม่ถูกบันทึกครึ่ง ๆ กลาง ๆ
    *
@@ -135,23 +125,23 @@ export class MealRepository {
           data:
             input.foodEntries.length > 0
               ? input.foodEntries.map((food) => ({
-                  userId: input.userId,
-                  name: food.foodName,
-                  amount: food.amount || 1,
-                  unit: food.unit || "serving",
-                  calories: food.calories || 0,
-                  protein: food.protein || 0,
-                }))
+                userId: input.userId,
+                name: food.foodName,
+                amount: food.amount || 1,
+                unit: food.unit || "serving",
+                calories: food.calories || 0,
+                protein: food.protein || 0,
+              }))
               : [
-                  {
-                    userId: input.userId,
-                    name: input.fallbackFoodName,
-                    amount: 1,
-                    unit: "text",
-                    calories: input.fallbackCalories,
-                    protein: input.fallbackProtein,
-                  },
-                ],
+                {
+                  userId: input.userId,
+                  name: input.fallbackFoodName,
+                  amount: 1,
+                  unit: "text",
+                  calories: input.fallbackCalories,
+                  protein: input.fallbackProtein,
+                },
+              ],
           skipDuplicates: true,
         });
       }
