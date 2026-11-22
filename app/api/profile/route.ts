@@ -4,7 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { buildProfileNutritionSummary, calculateDailyNutritionTargets } from "@/lib/nutrition";
 import { getUserAiQuota } from "@/lib/services/ai-quota";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import { rateLimitResponse } from "@/lib/http";
+import { rateLimitResponse } from "@/lib/http/http";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, deleteUserCache } from "@/lib/cache";
 import { publishProfileUpdate } from "@/lib/realtime/publisher";

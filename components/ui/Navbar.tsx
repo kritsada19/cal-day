@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useSession, signOut } from "next-auth/react";
 import axios from "axios";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
+
 import {
   LayoutDashboard,
   Plus,
@@ -149,8 +151,16 @@ export default function Navbar() {
   }, []);
 
   const fetchProfile = useCallback(async () => {
+    const userId = session?.user?.id;
+
+    if (!userId) return;
+
     try {
-      const response = await axios.get<ProfileApiResponse>("/api/profile");
+      const response = await deduplicateRequest(
+        `fetch-profile:${userId}`,
+        () => axios.get<ProfileApiResponse>("/api/profile")
+      );
+
       setUserData(response.data);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -159,7 +169,7 @@ export default function Navbar() {
 
       logger.error({ err: error }, "Error fetching profile data");
     }
-  }, []);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (status !== "authenticated") return;

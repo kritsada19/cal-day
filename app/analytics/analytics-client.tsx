@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useLocale, useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 // Types for the Analytics API Response
 interface DailyData {
@@ -59,10 +60,23 @@ export default function AnalyticsClient() {
   // ห่อ fetchAnalytics ด้วย useCallback เพื่อให้ SSE effect
   // เรียก refetch ได้โดยไม่ต้องสร้างฟังก์ชันใหม่ทุก render
   const fetchAnalytics = useCallback(async () => {
+    const userId = session?.user?.id;
+
+    if (!userId) return;
+
     setFetching(true);
+
     try {
       const days = timeRange === "7D" ? 7 : 30;
-      const response = await axios.get<AnalyticsResponse>(`/api/analytics?days=${days}&locale=${locale}`);
+
+      const response = await deduplicateRequest(
+        `fetch-analytics:${userId}:${days}:${locale}`,
+        () =>
+          axios.get<AnalyticsResponse>(
+            `/api/analytics?days=${days}&locale=${locale}`
+          )
+      );
+
       setData(response.data.weeklyData);
       setStats(response.data.stats);
     } catch (error) {
@@ -70,7 +84,7 @@ export default function AnalyticsClient() {
     } finally {
       setFetching(false);
     }
-  }, [locale, timeRange]);
+  }, [locale, timeRange, session?.user?.id]);
 
   // โหลดข้อมูล analytics ครั้งแรก และโหลดใหม่เมื่อ timeRange เปลี่ยน
   useEffect(() => {

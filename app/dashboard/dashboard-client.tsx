@@ -16,6 +16,7 @@ import {
   formatGoalLabel,
 } from "@/lib/formatters/profile";
 import MealCalendar from "@/components/ui/MealCalender";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 type ProfileApiResponse = {
   profile: {
@@ -130,7 +131,10 @@ export default function DashboardClient() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const res = await axios.get<ProfileApiResponse>("/api/profile");
+      const res = await deduplicateRequest(
+        "profile:fetch",
+        () => axios.get<ProfileApiResponse>("/api/profile")
+      );
 
       setSummary(res.data);
       setHasLoadedProfile(true);

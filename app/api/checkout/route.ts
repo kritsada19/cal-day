@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/access";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import { rateLimitResponse } from "@/lib/http";
+import { rateLimitResponse } from "@/lib/http/http";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { logAuditEvent } from "@/lib/audit";

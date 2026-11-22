@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { errorResponse, rateLimitResponse } from "../http";
-import { AppError } from "../services/errors";
-import { logger } from "../logger";
+import { AppError } from "@/lib/services/errors";
+import { logger } from "@/lib/logger";
 
 // Mock logger เพื่อตรวจสอบการเรียกใช้งาน log
-vi.mock("../logger", () => ({
+vi.mock("@/lib/logger", () => ({
   logger: {
     warn: vi.fn(),
     error: vi.fn(),

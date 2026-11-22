@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db/prisma";
 import { getPeriodEnd } from "@/lib/stripe/getPeriodEnd";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import { rateLimitResponse } from "@/lib/http";
+import { rateLimitResponse } from "@/lib/http/http";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { deleteUserCache } from "@/lib/cache";

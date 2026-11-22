@@ -11,6 +11,7 @@ import {
   formatGoalLabel,
 } from "@/lib/formatters/profile";
 import type { NutritionTargets } from "@/lib/nutrition";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 type ProfileData = {
   gender?: string | null;
@@ -71,7 +72,10 @@ export default function ProfilePage() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const res = await axios.get<ProfileApiResponse>("/api/profile");
+      const res = await deduplicateRequest(
+        "profile:fetch",
+        () => axios.get<ProfileApiResponse>("/api/profile")
+      );
 
       setProfileData(res.data);
       setHasLoadedProfile(true);

@@ -5,6 +5,7 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 interface DailySummary {
     totalCalories: number
@@ -69,19 +70,24 @@ export default function MealCalendar() {
     const startingDay = startOfMonth.getDay();
 
     const fetchMonthlySummaries = useCallback(async () => {
+        const userId = session?.user?.id;
+
+        if (!userId) return;
+
         try {
             const year = currentDate.getFullYear();
-            // getMonth() จะได้ 0-11 เราต้องบวก 1 ให้เป็น 1-12 ก่อนส่งให้ API
             const month = currentDate.getMonth() + 1;
 
-            const res = await axios.get(`/api/meals?year=${year}&month=${month}`);
+            const res = await deduplicateRequest(
+                `fetch-monthly-summaries:${userId}:${year}:${month}`,
+                () => axios.get(`/api/meals?year=${year}&month=${month}`)
+            );
 
             setSummaries(res.data.summaries);
-
         } catch (err) {
-            logger.error({ err }, "Failed to load month summaries")
+            logger.error({ err }, "Failed to load month summaries");
         }
-    }, [currentDate]);
+    }, [currentDate, session?.user?.id]);
 
     useEffect(() => {
         if (status !== "authenticated") {
@@ -148,35 +154,41 @@ export default function MealCalendar() {
 
     // ฟังก์ชันนี้จะทำงานเมื่อเรากดที่ช่องวันที่บนปฏิทิน
     const handleDayClick = async (dayNumber: number) => {
-        if (!isAuthenticated) {
-            return;
-        }
+        if (!isAuthenticated) return;
 
-        // 1. สร้าง Object วันที่ จากวันที่ที่เรากด
-        const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNumber);
-        setSelectedDate(clickedDate); // บันทึกว่าเรากำลังดูวันนี้อยู่
-        setIsLoadingDaily(true); // เปิดโหมดโหลดข้อมูล
+        const userId = session?.user?.id;
+        if (!userId) return;
+
+        const clickedDate = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            dayNumber
+        );
+
+        setSelectedDate(clickedDate);
+        setIsLoadingDaily(true);
 
         try {
-            // 2. แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD เพื่อส่งไปให้ API
-            // เนื่องจาก Javascript อาจะมีปัญหา Timezone เราจึงใช้วิธีดึงปี-เดือน-วัน ออกมาประกอบร่างเองแบบปลอดภัย
             const year = clickedDate.getFullYear();
-            const month = String(clickedDate.getMonth() + 1).padStart(2, '0');
-            const day = String(clickedDate.getDate()).padStart(2, '0');
+            const month = String(clickedDate.getMonth() + 1).padStart(2, "0");
+            const day = String(clickedDate.getDate()).padStart(2, "0");
             const formattedDate = `${year}-${month}-${day}`;
 
-            // 3. ยิง API ไปที่ /api/meals/daily พร้อมส่ง timezone offset ของ client ไปด้วย
-            // getTimezoneOffset() คืนค่าเป็นนาที เช่น UTC+7 = -420
             const tzOffset = new Date().getTimezoneOffset();
-            const res = await axios.get(`/api/meals/daily?date=${formattedDate}&timezone=${tzOffset}`);
 
-            // 4. เอาข้อมูลรายการอาหารมาเก็บไว้ใน State
+            const res = await deduplicateRequest(
+                `fetch-daily-meals:${userId}:${formattedDate}:${tzOffset}`,
+                () => axios.get(
+                    `/api/meals/daily?date=${formattedDate}&timezone=${tzOffset}`
+                )
+            );
+
             setDailyMeals(res.data.meals || []);
         } catch (error) {
             logger.error({ err: error }, "Failed to load daily meals");
             setDailyMeals([]);
         } finally {
-            setIsLoadingDaily(false); // ปิดโหมดโหลดข้อมูล
+            setIsLoadingDaily(false);
         }
     };
 

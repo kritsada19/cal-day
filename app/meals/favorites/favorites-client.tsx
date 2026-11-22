@@ -8,6 +8,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Heart, Flame, Dumbbell, UtensilsCrossed, ArrowLeft, Plus, Pencil, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 type FavoriteMeal = {
   id: number;
@@ -53,7 +54,10 @@ export default function FavoritesClient() {
 
   const fetchFavorites = useCallback(async () => {
     try {
-      const res = await axios.get<FavoriteMeal[]>("/api/meals/favorites");
+      const res = await deduplicateRequest(
+        "meals:favorites:fetch",
+        () => axios.get<FavoriteMeal[]>("/api/meals/favorites")
+      );
       setFavorites(res.data);
       setErrorMessage(null);
       setIsProError(false);
