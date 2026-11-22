@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { logger } from "./logger";
-import type { RateLimitResult } from "./rate-limit";
-import { isAppError } from "./services/errors";
+import { logger } from "../logger";
+import type { RateLimitResult } from "../rate-limit";
+import { isAppError } from "../services/errors";
 
 /**
  * ไฟล์นี้เป็น "ตัวช่วยของชั้น HTTP"

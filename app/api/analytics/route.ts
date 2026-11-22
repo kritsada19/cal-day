@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requirePro } from "@/lib/auth/access";
 import prisma from "@/lib/db/prisma";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import { rateLimitResponse } from "@/lib/http";
+import { rateLimitResponse } from "@/lib/http/http";
 import { logger } from "@/lib/logger";
 import { getCache, setCache } from "@/lib/cache";
 

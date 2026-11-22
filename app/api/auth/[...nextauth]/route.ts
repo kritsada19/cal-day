@@ -8,7 +8,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { redis } from "@/lib/db/redis";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { NextRequest } from "next/server";
-import { rateLimitResponse } from "@/lib/http";
+import { rateLimitResponse } from "@/lib/http/http";
 import { env } from "@/lib/env";
 import { logAuditEvent } from "@/lib/audit";
 
@@ -218,14 +218,14 @@ export const authOptions: NextAuthOptions = {
 const handler = NextAuth(authOptions);
 
 async function rateLimitedHandler(request: NextRequest, context: { params: Promise<{ nextauth: string[] }> }) {
-  const policyName = request.method === "POST" ? "authPost" : "authGet";
-  const rateLimit = await checkRateLimitPolicy(request, policyName);
+    const policyName = request.method === "POST" ? "authPost" : "authGet";
+    const rateLimit = await checkRateLimitPolicy(request, policyName);
 
-  if (!rateLimit.success) {
-    return rateLimitResponse(rateLimit);
-  }
+    if (!rateLimit.success) {
+        return rateLimitResponse(rateLimit);
+    }
 
-  return handler(request, context);
+    return handler(request, context);
 }
 
 export { rateLimitedHandler as GET, rateLimitedHandler as POST };

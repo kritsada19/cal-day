@@ -6,6 +6,7 @@ import axios from "axios";
 import { Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 const features = ["feature1", "feature2",] as const;
 
@@ -20,33 +21,40 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     if (session?.user?.id) {
-      axios.get("/api/profile").then((res) => {
-        const subscription = res.data.subscription;
+      deduplicateRequest(
+        `fetch-profile:${session.user.id}`,
+        () => axios.get("/api/profile")
+      )
+        .then((res) => {
+          const subscription = res.data.subscription;
 
-        if (subscription?.plan) {
-          setPlan(subscription.plan);
-        } else {
+          if (subscription?.plan) {
+            setPlan(subscription.plan);
+          } else {
+            setPlan("FREE");
+          }
+
+          if (subscription?.endAt) {
+            setExpiresAt(subscription.endAt);
+          } else {
+            setExpiresAt(null);
+          }
+        })
+        .catch((error) => {
+          logger.error({ err: error }, "Failed to fetch profile");
           setPlan("FREE");
-        }
-
-        if (subscription?.endAt) {
-          setExpiresAt(subscription.endAt);
-        } else {
           setExpiresAt(null);
-        }
-      }).catch((error) => {
-        logger.error({ err: error }, "Failed to fetch profile");
-        setPlan("FREE");
-        setExpiresAt(null);
-      }).finally(() => {
-        setIsFetchingPlan(false);
-      });
+        })
+        .finally(() => {
+          setIsFetchingPlan(false);
+        });
     } else if (session === null) {
       const timer = setTimeout(() => {
         setPlan("FREE");
         setExpiresAt(null);
         setIsFetchingPlan(false);
       }, 0);
+
       return () => clearTimeout(timer);
     }
   }, [session]);

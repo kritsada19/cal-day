@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/access";
-import { errorResponse } from "@/lib/http";
+import { errorResponse } from "@/lib/http/http";
 import { mealService } from "@/lib/services/meal.service";
 import { publishMealEvent } from "@/lib/realtime/publisher";
 /**

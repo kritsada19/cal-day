@@ -4,7 +4,7 @@ import { favoriteService } from "@/lib/services/favorite.service";
 import { favoriteMealUpdateSchema } from "@/lib/validation/meal";
 import { publishFavoriteEvent } from "@/lib/realtime/publisher";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import { errorResponse, rateLimitResponse } from "@/lib/http";
+import { errorResponse, rateLimitResponse } from "@/lib/http/http";
 
 export async function PUT(
   request: NextRequest,

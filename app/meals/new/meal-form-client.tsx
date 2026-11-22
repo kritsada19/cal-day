@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -53,21 +54,28 @@ export default function MealFormClient() {
   useEffect(() => {
     if (status !== "authenticated") return; // รอให้ล็อกอินก่อนค่อยดึง
 
-    axios
-      .get<{ recentMeals: string[] }>("/api/meals/recent")
-      .then((res) => setRecentMeals(res.data.recentMeals))
+    deduplicateRequest(
+      "meals:recent:fetch",
+      () => axios.get<{ recentMeals: string[] }>("/api/meals/recent")
+    )
+      .then((res) => {
+        setRecentMeals(res.data.recentMeals);
+      })
       .catch(() => {
         // ไม่แสดง error — shortcut เป็นแค่ฟีเจอร์เสริม ถ้าดึงไม่ได้ก็ซ่อนไปเฉย ๆ
       });
 
-    axios
-      .get<{ isPro: boolean }>("/api/profile")
+    deduplicateRequest(
+      "profile:fetch",
+      () => axios.get<{ isPro: boolean }>("/api/profile")
+    )
       .then((res) => {
         setIsPro(res.data.isPro);
       })
       .catch(() => {
         setIsPro(false);
       });
+
   }, [status]); // re-run ถ้า auth status เปลี่ยน (เช่น ล็อกอินสำเร็จหลัง mount)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,11 +196,10 @@ export default function MealFormClient() {
                 }
                 router.push("/meals/favorites");
               }}
-              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-base font-semibold transition-colors ${focusRing} ${
-                isPro
-                  ? "cursor-pointer border-transparent bg-primary-tint text-primary hover:bg-highlight hover:text-ink"
-                  : "cursor-pointer border-secondary bg-canvas text-muted hover:bg-primary-tint"
-              }`}
+              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-base font-semibold transition-colors ${focusRing} ${isPro
+                ? "cursor-pointer border-transparent bg-primary-tint text-primary hover:bg-highlight hover:text-ink"
+                : "cursor-pointer border-secondary bg-canvas text-muted hover:bg-primary-tint"
+                }`}
             >
               <Heart className="h-4 w-4" />
               {t("viewFavorites")}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/access";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import { errorResponse, rateLimitResponse } from "@/lib/http";
+import { errorResponse, rateLimitResponse } from "@/lib/http/http";
 import { mealService } from "@/lib/services/meal.service";
 
 /**

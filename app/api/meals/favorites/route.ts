@@ -5,7 +5,7 @@ import { mealService } from "@/lib/services/meal.service";
 import { favoriteMealCreateSchema } from "@/lib/validation/meal";
 import { publishMealEvent } from "@/lib/realtime/publisher";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
-import { errorResponse, rateLimitResponse } from "@/lib/http";
+import { errorResponse, rateLimitResponse } from "@/lib/http/http";
 
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimitPolicy(request, "meals");

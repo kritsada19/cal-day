@@ -14,6 +14,7 @@ import {
   FaWeightScale,
 } from "react-icons/fa6";
 import { toast } from "sonner";
+import { deduplicateRequest } from "@/lib/http/request-deduplication";
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -51,8 +52,18 @@ export default function ProfileFormPage() {
   const [isSaving, setIsSaving] = useState(false);
   useEffect(() => {
     if (status === "authenticated") {
-      fetch("/api/profile")
-        .then((res) => res.json())
+      deduplicateRequest(
+        "profile-form:fetch",
+        async () => {
+          const res = await fetch("/api/profile");
+
+          if (!res.ok) {
+            throw new Error("Failed to load profile");
+          }
+
+          return res.json();
+        }
+      )
         .then((data) => {
           if (data.profile) {
             setFormData({
