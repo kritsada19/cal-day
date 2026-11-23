@@ -4,6 +4,8 @@
 
 
 
+
+
 # CalDay 🥗 (AI-Powered Nutrition & Calorie Tracker)
 
 CalDay คือเว็บแอปพลิเคชันสำหรับการติดตามโภชนาการและการนับแคลอรีในแต่ละวัน ขับเคลื่อนด้วย AI (Google Gemini) ที่ช่วยให้การบันทึกมื้ออาหารเป็นเรื่องง่าย พร้อมระบบจัดการโปรไฟล์ผู้ใช้ คำนวณ BMR/TDEE อัตโนมัติ และระบบ Subscription
@@ -928,6 +930,44 @@ Prisma ไม่มีคำสั่ง `migrate down` อัตโนมัต
 
 - **`DailySummary`: `@@unique([userId, date])`** — Compound Unique Constraint ที่ทำหน้าที่เป็น Composite Index ในตัว ช่วยเพิ่มความเร็วในการ Query สรุปผลรายวัน พร้อมทั้งป้องกันข้อมูลซ้ำซ้อนในวันเดียวกันของผู้ใช้แต่ละคน
 
+## ⚡ Database Query Performance Monitoring
+
+CalDay ใช้ Prisma Query Extension ร่วมกับ Pino เพื่อวัดระยะเวลาของ Prisma Model Operations โดยอัตโนมัติ โดยไม่ต้องเขียนตัวจับเวลาแยกในแต่ละ Repository หรือ API Route
+
+### การทำงาน
+
+Prisma รับ Model Operation เช่น findMany, findUnique, create หรือ update
+Query Extension บันทึกเวลาเริ่มต้นด้วย performance.now()
+ส่ง Query ให้ Prisma ดำเนินการตามปกติ
+เมื่อ Query เสร็จสิ้น ระบบคำนวณระยะเวลาที่ใช้และส่งข้อมูลให้ Pino Logger
+ใช้ finally เพื่อให้บันทึกระยะเวลาได้ทั้งกรณี Query สำเร็จและเกิด Error
+### ข้อมูลที่บันทึก
+
+Field	คำอธิบาย
+model	Prisma Model ที่เรียกใช้งาน เช่น DailySummary
+operation	ประเภท Operation เช่น findFirst หรือ findMany
+duration	ระยะเวลาที่ Prisma Operation ใช้ หน่วยเป็น milliseconds
+ตัวอย่าง Log แบบ JSON:
+
+{
+  "level": 30,
+  "model": "DailySummary",
+  "operation": "findFirst",
+  "duration": 25.02,
+  "msg": "Database Query Performance"
+}
+### การจัดรูปแบบ Log
+
+ใช้ pino-pretty เป็น Pino Transport เฉพาะ Development เพื่อแปลง JSON Log ให้อ่านง่ายใน Terminal โดยตั้งค่า colorize เพื่อแสดงสี, translateTime เพื่อแสดงเวลาให้อ่านง่าย และ ignore เพื่อซ่อน Field ที่ไม่จำเป็น เช่น pid และ hostname
+
+ใน Production จะไม่เปิดใช้ pino-pretty และคงรูปแบบ JSON เพื่อให้ระบบ Log Aggregation สามารถนำข้อมูลไปค้นหาและวิเคราะห์ต่อได้
+
+### ข้อจำกัด
+
+Monitoring นี้ครอบคลุม Prisma Model Operations ที่ผ่าน $allModels.$allOperations
+Raw Queries เช่น $queryRaw และ $executeRaw ไม่ถูกรวมอยู่ในการวัดด้วย Extension ชุดนี้
+duration คือเวลาที่วัดได้รอบ Prisma Operation ไม่ใช่เวลาประมวลผล SQL ภายใน PostgreSQL เพียงอย่างเดียว
+การวัดนี้ใช้สำหรับตรวจสอบ Query ที่ใช้เวลานานและช่วยระบุจุดที่ควรนำไปวิเคราะห์เพิ่มเติม ไม่ได้เปลี่ยนพฤติกรรมของ Query
 ## 🛡️ Resilience: AI Circuit Breaker
 
 CalDay มีระบบ Circuit Breaker สำหรับการเรียกใช้ Google Gemini เพื่อป้องกันความล้มเหลวแบบต่อเนื่องจาก AI Provider
@@ -961,13 +1001,19 @@ CalDay มีระบบ Circuit Breaker สำหรับการเรี�
 มี Utility สำหรับป้องกันการส่ง HTTP Request ซ้ำซ้อนในช่วงเวลาที่ Request เดิมยังทำงานอยู่ โดยใช้ In-memory `Map<string, Promise<unknown>>` ใน `lib/http/request-deduplication.ts`
 
 เมื่อมี Request ที่ใช้ Key เดียวกันและยังไม่เสร็จ ระบบจะคืน Promise เดิมให้ผู้เรียกใช้ แทนการเรียก API ซ้ำ
+
 เมื่อ Request สำเร็จหรือล้มเหลว จะลบ Key ออกจาก Map เพื่อให้ Request ครั้งถัดไปสามารถทำงานได้ตามปกติ
+
 เหมาะกับการใช้งานกับ GET Request ที่มีเงื่อนไขและผลลัพธ์ที่คาดหวังเหมือนกัน เช่น การดึงข้อมูล Profile
+
 Key ต้องแยกตามบริบทที่มีผลต่อผลลัพธ์ เช่น ผู้ใช้, Query Parameters หรือ Locale เพื่อไม่ให้ Request คนละบริบทใช้ Promise ร่วมกัน
+
 เป็นการป้องกันเฉพาะ Request ที่ทำงานพร้อมกัน ไม่ใช่ Cache และไม่ใช่ Idempotency จึงไม่ควรใช้แทนกลไกป้องกันการทำรายการซ้ำฝั่ง Server สำหรับ POST ที่มีผลข้างเคียง
+
 มี Unit Tests ด้วย Vitest เพื่อทดสอบการใช้ Promise ร่วมกัน, การแยก Request ต่าง Key, การ Retry หลัง Request ล้มเหลว และการ Deduplicate Request ที่เกิดขึ้นพร้อมกัน
 
 🚨 Error Monitoring & Observability (Sentry)**
+
 โปรเจกต์นี้ติดตั้งและเชื่อมต่อระบบติดตามข้อผิดพลาดและประสิทธิภาพด้วย **[Sentry](https://sentry.io/)** แบบ Full-stack:
 
 - **Client-Side Monitoring (`instrumentation-client.ts`):** ดักจับ JavaScript Error บนเบราว์เซอร์ของผู้ใช้ พร้อมฟีเจอร์ **Session Replay** ที่บันทึกคลิปจำลองการใช้งานของผู้ใช้ก่อนเกิด Error (ตั้งค่าบันทึก 100% เมื่อเกิด Error) ช่วยให้ Debug ได้ง่ายและตรงจุด
