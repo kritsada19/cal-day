@@ -18,4 +18,16 @@ export const logger = pino({
     "cookie",
     "headers.cookie",
   ],
+
+  // ระบบกำหนดว่า Log จะถูกส่งไปจัดการหรือแสดงผลอย่างไร
+  transport: {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+      translateTime: "SYS:standard",
+      ignore: "",
+      messageFormat: "{msg}",
+      levelFirst: false,
+    },
+  },
 });
