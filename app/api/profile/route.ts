@@ -24,10 +24,11 @@ export async function GET(request: NextRequest) {
   }
 
   const session = auth.session;
+  const userId = Number(session.user.id);
 
   try {
 
-    const cacheKey = `cache:user:${session.user.id}:profile`;
+    const cacheKey = `cache:user:${userId}:profile`;
     const cachedData = await getCache(cacheKey);
 
     if (cachedData) {
@@ -35,26 +36,59 @@ export async function GET(request: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: Number(session.user.id) },
-      include: {
-        subscription: true,
-        profile: true,
-      }
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        subscription: {
+          select: {
+            plan: true,
+          },
+        },
+        profile: {
+          select: {
+            gender: true,
+            age: true,
+            weight: true,
+            height: true,
+            exerciseLevel: true,
+            goal: true,
+            bmr: true,
+            tdee: true,
+            targetCalories: true,
+            targetProtein: true,
+          },
+        },
+      },
     });
 
-    const isPro = user?.subscription?.plan === "PRO";
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
 
-    const aiQuota = await getUserAiQuota(Number(session.user.id), user?.subscription?.plan);
+    const plan = user.subscription?.plan;
+    const isPro = plan === "PRO";
+
+    const aiQuota = await getUserAiQuota(userId, plan);
 
     const { startOfDay, endOfDay } = getUtcDayRange();
 
     const dailySummary = await prisma.dailySummary.findFirst({
       where: {
-        userId: Number(session.user.id),
+        userId,
         date: {
           gte: startOfDay,
           lt: endOfDay,
         },
+      },
+      select: {
+        totalCalories: true,
+        totalProtein: true,
       },
     });
 
@@ -64,19 +98,20 @@ export async function GET(request: NextRequest) {
       dailySummary?.totalProtein ?? 0
     );
 
-
-    await setCache(cacheKey, { ...user, ...summary, isPro, aiusage: aiQuota.usage, aiLimit: aiQuota.limit, aiRemaining: aiQuota.remaining }, 300);
-
-    return NextResponse.json({
+    const responseData = {
       ...user,
       ...summary,
       isPro,
       aiUsage: aiQuota.usage,
       aiLimit: aiQuota.limit,
-      aiRemaining: aiQuota.remaining
-    });
+      aiRemaining: aiQuota.remaining,
+    };
+
+    await setCache(cacheKey, responseData, 300);
+
+    return NextResponse.json(responseData);
   } catch (error) {
-    logger.error({ err: error, userId: session.user.id }, "Profile GET error");
+    logger.error({ err: error, userId }, "Profile GET error");
     return NextResponse.json({ message: "Database unavailable" }, { status: 503 });
   }
 }
