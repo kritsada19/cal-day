@@ -58,7 +58,9 @@ export default function ProfileFormPage() {
           const res = await fetch("/api/profile");
 
           if (!res.ok) {
-            throw new Error("Failed to load profile");
+            const error = new Error("Failed to load profile");
+            (error as { status?: number }).status = res.status;
+            throw error;
           }
 
           return res.json();
@@ -76,8 +78,15 @@ export default function ProfileFormPage() {
             });
           }
         })
-        .catch(() => {
-          toast.error(formT("loadProfileError"));
+        .catch((err) => {
+          const status = (err as { status?: number })?.status;
+          if (status === 401) {
+            toast.error(formT("unauthorized"));
+          } else if (status === 429) {
+            toast.error(formT("rateLimited"));
+          } else {
+            toast.error(formT("loadProfileError"));
+          }
         });
     }
   }, [status, formT]);
@@ -94,14 +103,25 @@ export default function ProfileFormPage() {
       });
 
       if (!response.ok) {
-        throw new Error(formT("saveError"));
+        const error = new Error(formT("saveError"));
+        (error as { status?: number }).status = response.status;
+        throw error;
       }
 
       // Toast stays on screen through the short redirect to the profile page.
       toast.success(formT("saveSuccess"));
       setTimeout(() => router.push("/profile"), 800);
-    } catch {
-      toast.error(formT("saveError"));
+    } catch (err) {
+      const status = (err as { status?: number })?.status;
+      if (status === 401) {
+        toast.error(formT("unauthorized"));
+      } else if (status === 429) {
+        toast.error(formT("rateLimited"));
+      } else if (status === 400) {
+        toast.error(formT("invalidData"));
+      } else {
+        toast.error(formT("saveError"));
+      }
     } finally {
       setIsSaving(false);
     }

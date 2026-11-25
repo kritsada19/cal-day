@@ -158,7 +158,10 @@
     "errorSubtitle": "We couldn't verify your email",
     "errorDescription": "An unexpected error occurred while verifying your email. Please try again later or contact support.",
     "errorAction": "Go to homepage",
-    "loadingVerify": "Loading..."
+    "loadingVerify": "Loading...",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "unauthorized": "Please sign in to continue",
+    "notFound": "Resource not found"
   },
   "email": {
     "brandTagline": "Small steps, healthier days.",
@@ -281,7 +284,10 @@
     "saveProfile": "Save profile",
     "loadProfileError": "Unable to load your profile data",
     "saveError": "Unable to save your profile",
-    "saveSuccess": "Profile saved successfully"
+    "saveSuccess": "Profile saved successfully",
+    "unauthorized": "Please sign in to continue",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "invalidData": "Invalid profile information"
   },
   "mealCalendar": {
     "history": "History",
@@ -573,7 +579,11 @@
     "saveError": "Unable to save your meal",
     "proFeatureWarning": "This feature is available for PRO members only. Upgrade to PRO to unlock this feature.",
     "saveAsFavorite": "Save and add to favorites",
-    "viewFavorites": "Favorite Meals"
+    "viewFavorites": "Favorite Meals",
+    "unauthorized": "Please sign in to continue",
+    "proRequiredError": "PRO subscription required",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "invalidData": "Invalid meal data or image"
   },
   "favoriteMeals": {
     "pageLabel": "Saved meals",
@@ -620,6 +630,11 @@
     "confirmDeleteDesc": "Are you sure you want to remove this meal from your favorites?",
     "deleting": "Deleting...",
     "deleteSuccess": "Favorite meal removed successfully",
-    "deleteError": "Failed to remove favorite meal"
+    "deleteError": "Failed to remove favorite meal",
+    "unauthorized": "Please sign in to continue",
+    "proRequiredError": "PRO subscription required",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "invalidData": "Invalid meal data",
+    "notFound": "Favorite meal not found"
   }
 }
