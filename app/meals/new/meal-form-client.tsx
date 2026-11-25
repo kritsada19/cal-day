@@ -138,10 +138,17 @@ export default function MealFormClient() {
       setTimeout(() => router.push("/dashboard"), 900);
     } catch (error) {
       let errorMessage = t("saveError");
-      if (axios.isAxiosError(error) && error.response) {
-        errorMessage = t("saveError");
-      } else if (error instanceof Error) {
-        errorMessage = t("saveError");
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 401) {
+          errorMessage = t("unauthorized");
+        } else if (status === 403) {
+          errorMessage = t("proRequiredError");
+        } else if (status === 429) {
+          errorMessage = t("rateLimited");
+        } else if (status === 400) {
+          errorMessage = t("invalidData");
+        }
       }
 
       toast.error(errorMessage);

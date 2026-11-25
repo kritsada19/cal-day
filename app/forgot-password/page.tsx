@@ -44,8 +44,22 @@ export default function ForgetPasswordPage() {
       toast.success(t("resetLinkSent"));
       setEmail("");
     } catch (err) {
-      const message = axios.isAxiosError(err) ? t("signupError") : t("signupError");
-      toast.error(message);
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 429) {
+          toast.error(t("rateLimited"));
+          return;
+        }
+        if (status === 400) {
+          toast.error(t("emailInvalid"));
+          return;
+        }
+        if (status === 404) {
+          toast.error(t("notFound"));
+          return;
+        }
+      }
+      toast.error(t("signupError"));
     } finally {
       setLoading(false);
     }

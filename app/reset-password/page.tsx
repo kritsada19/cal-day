@@ -71,15 +71,17 @@ function ResetPasswordContent() {
                 }, 1500);
             }
         } catch (err: unknown) {
+            let message = t("somethingWentWrong");
             if (axios.isAxiosError(err)) {
-                const message = t("somethingWentWrong");
-
-                setError(message);
-                toast.error(message);
-            } else {
-                setError(t("somethingWentWrong"));
-                toast.error(t("somethingWentWrong"));
+                const status = err.response?.status;
+                if (status === 429) {
+                    message = t("rateLimited");
+                } else if (status === 400) {
+                    message = t("invalidResetLink");
+                }
             }
+            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }

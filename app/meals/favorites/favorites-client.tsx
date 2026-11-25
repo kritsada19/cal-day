@@ -52,6 +52,21 @@ export default function FavoritesClient() {
     unit: "",
   });
 
+  const getErrorMessage = useCallback(
+    (err: unknown, fallbackKey: "addError" | "editError" | "deleteError") => {
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 401) return t("unauthorized");
+        if (status === 403) return t("proRequiredError");
+        if (status === 404) return t("notFound");
+        if (status === 429) return t("rateLimited");
+        if (status === 400) return t("invalidData");
+      }
+      return t(fallbackKey);
+    },
+    [t]
+  );
+
   const fetchFavorites = useCallback(async () => {
     try {
       const res = await deduplicateRequest(
@@ -62,11 +77,21 @@ export default function FavoritesClient() {
       setErrorMessage(null);
       setIsProError(false);
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        setIsProError(true);
-      } else {
-        setErrorMessage(t("fetchError"));
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 403) {
+          setIsProError(true);
+          return;
+        }
+        if (err.response?.status === 429) {
+          setErrorMessage(t("rateLimited"));
+          return;
+        }
+        if (err.response?.status === 401) {
+          setErrorMessage(t("unauthorized"));
+          return;
+        }
       }
+      setErrorMessage(t("fetchError"));
     } finally {
       setIsLoading(false);
     }
@@ -80,17 +105,21 @@ export default function FavoritesClient() {
       const now = new Date();
       const localDateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-      await axios.post("/api/meals/favorites", {
+      const res = await axios.post("/api/meals/favorites", {
         favoriteId: addModalMeal.id,
         mealType: addMealType,
         date: localDateString,
       });
 
-      toast.success(t("addSuccess"));
-      setAddModalMeal(null);
-      setTimeout(() => router.push("/dashboard"), 900);
-    } catch {
-      toast.error(t("addError"));
+      if (res.status === 200 || res.status === 201) {
+        toast.success(t("addSuccess"));
+        setAddModalMeal(null);
+        setTimeout(() => router.push("/dashboard"), 900);
+      } else {
+        toast.error(t("addError"));
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, "addError"));
     } finally {
       setIsAddingMeal(false);
     }
@@ -102,17 +131,20 @@ export default function FavoritesClient() {
 
     setIsEditingMeal(true);
     try {
-      await axios.put(`/api/meals/favorites/${editModalMeal.id}`, {
+      const res = await axios.put(`/api/meals/favorites/${editModalMeal.id}`, {
         amount: Number(editForm.amount),
         unit: editForm.unit.trim(),
       });
 
-      toast.success(t("editSuccess"));
-      setEditModalMeal(null);
-      // reload ทันทีหรือรอ SSE sync
-      await fetchFavorites();
-    } catch {
-      toast.error(t("editError"));
+      if (res.status === 200) {
+        toast.success(t("editSuccess"));
+        setEditModalMeal(null);
+        await fetchFavorites();
+      } else {
+        toast.error(t("editError"));
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, "editError"));
     } finally {
       setIsEditingMeal(false);
     }
@@ -123,12 +155,16 @@ export default function FavoritesClient() {
 
     setIsDeletingMeal(true);
     try {
-      await axios.delete(`/api/meals/favorites/${deleteModalMeal.id}`);
-      toast.success(t("deleteSuccess"));
-      setDeleteModalMeal(null);
-      await fetchFavorites();
-    } catch {
-      toast.error(t("deleteError"));
+      const res = await axios.delete(`/api/meals/favorites/${deleteModalMeal.id}`);
+      if (res.status === 200) {
+        toast.success(t("deleteSuccess"));
+        setDeleteModalMeal(null);
+        await fetchFavorites();
+      } else {
+        toast.error(t("deleteError"));
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, "deleteError"));
     } finally {
       setIsDeletingMeal(false);
     }
