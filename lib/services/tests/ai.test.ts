@@ -9,6 +9,11 @@ vi.mock("@/lib/env", () => ({
   },
 }));
 
+// Mock withRetry เพื่อไม่ให้หน่วงเวลา backoff จริงใน Unit Test ของ analyzeFood
+vi.mock("@/lib/resilience/retry", () => ({
+  withRetry: <T>(fn: () => Promise<T>) => fn(),
+}));
+
 // สร้าง mock function สำหรับ generateContent และ getGenerativeModel
 const mockGenerateContent = vi.fn();
 const mockGetGenerativeModel = vi.fn(() => ({
