@@ -1,5 +1,8 @@
 import pino from "pino";
 
+const isDevelopment = process.env.NODE_ENV === "development";
+const isServer = typeof window === "undefined";
+
 /**
  * Application logger for both server and browser code.
  *
@@ -20,14 +23,18 @@ export const logger = pino({
   ],
 
   // ระบบกำหนดว่า Log จะถูกส่งไปจัดการหรือแสดงผลอย่างไร
-  transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
-      translateTime: "SYS:standard",
-      ignore: "",
-      messageFormat: "{msg}",
-      levelFirst: false,
-    },
-  },
+  ...(isDevelopment && isServer
+    ? {
+      transport: {
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+          translateTime: "SYS:standard",
+          ignore: "",
+          messageFormat: "{msg}",
+          levelFirst: false,
+        },
+      },
+    }
+    : {}),
 });

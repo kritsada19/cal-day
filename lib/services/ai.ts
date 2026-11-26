@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/lib/env";
 import { CircuitBreaker } from "@/lib/resilience/circuit-breaker";
+import { withRetry } from "../resilience/retry";
 
 type FoodItem = {
   name: string;
@@ -98,7 +99,8 @@ export async function analyzeFood(rawText: string) {
 
   let result;
   try {
-    result = await model.generateContent(prompt);
+    result = await withRetry(() => model.generateContent(prompt));
+    aiBreaker.recordSuccess(); // บันทึกความสำเร็จของการเรียกใช้งาน AI
   } catch (error: unknown) {
     aiBreaker.recordFailure(); // บันทึกความล้มเหลวของการเรียกใช้งาน AI
     if (error instanceof Error && error.message.includes("429")) {
@@ -106,7 +108,6 @@ export async function analyzeFood(rawText: string) {
     }
     throw error;
   }
-  aiBreaker.recordSuccess(); // บันทึกความสำเร็จของการเรียกใช้งาน AI
 
   let aiResponse: unknown;
   try {
@@ -209,7 +210,7 @@ export async function analyzeFoodImage(base64Data: string, mimeType: string) {
 
   let result;
   try {
-    result = await model.generateContent([prompt, imagePart]);
+    result = await withRetry(() => model.generateContent([prompt, imagePart]));
     aiBreaker.recordSuccess();
   } catch (error: unknown) {
     // บันทึกความล้มเหลวของการเรียกใช้งาน AI

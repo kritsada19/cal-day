@@ -992,6 +992,12 @@ CalDay มีระบบ Circuit Breaker สำหรับการเรี�
 
 การออกแบบนี้ช่วยให้แอปไม่ล่มตามไปด้วยเมื่อ Gemini มีปัญหา และยังให้ระบบกลับมาใช้งานได้โดยอัตโนมัติเมื่อ provider ฟื้นตัว
 
+### AI Retry (Exponential Backoff + Jitter)
+
+- ใช้ helper `withRetry` ใน `lib/resilience/retry.ts` ครอบการเรียก Gemini API ภายใน `lib/services/ai.ts` (อยู่ชั้นในของ Circuit Breaker)
+- Retry เฉพาะ error ชั่วคราว (`429`, `500`, `502`, `503`, `504`, `ECONNRESET`, `ETIMEDOUT`) สูงสุด 2 ครั้ง (รวม 3 รอบ) ด้วย `baseDelayMs = 500` แบบ Exponential Backoff (`500ms * 2^attempt`) บวก random jitter (0–200ms) เพื่อลดการชนกันของ request
+- นับ `recordFailure()` เข้า Circuit Breaker แค่ 1 ครั้งเมื่อ retry ครบแล้วยังล้มเหลว
+
 ## ⚡ Redis Cache
 
 - ระบบ Redis cache ยังใช้ TTL jitter ใน `lib/cache.ts` เพื่อป้องกัน cache stampede: เวลา expiry ถูกสุ่มเพิ่ม 0–60 วินาที ทำให้แต่ละ instance หมดอายุไม่พร้อมกัน และลดการ refresh พร้อมกันเมื่อ cache หมดอายุ
