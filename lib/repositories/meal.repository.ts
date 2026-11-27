@@ -154,45 +154,24 @@ export class MealRepository {
       const targetCalories = profile?.targetCalories ?? 0;
       const targetProtein = profile?.targetProtein ?? 0;
 
-      // วันนี้มีสรุปอยู่แล้วหรือยัง? (หาด้วย "ช่วงวัน" ไม่ใช่ timestamp ตรง ๆ)
-      const existingSummary = await tx.dailySummary.findFirst({
-        where: {
+      await tx.dailySummary.upsert({
+        where: { userId_date: { userId: input.userId, date: input.startOfDay } },
+        update: {
+          // Atomic Increment Prisma จะให้ Database เพิ่มค่าจากค่าปัจจุบันโดยตรง ไม่ใช่ค่าที่ Request อ่านไว้ก่อนหน้า
+          totalCalories: { increment: round1(input.totalCalories) },
+          totalProtein: { increment: round1(input.totalProtein) },
+          targetCalories,
+          targetProtein,
+        },
+        create: {
           userId: input.userId,
-          date: {
-            gte: input.startOfDay,
-            lt: input.endOfDay,
-          },
+          date: input.startOfDay,
+          totalCalories: round1(input.totalCalories),
+          totalProtein: round1(input.totalProtein),
+          targetCalories,
+          targetProtein,
         },
       });
-
-      if (existingSummary) {
-        // มีแล้ว → บวกเพิ่มเข้าไป
-        await tx.dailySummary.update({
-          where: { id: existingSummary.id },
-          data: {
-            totalCalories: round1(
-              existingSummary.totalCalories + input.totalCalories,
-            ),
-            totalProtein: round1(
-              existingSummary.totalProtein + input.totalProtein,
-            ),
-            targetCalories,
-            targetProtein,
-          },
-        });
-      } else {
-        // วันนี้ยังไม่มี → สร้างใหม่ โดยให้ date ตรงกับต้นวัน
-        await tx.dailySummary.create({
-          data: {
-            userId: input.userId,
-            date: input.startOfDay,
-            totalCalories: round1(input.totalCalories),
-            totalProtein: round1(input.totalProtein),
-            targetCalories,
-            targetProtein,
-          },
-        });
-      }
 
       return meal.id;
     });

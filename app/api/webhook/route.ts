@@ -102,13 +102,14 @@ export async function POST(req: NextRequest) {
                     return NextResponse.json({ error: "User ID not found in metadata" }, { status: 400 });
                 }
 
-                // อัปเดตข้อมูล Subscription ให้เป็นสถานะ PRO และ ACTIVE
+                // อัปเดตข้อมูล Subscription ตามสถานะล่าสุดจาก Stripe
+                const isCheckoutActive = subscription.status === "active";
                 await prisma.subscription.update({
                     where: { userId: Number(session.metadata.userId) },
                     data: {
                         stripeCustomerId: session.customer as string,
-                        plan: "PRO",
-                        status: "ACTIVE",
+                        plan: isCheckoutActive ? "PRO" : "FREE",
+                        status: isCheckoutActive ? "ACTIVE" : (subscription.status === "canceled" ? "CANCELLED" : "EXPIRED"),
                         startAt: new Date(session.created * 1000),
                         endAt: getPeriodEnd(subscription),
                     },
@@ -201,7 +202,12 @@ export async function POST(req: NextRequest) {
 
             // 4.5 เมื่อมีการอัปเดตข้อมูล Subscription (เช่น เปลี่ยนแพ็กเกจ หรือกดยกเลิกแบบมีผลรอบบิลถัดไป)
             case "customer.subscription.updated": {
-                const subscription = event.data.object as any;
+                const eventSubscription = event.data.object as any;
+                // ดึงสถานะล่าสุดจาก Stripe โดยตรง เพื่อป้องกัน Out-of-Order Event เขียนทับข้อมูลใหม่
+                // ดึงสถานะล่าสุดจาก Stripe โดยตรงเพื่อนำไปบันทึก ป้องกัน event เก่าส่งมาบันทึกแทน
+                const subscription = (await stripe.subscriptions.retrieve(
+                    eventSubscription.id as string
+                )) as any;
                 const isActive = subscription.status === "active";
 
                 const updatedSubscriptions = await prisma.subscription.findMany({

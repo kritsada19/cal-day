@@ -188,6 +188,7 @@ describe("API Integration Tests", () => {
         findFirst: vi.fn().mockResolvedValue(null),
         create: vi.fn().mockResolvedValue({ id: 99 }),
         update: vi.fn(),
+        upsert: vi.fn().mockResolvedValue({ id: 99 }),
       },
     };
 
@@ -213,7 +214,7 @@ describe("API Integration Tests", () => {
     expect(tx.meal.create).toHaveBeenCalledWith({
       data: { userId: 7, mealType: "LUNCH" },
     });
-    expect(tx.dailySummary.create).toHaveBeenCalled();
+    expect(tx.dailySummary.upsert).toHaveBeenCalled();
     expect(body.mealId).toBe(12);
     expect(body.totalCalories).toBe(540);
     expect(body.totalProtein).toBe(30);

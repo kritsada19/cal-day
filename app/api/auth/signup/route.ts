@@ -72,40 +72,56 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // กรณีที่ 3: ผู้ใช้ใหม่ที่ยังไม่เคยมีในระบบเลย
-      await prisma.user.create({
-        data: {
-          name: name.trim(),
-          email: email.trim().toLowerCase(),
-          password: hashedPassword,
+      try {
+        await prisma.user.create({
+          data: {
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            password: hashedPassword,
 
-          subscription: {
-            create: {
-              plan: "FREE",
-              status: "ACTIVE",
+            subscription: {
+              create: {
+                plan: "FREE",
+                status: "ACTIVE",
+              },
             },
           },
-        },
-      });
+        });
+      } catch (err: unknown) {
+        if (
+          typeof err === "object" &&
+          err !== null &&
+          "code" in err &&
+          (err as { code?: string }).code === "P2002"
+        ) {
+          return NextResponse.json(
+            { message: "An account with this email already exists. You can log in instead." },
+            { status: 409, headers: { "Cache-Control": "no-store" } }
+          );
+        }
+        throw err;
+      }
     }
-
-    // ลบ Token ยืนยันอีเมลเดิมที่อาจค้างอยู่หรือหมดอายุ
-    await prisma.verificationToken.deleteMany({
-      where: {
-        email: email.toLowerCase(),
-        type: "EMAIL_VERIFY",
-      },
-    });
 
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    await prisma.verificationToken.create({
-      data: {
-        email: email.toLowerCase(),
-        token: verificationToken,
-        type: "EMAIL_VERIFY",
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // Expire in 1 Hour
-      },
-    });
+    // ลบ Token เดิมและสร้างใหม่ใน Transaction เดียว ป้องกัน Race Condition
+    await prisma.$transaction([
+      prisma.verificationToken.deleteMany({
+        where: {
+          email: email.toLowerCase(),
+          type: "EMAIL_VERIFY",
+        },
+      }),
+      prisma.verificationToken.create({
+        data: {
+          email: email.toLowerCase(),
+          token: verificationToken,
+          type: "EMAIL_VERIFY",
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000), // Expire in 1 Hour
+        },
+      }),
+    ]);
 
     const verificationLink = `${env.NEXTAUTH_URL}/api/auth/email-verify?token=${verificationToken}`;
 
