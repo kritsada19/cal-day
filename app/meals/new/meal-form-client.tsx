@@ -107,13 +107,19 @@ export default function MealFormClient() {
 
       const localDateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
+      const idempotencyKey = crypto.randomUUID();
+
       if (mode === "text") {
-        await axios.post("/api/meals", {
-          mealType,
-          mealText,
-          date: localDateString,
-          isFav
-        });
+        await axios.post(
+          "/api/meals",
+          {
+            mealType,
+            mealText,
+            date: localDateString,
+            isFav
+          },
+          { headers: { "Idempotency-Key": idempotencyKey } }
+        );
       } else {
         if (!imagePreview || !imageFile) {
           toast.error(t("noImageError"));
@@ -123,13 +129,17 @@ export default function MealFormClient() {
         const base64Data = imagePreview.split(",")[1];
         const mimeType = imageFile.type;
 
-        await axios.post("/api/meals/image", {
-          mealType,
-          base64Data,
-          mimeType,
-          date: localDateString,
-          isFav
-        });
+        await axios.post(
+          "/api/meals/image",
+          {
+            mealType,
+            base64Data,
+            mimeType,
+            date: localDateString,
+            isFav
+          },
+          { headers: { "Idempotency-Key": idempotencyKey } }
+        );
       }
 
       // ไม่ต้องเช็ค response.data.ok เพราะ axios จะ throw error อัตโนมัติถ้า status ไม่ใช่ 2xx

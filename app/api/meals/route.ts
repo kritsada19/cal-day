@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/access";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { errorResponse, rateLimitResponse } from "@/lib/http/http";
+import { withIdempotency } from "@/lib/http/idempotency";
 import { mealSchema } from "@/lib/validation/meal";
 import { mealService } from "@/lib/services/meal.service";
 import { publishMealEvent } from "@/lib/realtime/publisher";
@@ -31,44 +32,47 @@ export async function POST(request: NextRequest) {
   const session = auth.session;
   const userId = Number(session.user.id);
 
-  // 3) ตรวจรูปแบบข้อมูลที่ส่งมา (mealText / mealType / date)
-  const body = await request.json();
-  const validation = mealSchema.safeParse(body);
+  // 3) ครอบด้วย Idempotency-Key ป้องกันการสร้างมื้อซ้ำและหัก AI quota ซ้ำเมื่อกดเบิ้ลหรือ retry
+  return withIdempotency(request, "meals:create", userId, async () => {
+    // 4) ตรวจรูปแบบข้อมูลที่ส่งมา (mealText / mealType / date)
+    const body = await request.json();
+    const validation = mealSchema.safeParse(body);
 
-  if (!validation.success) {
-    return NextResponse.json(
-      { message: validation.error.issues[0]?.message || "Invalid input" },
-      { status: 400 },
-    );
-  }
+    if (!validation.success) {
+      return NextResponse.json(
+        { message: validation.error.issues[0]?.message || "Invalid input" },
+        { status: 400 },
+      );
+    }
 
-  try {
-    // 4) งานทั้งหมดเป็นของ service — บรรทัดเดียวจบ
-    const result = await mealService.createMeal(userId, validation.data);
+    try {
+      // 5) งานทั้งหมดเป็นของ service — บรรทัดเดียวจบ
+      const result = await mealService.createMeal(userId, validation.data);
 
-    // 5) ส่ง Event ไปให้ Browser ผ่าน Redis
-    await publishMealEvent({
-      type: "meal.created",
-      userId: String(userId),
-    });
+      // 6) ส่ง Event ไปให้ Browser ผ่าน Redis
+      await publishMealEvent({
+        type: "meal.created",
+        userId: String(userId),
+      });
 
-    // 6) ตอบกลับผลลัพธ์
-    return NextResponse.json({
-      message: "Meal created successfully",
-      aiAnalysis: result.aiAnalysis,
-      mealId: result.mealId,
-      totalCalories: result.totalCalories,
-      totalProtein: result.totalProtein,
-      status: 201,
-    });
-  } catch (error) {
-    return errorResponse(error, {
-      status: 503,
-      message: "Internal server error",
-      log: "Meal POST error",
-      context: { userId },
-    });
-  }
+      // 7) ตอบกลับผลลัพธ์
+      return NextResponse.json({
+        message: "Meal created successfully",
+        aiAnalysis: result.aiAnalysis,
+        mealId: result.mealId,
+        totalCalories: result.totalCalories,
+        totalProtein: result.totalProtein,
+        status: 201,
+      });
+    } catch (error) {
+      return errorResponse(error, {
+        status: 503,
+        message: "Internal server error",
+        log: "Meal POST error",
+        context: { userId },
+      });
+    }
+  });
 }
 
 /**

@@ -71,7 +71,11 @@ export default function SubscriptionPage() {
   const handleSubscribe = async () => {
     try {
       setLoading(true);
-      const res = await axios.post("/api/checkout");
+      const res = await axios.post(
+        "/api/checkout",
+        {},
+        { headers: { "Idempotency-Key": crypto.randomUUID() } }
+      );
       if (res.data.url) {
         window.location.href = res.data.url;
       }
