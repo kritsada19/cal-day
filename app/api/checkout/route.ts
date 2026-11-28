@@ -4,6 +4,7 @@ import prisma from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/access";
 import { checkRateLimitPolicy } from "@/lib/rate-limit";
 import { rateLimitResponse } from "@/lib/http/http";
+import { withIdempotency } from "@/lib/http/idempotency";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { logAuditEvent } from "@/lib/audit";
@@ -28,7 +29,9 @@ export async function POST(request: NextRequest) {
 
         const sessionUser = auth.session;
 
-        logAuditEvent({
+        // ครอบด้วย Idempotency-Key ป้องกันการสร้าง Stripe Checkout Session ซ้ำเมื่อ user กดเบิ้ล
+        return await withIdempotency(request, "checkout:create", sessionUser.user.id, async () => {
+            logAuditEvent({
             event: "payment_initiated",
             userId: sessionUser.user.id,
             email: sessionUser.user.email ?? null,
@@ -110,9 +113,10 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        return NextResponse.json({
-            url: session.url,
-            status: 200,
+            return NextResponse.json({
+                url: session.url,
+                status: 200,
+            });
         });
     } catch (error) {
         logger.error({ err: error }, "Checkout error");

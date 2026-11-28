@@ -38,6 +38,18 @@ CalDay คือเว็บแอปพลิเคชันสำหรับ�
 
 - **Multi-language UI:** รองรับการสลับภาษาไทย/อังกฤษผ่าน Navbar พร้อม fallback อัตโนมัติเป็นภาษาไทยเมื่อ locale ไม่ถูกต้องหรือไม่มีค่า
 
+## 🔒 Idempotency-Key (ป้องกันการทำรายการซ้ำ)
+
+ระบบรองรับ `Idempotency-Key` header ผ่าน Redis (`lib/http/idempotency.ts`) เพื่อป้องกันการสร้างมื้ออาหารซ้ำ, การหัก AI quota ซ้ำ, และการสร้าง Stripe Checkout Session ซ้ำเมื่อผู้ใช้กดส่งฟอร์มเบิ้ลหรือเกิด network retry:
+
+- **Endpoints ที่รองรับ:** `POST /api/meals`, `POST /api/meals/image`, `POST /api/checkout`
+- **กลไกการทำงาน:**
+  - จอง lock แบบ atomic ด้วย `SET idem:<scope>:<userId>:<key> ... EX 60 NX`
+  - หากกำลังประมวลผลอยู่ (`processing`) จะคืน `409 Conflict`
+  - หากสำเร็จหรือเป็น `4xx` จะ cache ผลลัพธ์ไว้ใน Redis 24 ชั่วโมง (`done`) และคืนคำตอบเดิมทันทีเมื่อส่ง key เดิมซ้ำ
+  - หากเกิด `5xx` หรือ exception จะลบ lock ทิ้งเพื่อให้ client retry ใหม่ได้
+- **Frontend:** สร้าง `crypto.randomUUID()` ต่อ 1 การกดปุ่มส่งไปใน header `Idempotency-Key`
+
 ## 🌐 Internationalization (i18n)
 
 แอปพลิเคชันรองรับภาษาทั้งหมด 2 ภาษา:
